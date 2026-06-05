@@ -1,11 +1,30 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>DynastyHQ</title>
   <style>
     :root {
+      --bg: #f7f6f2;
+      --surface: #fbfaf7;
+      --surface-2: #f1efe8;
+      --surface-3: #e9e5dc;
+      --border: #d8d2c4;
+      --text: #1d1c18;
+      --muted: #6f6a5f;
+      --faint: #a39c8d;
+      --accent: #b8860b;
+      --accent-hover: #9e7409;
+      --accent-dim: rgba(184,134,11,.12);
+      --danger: #c94f4f;
+      --success: #2e8b57;
+      --radius: 14px;
+      --radius-sm: 8px;
+      --transition: 160ms cubic-bezier(.16,1,.3,1);
+      --shadow: 0 20px 60px rgba(17,17,17,.08);
+    }
+    [data-theme="dark"] {
       --bg: #0d0d0f;
       --surface: #141416;
       --surface-2: #1a1a1e;
@@ -19,9 +38,25 @@
       --accent-dim: rgba(212,168,71,.12);
       --danger: #c94f4f;
       --success: #4caf7d;
-      --radius: 14px;
-      --radius-sm: 8px;
-      --transition: 160ms cubic-bezier(.16,1,.3,1);
+      --shadow: 0 24px 64px rgba(0,0,0,.5);
+    }
+    @media (prefers-color-scheme: dark) {
+      html:not([data-theme]) {
+        --bg: #0d0d0f;
+        --surface: #141416;
+        --surface-2: #1a1a1e;
+        --surface-3: #202024;
+        --border: #2a2a30;
+        --text: #f0f0f2;
+        --muted: #888890;
+        --faint: #444448;
+        --accent: #d4a847;
+        --accent-hover: #e8be5a;
+        --accent-dim: rgba(212,168,71,.12);
+        --danger: #c94f4f;
+        --success: #4caf7d;
+        --shadow: 0 24px 64px rgba(0,0,0,.5);
+      }
     }
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html { scroll-behavior: smooth; }
@@ -37,6 +72,120 @@
     input, textarea, select { font: inherit; color: inherit; }
     a { color: inherit; text-decoration: none; }
 
+
+    .theme-toggle {
+      position: fixed;
+      top: 16px;
+      right: 16px;
+      z-index: 2000;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      box-shadow: var(--shadow);
+      transition: all var(--transition);
+    }
+    .theme-toggle:hover { background: var(--surface-2); }
+    .theme-toggle .theme-icon { font-size: 14px; }
+    .theme-toggle .theme-label { font-size: 12px; font-weight: 700; letter-spacing: .02em; }
+
+    .page-header {
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:16px;
+      flex-wrap:wrap;
+      margin-bottom:18px;
+    }
+    .page-header h1, .page-header h2 { margin-bottom: 6px; }
+    .page-header p { color: var(--muted); }
+
+    .league-grid {
+      display:grid;
+      grid-template-columns: 1.2fr .8fr;
+      gap:20px;
+      align-items:start;
+    }
+    .league-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 22px;
+      margin-bottom: 16px;
+    }
+    .league-card h3 { font-size:16px; font-weight:700; margin-bottom:4px; }
+    .league-card p { font-size:13px; color: var(--muted); margin-bottom:16px; }
+    .league-form-grid {
+      display:grid;
+      grid-template-columns: repeat(2, minmax(0,1fr));
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+    .league-list {
+      display:grid;
+      gap:12px;
+    }
+    .league-item {
+      border:1px solid var(--border);
+      background: var(--surface-2);
+      border-radius: 12px;
+      padding: 16px;
+    }
+    .league-item-top {
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom:10px;
+      flex-wrap:wrap;
+    }
+    .league-item-name { font-size:15px; font-weight:700; }
+    .league-tag {
+      padding:4px 10px;
+      border-radius:999px;
+      font-size:11px;
+      font-weight:700;
+      background: var(--accent-dim);
+      color: var(--accent);
+    }
+    .league-meta {
+      display:grid;
+      grid-template-columns: repeat(2, minmax(0,1fr));
+      gap:8px;
+      font-size:12px;
+      color: var(--muted);
+    }
+    .quick-actions {
+      display:grid;
+      gap:12px;
+    }
+    .quick-action-btn {
+      width:100%;
+      text-align:left;
+      padding:14px 16px;
+      border-radius:12px;
+      border:1px solid var(--border);
+      background: var(--surface-2);
+      color: var(--text);
+      transition: all var(--transition);
+    }
+    .quick-action-btn:hover { background: var(--surface-3); }
+    .quick-action-btn strong { display:block; font-size:14px; margin-bottom:4px; }
+    .quick-action-btn span { font-size:12px; color: var(--muted); }
+
+    @media (max-width: 860px) {
+      .league-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 640px) {
+      .league-form-grid, .league-meta { grid-template-columns: 1fr; }
+      .theme-toggle { top: 12px; right: 12px; padding: 8px 10px; }
+      .theme-toggle .theme-label { display:none; }
+    }
+
     /* ── AUTH SCREEN ── */
     #auth-screen {
       min-height: 100dvh;
@@ -44,7 +193,7 @@
       align-items: center;
       justify-content: center;
       padding: 24px;
-      background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(212,168,71,.07) 0%, transparent 70%), var(--bg);
+      background: radial-gradient(ellipse 80% 60% at 50% 0%, var(--accent-dim) 0%, transparent 70%), var(--bg);
     }
     .auth-card {
       background: var(--surface);
@@ -53,7 +202,7 @@
       padding: 40px 36px;
       width: 100%;
       max-width: 420px;
-      box-shadow: 0 24px 64px rgba(0,0,0,.5);
+      box-shadow: var(--shadow);
     }
     .auth-logo {
       display: flex;
@@ -344,7 +493,7 @@
       background: var(--surface-3); border: 1px solid var(--border);
       border-radius: 999px; padding: 11px 22px;
       font-size: 14px; font-weight: 600;
-      box-shadow: 0 8px 32px rgba(0,0,0,.4);
+      box-shadow: var(--shadow);
       transition: transform .3s cubic-bezier(.16,1,.3,1);
       z-index: 9999; white-space: nowrap;
     }
@@ -424,6 +573,7 @@
   </style>
 </head>
 <body>
+<button class="theme-toggle" id="theme-toggle" aria-label="Toggle color theme"><span class="theme-icon" id="theme-icon">🌙</span><span class="theme-label" id="theme-label">Dark</span></button>
 
 <!-- AUTH SCREEN -->
 <div id="auth-screen">
@@ -559,11 +709,108 @@
 
   <!-- LEAGUES -->
   <div class="page" id="page-leagues">
-    <div class="empty-state">
-      <div class="empty-icon">🏟️</div>
-      <h3>No leagues yet</h3>
-      <p>Create or join a dynasty league to get started tracking your season.</p>
-      <button class="btn-accent">+ Create League</button>
+    <div class="page-header">
+      <div>
+        <h2>Your Leagues</h2>
+        <p>Create leagues, join with a code, and keep your dynasty groups organized.</p>
+      </div>
+      <button class="btn-accent" onclick="focusCreateLeague()">+ Create League</button>
+    </div>
+
+    <div class="league-grid">
+      <div>
+        <div class="league-card" id="create-league-card">
+          <h3>Create a league</h3>
+          <p>Start a new dynasty, choose the platform, and generate an invite code for your members.</p>
+          <div class="league-form-grid">
+            <div class="field-group">
+              <label>League Name</label>
+              <input id="league-name" type="text" placeholder="Friday Night Dynasty" />
+            </div>
+            <div class="field-group">
+              <label>Game</label>
+              <input id="league-game" type="text" value="College Football 26" />
+            </div>
+            <div class="field-group">
+              <label>Platform</label>
+              <select id="league-platform">
+                <option>Xbox</option>
+                <option>PlayStation</option>
+                <option>PC</option>
+              </select>
+            </div>
+            <div class="field-group">
+              <label>Advance Schedule</label>
+              <input id="league-advance" type="text" placeholder="Every Sunday at 9PM CT" />
+            </div>
+            <div class="field-group">
+              <label>Commissioner Name</label>
+              <input id="league-commissioner" type="text" placeholder="Auto-filled from your profile" />
+            </div>
+            <div class="field-group">
+              <label>Team / School</label>
+              <input id="league-team" type="text" placeholder="Texas A&M" />
+            </div>
+          </div>
+          <button class="save-btn" onclick="createLeague()">Create League</button>
+        </div>
+
+        <div class="league-card">
+          <h3>Join with invite code</h3>
+          <p>Got a commissioner code? Join a league without needing the console in front of you.</p>
+          <div class="league-form-grid">
+            <div class="field-group">
+              <label>Invite Code</label>
+              <input id="invite-code" type="text" placeholder="DYNASTY-7F4K" />
+            </div>
+            <div class="field-group">
+              <label>Your Team / School</label>
+              <input id="join-team" type="text" placeholder="LSU" />
+            </div>
+          </div>
+          <button class="save-btn" onclick="joinLeague()">Join League</button>
+        </div>
+      </div>
+
+      <div>
+        <div class="league-card">
+          <h3>Quick actions</h3>
+          <p>Core dynasty workflows for commissioners and members.</p>
+          <div class="quick-actions">
+            <button class="quick-action-btn" onclick="showPage('commissioner')">
+              <strong>Send weekly update</strong>
+              <span>Broadcast advance reminders, scheduling notes, and commissioner messages.</span>
+            </button>
+            <button class="quick-action-btn" onclick="prefillAdvanceMessage()">
+              <strong>Pre-fill week advance</strong>
+              <span>Jump straight into a standard “advance tonight” message.</span>
+            </button>
+            <button class="quick-action-btn" onclick="showPage('settings')">
+              <strong>Notification setup</strong>
+              <span>Make sure your members can receive push, email, and SMS.</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="league-card">
+          <h3>League list</h3>
+          <p>Your current dynasty groups and ownership status.</p>
+          <div class="league-list" id="league-list">
+            <div class="league-item">
+              <div class="league-item-top">
+                <div class="league-item-name">Saturday Dynasty</div>
+                <span class="league-tag">Commissioner</span>
+              </div>
+              <div class="league-meta">
+                <div><strong>Game:</strong> College Football 26</div>
+                <div><strong>Platform:</strong> Xbox</div>
+                <div><strong>Team:</strong> Texas A&amp;M</div>
+                <div><strong>Advance:</strong> Sunday 9PM CT</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -752,6 +999,8 @@
     document.getElementById('nav-username').textContent = name;
     document.getElementById('hero-name').textContent = name.split(' ')[0];
     document.getElementById('displayname-input').value = name;
+    const commissionerField = document.getElementById('league-commissioner');
+    if (commissionerField && !commissionerField.value) commissionerField.value = name;
 
     const avatar = document.getElementById('nav-avatar');
     if (user.photoURL) {
@@ -887,6 +1136,43 @@
 </script>
 
 <script>
+
+  // ── THEME ──
+  const root = document.documentElement;
+  const themeToggle = document.getElementById('theme-toggle');
+  const themeIcon = document.getElementById('theme-icon');
+  const themeLabel = document.getElementById('theme-label');
+  let manualTheme = null;
+
+  function resolvedTheme() {
+    if (manualTheme) return manualTheme;
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  }
+
+  function applyTheme(theme) {
+    if (manualTheme) {
+      root.setAttribute('data-theme', theme);
+    } else {
+      root.removeAttribute('data-theme');
+      if (theme === 'dark') root.setAttribute('data-theme', 'dark');
+    }
+    const isDark = theme === 'dark';
+    themeIcon.textContent = isDark ? '🌙' : '☀️';
+    themeLabel.textContent = isDark ? 'Dark' : 'Light';
+  }
+
+  applyTheme(resolvedTheme());
+
+  themeToggle.addEventListener('click', () => {
+    const current = resolvedTheme();
+    manualTheme = current === 'dark' ? 'light' : 'dark';
+    applyTheme(manualTheme);
+  });
+
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+    if (!manualTheme) applyTheme(resolvedTheme());
+  });
+
   // ── PAGE NAV ──
   window.showPage = (name) => {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -925,6 +1211,99 @@
     const wk = document.getElementById('current-week').value;
     showToast(`Week ${wk} advance notification sent!`, 'success');
   };
+
+
+  window.focusCreateLeague = () => {
+    showPage('leagues');
+    setTimeout(() => document.getElementById('league-name')?.focus(), 50);
+  };
+
+  window.createLeague = () => {
+    const name = document.getElementById('league-name').value.trim();
+    const game = document.getElementById('league-game').value.trim() || 'College Football 26';
+    const platform = document.getElementById('league-platform').value;
+    const advance = document.getElementById('league-advance').value.trim() || 'TBD';
+    const commissioner = document.getElementById('league-commissioner').value.trim() || document.getElementById('nav-username').textContent || 'Commissioner';
+    const team = document.getElementById('league-team').value.trim() || 'Unassigned';
+
+    if (!name) {
+      showToast('Add a league name first.', '');
+      return;
+    }
+
+    const container = document.getElementById('league-list');
+    const item = document.createElement('div');
+    item.className = 'league-item';
+    item.innerHTML = `
+      <div class="league-item-top">
+        <div class="league-item-name">${escapeHtml(name)}</div>
+        <span class="league-tag">Commissioner</span>
+      </div>
+      <div class="league-meta">
+        <div><strong>Game:</strong> ${escapeHtml(game)}</div>
+        <div><strong>Platform:</strong> ${escapeHtml(platform)}</div>
+        <div><strong>Team:</strong> ${escapeHtml(team)}</div>
+        <div><strong>Advance:</strong> ${escapeHtml(advance)}</div>
+        <div><strong>Invite:</strong> ${generateInviteCode()}</div>
+        <div><strong>Owner:</strong> ${escapeHtml(commissioner)}</div>
+      </div>
+    `;
+    container.prepend(item);
+
+    document.getElementById('league-name').value = '';
+    document.getElementById('league-advance').value = '';
+    document.getElementById('league-team').value = '';
+    document.getElementById('league-commissioner').value = commissioner;
+
+    showToast('League created! Invite code generated.', 'success');
+  };
+
+  window.joinLeague = () => {
+    const code = document.getElementById('invite-code').value.trim();
+    const team = document.getElementById('join-team').value.trim() || 'Unassigned';
+    if (!code) {
+      showToast('Enter an invite code first.', '');
+      return;
+    }
+    const container = document.getElementById('league-list');
+    const item = document.createElement('div');
+    item.className = 'league-item';
+    item.innerHTML = `
+      <div class="league-item-top">
+        <div class="league-item-name">Joined League (${escapeHtml(code)})</div>
+        <span class="league-tag">Member</span>
+      </div>
+      <div class="league-meta">
+        <div><strong>Game:</strong> College Football 26</div>
+        <div><strong>Platform:</strong> Pending</div>
+        <div><strong>Team:</strong> ${escapeHtml(team)}</div>
+        <div><strong>Advance:</strong> See commissioner updates</div>
+      </div>
+    `;
+    container.prepend(item);
+    document.getElementById('invite-code').value = '';
+    document.getElementById('join-team').value = '';
+    showToast('League joined from invite code!', 'success');
+  };
+
+  window.prefillAdvanceMessage = () => {
+    showPage('commissioner');
+    const week = document.getElementById('current-week')?.value || '1';
+    const msg = document.getElementById('broadcast-msg');
+    if (msg) {
+      msg.value = `Week ${week} advance is tonight at 9PM CT. Please finish your games, recruiting, and depth chart updates before deadline.`;
+      msg.focus();
+    }
+    showToast('Advance message pre-filled.', 'success');
+  };
+
+  function generateInviteCode() {
+    return 'DYNASTY-' + Math.random().toString(36).slice(2,6).toUpperCase();
+  }
+
+  function escapeHtml(str) {
+    return String(str).replace(/[&<>"']/g, (m) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  }
 
   // ── TOAST ──
   window.showToast = (msg, type) => {
