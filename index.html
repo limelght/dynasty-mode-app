@@ -1,338 +1,737 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="Dynasty Mode Profile — manage account identity, platform accounts, and league memberships." />
-  <title>Dynasty Mode Profile</title>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dynasty HQ</title>
   <style>
-    :root{
-      --bg:#0a0a12;
-      --panel:#12131d;
-      --panel-2:#171925;
-      --border:#2b2f42;
-      --text:#f4f6fb;
-      --muted:#9ea6c2;
-      --accent:#d6b25e;
-      --danger:#d46b6b;
-      --radius:16px;
+    :root,[data-theme="dark"]{
+      --bg:#08090f;--panel:#10111a;--panel-2:#14151f;--border:#22253a;
+      --text:#eef0f8;--muted:#7c82a0;--faint:#3a3e56;
+      --accent:#d6b25e;--accent-dim:rgba(214,178,94,.12);
+      --danger:#c45c5c;--success:#4caf7d;--radius:16px;
     }
-
-    *{
-      box-sizing:border-box;
+    [data-theme="light"]{
+      --bg:#f7f6f2;--panel:#ffffff;--panel-2:#f3f0ec;--border:#dcd9d5;
+      --text:#28251d;--muted:#7a7974;--faint:#bab9b4;
+      --accent:#b8860b;--accent-dim:rgba(184,134,11,.1);
+      --danger:#a12c2c;--success:#2e7d54;
     }
-
-    body{
-      margin:0;
-      font-family:Inter,system-ui,sans-serif;
-      background:linear-gradient(180deg,#07070d,#0f1220);
-      color:var(--text);
-      padding:24px;
-      min-height:100vh;
-    }
-
-    .container{
-      max-width:1100px;
-      margin:0 auto;
-      display:grid;
-      gap:24px;
-    }
-
-    .card{
-      background:rgba(18,19,29,.95);
-      border:1px solid var(--border);
-      border-radius:var(--radius);
-      padding:24px;
-      box-shadow:0 10px 30px rgba(0,0,0,.25);
-    }
-
-    h1,
-    h2,
-    h3{
-      margin:0 0 14px;
-    }
-
-    p{
-      margin:0 0 18px;
-      color:var(--muted);
-    }
-
-    .grid{
-      display:grid;
-      grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
-      gap:16px;
-    }
-
-    label{
-      display:block;
-      font-size:14px;
-      color:var(--muted);
-      margin-bottom:8px;
-    }
-
-    input,
-    select,
-    textarea{
-      width:100%;
-      background:var(--panel-2);
-      color:var(--text);
-      border:1px solid var(--border);
-      border-radius:12px;
-      padding:14px 16px;
-      font-size:15px;
-      outline:none;
-    }
-
-    input:focus,
-    select:focus,
-    textarea:focus{
-      border-color:var(--accent);
-      box-shadow:0 0 0 3px rgba(214,178,94,.15);
-    }
-
-    .platform-list{
-      display:grid;
-      gap:12px;
-    }
-
-    .platform-row{
-      display:grid;
-      grid-template-columns:160px 1fr;
-      gap:12px;
-      align-items:center;
-    }
-
-    .btn-row{
-      display:flex;
-      flex-wrap:wrap;
-      gap:12px;
-      margin-top:18px;
-    }
-
-    button{
-      border:none;
-      border-radius:12px;
-      padding:12px 16px;
-      font-weight:600;
-      cursor:pointer;
-    }
-
-    .btn-primary{
-      background:var(--accent);
-      color:#1a1a1a;
-    }
-
-    .btn-secondary{
-      background:transparent;
-      border:1px solid var(--border);
-      color:var(--text);
-    }
-
-    .btn-danger{
-      background:transparent;
-      border:1px solid rgba(212,107,107,.35);
-      color:#f0b4b4;
-    }
-
-    .league-list{
-      display:grid;
-      gap:16px;
-      margin-top:10px;
-    }
-
-    .league-card{
-      background:var(--panel-2);
-      border:1px solid var(--border);
-      border-radius:14px;
-      padding:18px;
-      display:grid;
-      gap:14px;
-    }
-
-    .league-top{
-      display:flex;
-      justify-content:space-between;
-      gap:12px;
-      align-items:flex-start;
-      flex-wrap:wrap;
-    }
-
-    .badge{
-      display:inline-block;
-      padding:6px 10px;
-      border-radius:999px;
-      font-size:12px;
-      font-weight:700;
-      background:rgba(214,178,94,.15);
-      color:var(--accent);
-    }
-
-    .meta{
-      display:grid;
-      grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
-      gap:10px;
-    }
-
-    .meta div{
-      background:#11131c;
-      border:1px solid #25283a;
-      border-radius:12px;
-      padding:10px 12px;
-    }
-
-    .meta strong{
-      display:block;
-      font-size:12px;
-      color:var(--muted);
-      margin-bottom:6px;
-      font-weight:600;
-    }
-
-    .section-head{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:12px;
-      flex-wrap:wrap;
-    }
-
-    .helper{
-      font-size:13px;
-      color:var(--muted);
-    }
-
-    @media (max-width:700px){
-      body{
-        padding:16px;
-      }
-
-      .platform-row{
-        grid-template-columns:1fr;
-      }
-    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:Inter,system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+    /* ─── LAYOUT ─── */
+    .app{display:flex;flex-direction:column;min-height:100vh}
+    .topbar{position:sticky;top:0;z-index:50;background:var(--panel);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:14px;padding:0 20px;height:56px}
+    .logo{font-size:19px;font-weight:900;letter-spacing:-.5px;color:var(--accent);white-space:nowrap}
+    .logo span{color:var(--text)}
+    .topbar-nav{display:flex;gap:4px;flex:1;overflow-x:auto;scrollbar-width:none}
+    .topbar-nav::-webkit-scrollbar{display:none}
+    .nav-btn{border:none;background:none;color:var(--muted);font-size:13px;font-weight:600;padding:8px 14px;border-radius:9px;cursor:pointer;white-space:nowrap;transition:.15s}
+    .nav-btn:hover{background:var(--panel-2);color:var(--text)}
+    .nav-btn.active{background:var(--accent-dim);color:var(--accent)}
+    .topbar-actions{display:flex;gap:8px;align-items:center;margin-left:auto;flex-shrink:0}
+    .role-badge{font-size:11px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;padding:5px 10px;border-radius:999px;cursor:pointer;transition:.15s}
+    .role-public{background:rgba(124,130,160,.12);color:var(--muted)}
+    .role-user{background:rgba(76,175,125,.12);color:#5ec98c}
+    .role-commissioner{background:var(--accent-dim);color:var(--accent)}
+    .role-admin{background:rgba(196,92,92,.15);color:#e09090}
+    .icon-btn{background:none;border:none;color:var(--muted);cursor:pointer;padding:7px;border-radius:9px;transition:.15s;display:flex;align-items:center}
+    .icon-btn:hover{background:var(--panel-2);color:var(--text)}
+    main{flex:1;padding:20px;max-width:1100px;margin:0 auto;width:100%}
+    .page{display:none}
+    .page.active{display:block}
+    /* ─── CARDS ─── */
+    .card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:24px;margin-bottom:20px}
+    h1{font-size:22px;font-weight:800;margin-bottom:6px}
+    h2{font-size:18px;font-weight:700;margin-bottom:4px}
+    h3{font-size:15px;font-weight:700;margin-bottom:4px}
+    .sub{font-size:13px;color:var(--muted);margin-bottom:18px}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+    .field label{display:block;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+    input,select,textarea{width:100%;background:var(--panel-2);color:var(--text);border:1px solid var(--border);border-radius:12px;padding:12px 14px;font-size:14px;font-family:inherit;outline:none;transition:border-color .15s,box-shadow .15s}
+    input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(214,178,94,.12)}
+    [data-theme="light"] select option{background:#fff}
+    [data-theme="dark"] select option{background:#1a1b28}
+    .platform-row{display:grid;grid-template-columns:150px 1fr 36px;gap:10px;align-items:center}
+    .btn{border:none;border-radius:10px;padding:10px 16px;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;transition:opacity .15s,transform .1s}
+    .btn:active{transform:scale(.97)}
+    .btn-gold{background:var(--accent);color:#1a1400}
+    .btn-ghost{background:transparent;border:1px solid var(--border);color:var(--text)}
+    .btn-danger{background:transparent;border:1px solid rgba(196,92,92,.35);color:#e89898}
+    .btn-success{background:rgba(76,175,125,.15);color:#5ec98c;border:1px solid rgba(76,175,125,.25)}
+    .btn-sm{padding:8px 12px;font-size:12px}
+    .btn-row{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}
+    .section-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+    /* ─── LEAGUE CARDS ─── */
+    .league-list{display:grid;gap:14px}
+    .league-card{border:1px solid var(--border);border-radius:14px;padding:18px;display:grid;gap:14px;position:relative;overflow:hidden}
+    .league-card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--team-color,var(--accent));border-radius:4px 0 0 4px}
+    .league-top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap}
+    .badge{display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border-radius:999px;font-size:11px;font-weight:800;letter-spacing:.04em;text-transform:uppercase}
+    .badge-active{background:rgba(76,175,125,.15);color:#6fd4a2}
+    .badge-inactive{background:rgba(124,130,160,.1);color:var(--muted)}
+    .badge-role{background:var(--accent-dim);color:var(--accent)}
+    .badge-new{background:rgba(84,114,228,.15);color:#8aabf7}
+    .meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px}
+    .meta-item{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:10px;padding:10px 12px}
+    .meta-item strong{display:block;font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:5px}
+    .meta-item span{font-size:13px;font-weight:600}
+    /* ─── COMMISSIONER PANEL ─── */
+    .comm-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+    .advance-week{background:var(--accent-dim);border:1px solid rgba(214,178,94,.25);border-radius:14px;padding:20px;text-align:center}
+    .week-display{font-size:42px;font-weight:900;color:var(--accent);line-height:1;margin-bottom:4px}
+    .member-table{width:100%;border-collapse:collapse}
+    .member-table th{text-align:left;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:10px 12px;border-bottom:1px solid var(--border)}
+    .member-table td{padding:10px 12px;font-size:13px;border-bottom:1px solid rgba(255,255,255,.04)}
+    .member-table tr:last-child td{border-bottom:none}
+    .status-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:6px}
+    .dot-ready{background:#4caf7d}
+    .dot-pending{background:#d6b25e}
+    .dot-offline{background:#555}
+    /* ─── ADMIN ─── */
+    .admin-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-bottom:20px}
+    .stat-card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:18px}
+    .stat-number{font-size:32px;font-weight:900;color:var(--accent);line-height:1;margin-bottom:4px}
+    .stat-label{font-size:12px;color:var(--muted);font-weight:600}
+    /* ─── NOTIFICATION LOG ─── */
+    .notif-item{display:flex;gap:14px;align-items:flex-start;padding:14px 0;border-bottom:1px solid rgba(255,255,255,.05)}
+    .notif-item:last-child{border-bottom:none}
+    .notif-icon{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+    .notif-icon.gold{background:var(--accent-dim)}
+    .notif-icon.blue{background:rgba(84,114,228,.15)}
+    .notif-icon.green{background:rgba(76,175,125,.15)}
+    /* ─── MODAL ─── */
+    .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);z-index:100;align-items:center;justify-content:center;padding:20px}
+    .modal-overlay.open{display:flex}
+    .modal{background:#13141f;border:1px solid var(--border);border-radius:20px;padding:28px;width:100%;max-width:640px;max-height:90vh;overflow-y:auto}
+    .modal h2{margin-bottom:20px}
+    /* ─── MISC ─── */
+    .toast{position:fixed;bottom:24px;right:24px;background:#1c1e2e;border:1px solid var(--border);border-radius:12px;padding:13px 18px;font-size:13px;font-weight:700;box-shadow:0 8px 24px rgba(0,0,0,.5);z-index:200;transform:translateY(16px);opacity:0;transition:all .25s ease;pointer-events:none}
+    .toast.show{transform:translateY(0);opacity:1}
+    .divider{height:1px;background:var(--border);margin:18px 0}
+    .empty-state{text-align:center;padding:40px 20px;color:var(--muted)}
+    .info-box{background:var(--accent-dim);border:1px solid rgba(214,178,94,.2);border-radius:12px;padding:14px 16px;font-size:13px;margin-bottom:16px;line-height:1.6}
+    .tag{display:inline-block;background:rgba(84,114,228,.15);color:#8aabf7;font-size:11px;font-weight:700;padding:3px 8px;border-radius:6px;margin:2px}
+    @media(max-width:700px){.comm-grid{grid-template-columns:1fr}.platform-row{grid-template-columns:1fr 36px}.platform-row select:first-child{grid-column:1/-1}body{font-size:15px}}
   </style>
 </head>
 <body>
-  <div class="container">
-    <section class="card">
-      <h1>Account Profile</h1>
-      <p>This section stores the user’s core identity once, then reuses it across all leagues.</p>
-
-      <div class="grid">
-        <div>
-          <label for="name">Your Name</label>
-          <input id="name" type="text" placeholder="Sent" />
-        </div>
-        <div>
-          <label for="email">Email Address</label>
-          <input id="email" type="email" placeholder="you@email.com" />
-        </div>
-        <div>
-          <label for="phone">Phone Number</label>
-          <input id="phone" type="tel" placeholder="+1 (555) 000-0000" />
-        </div>
-        <div>
-          <label for="timezone">Time Zone</label>
-          <select id="timezone">
-            <option>Central Time (CT)</option>
-            <option>Eastern Time (ET)</option>
-            <option>Mountain Time (MT)</option>
-            <option>Pacific Time (PT)</option>
-          </select>
-        </div>
-      </div>
-
-      <h3 style="margin-top:22px;">Platform Accounts</h3>
-      <p class="helper">Store multiple gaming identities once, then attach the right one to each league membership.</p>
-
-      <div class="platform-list">
-        <div class="platform-row">
-          <select>
-            <option>Xbox</option>
-            <option>PlayStation</option>
-            <option>Steam</option>
-            <option>EA App</option>
-          </select>
-          <input type="text" placeholder="Gamertag / PSN / Steam / EA ID" />
-        </div>
-        <div class="platform-row">
-          <select>
-            <option>Steam</option>
-            <option>Xbox</option>
-            <option>PlayStation</option>
-            <option>EA App</option>
-          </select>
-          <input type="text" placeholder="Gamertag / PSN / Steam / EA ID" />
-        </div>
-      </div>
-
-      <div class="btn-row">
-        <button class="btn-primary">Save Account Profile</button>
-        <button class="btn-secondary">Add Another Platform</button>
-      </div>
-    </section>
-
-    <section class="card">
-      <div class="section-head">
-        <div>
-          <h2>League Memberships</h2>
-          <p>Each membership is a separate record so users can belong to multiple leagues, teams, and roles at the same time.</p>
-        </div>
-        <button class="btn-primary">+ Add League</button>
-      </div>
-
-      <div class="league-list">
-        <article class="league-card">
-          <div class="league-top">
-            <div>
-              <h3>FFL</h3>
-              <p class="helper">Membership ID: mem-001</p>
-            </div>
-            <span class="badge">Active</span>
-          </div>
-
-          <div class="meta">
-            <div><strong>School / Team</strong>Texas A&amp;M</div>
-            <div><strong>Role</strong>League Member</div>
-            <div><strong>Platform</strong>Xbox</div>
-            <div><strong>Gamertag</strong>SentXBL</div>
-            <div><strong>Joined</strong>2026-01-14</div>
-            <div><strong>Commissioner</strong>Yes</div>
-          </div>
-
-          <div class="btn-row">
-            <button class="btn-secondary">Edit Membership</button>
-            <button class="btn-secondary">Change Team</button>
-            <button class="btn-danger">Archive / Leave League</button>
-          </div>
-        </article>
-
-        <article class="league-card">
-          <div class="league-top">
-            <div>
-              <h3>Saturday Dynasty</h3>
-              <p class="helper">Membership ID: mem-002</p>
-            </div>
-            <span class="badge">Active</span>
-          </div>
-
-          <div class="meta">
-            <div><strong>School / Team</strong>LSU</div>
-            <div><strong>Role</strong>Commissioner</div>
-            <div><strong>Platform</strong>Steam</div>
-            <div><strong>Gamertag</strong>Sent_Steam</div>
-            <div><strong>Joined</strong>2026-03-02</div>
-            <div><strong>Commissioner</strong>Primary</div>
-          </div>
-
-          <div class="btn-row">
-            <button class="btn-secondary">Edit Membership</button>
-            <button class="btn-secondary">Send League Update</button>
-            <button class="btn-danger">Archive / Leave League</button>
-          </div>
-        </article>
-      </div>
-    </section>
+<div class="app">
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <div class="logo">Dynasty<span>HQ</span></div>
+    <nav class="topbar-nav" id="topNav"></nav>
+    <div class="topbar-actions">
+      <span class="role-badge" id="roleBadge" onclick="cycleRole()" title="Click to switch view (demo)">Public</span>
+      <button class="icon-btn" data-theme-toggle title="Toggle theme" aria-label="Toggle theme">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+    </div>
   </div>
+
+  <main>
+    <!-- ══════════════════════════════════
+         PAGE: PUBLIC — Home / Front Facing
+    ══════════════════════════════════ -->
+    <div class="page" id="page-home">
+      <div class="card">
+        <h1>&#127942; Dynasty HQ</h1>
+        <p class="sub">The companion app for working people playing EA Sports College Football dynasty modes. Week-by-week tracking, team notifications, and commissioner tools — all in one place.</p>
+        <div class="info-box">&#128161; <strong>Demo Mode:</strong> Click the role badge in the top-right corner to switch between <strong>Public</strong>, <strong>Member</strong>, <strong>Commissioner</strong>, and <strong>Admin</strong> views.</div>
+        <div class="grid">
+          <div class="stat-card"><div class="stat-number">138</div><div class="stat-label">Playable Teams in CFB 27</div></div>
+          <div class="stat-card"><div class="stat-number">2</div><div class="stat-label">New Teams Added (CFB 27)</div></div>
+          <div class="stat-card"><div class="stat-number">3</div><div class="stat-label">Supported Platforms</div></div>
+          <div class="stat-card"><div class="stat-number">∞</div><div class="stat-label">Active Leagues</div></div>
+        </div>
+      </div>
+      <div class="card">
+        <h2>&#128202; What's New in CFB 27 Dynasty</h2>
+        <p class="sub" style="margin-bottom:14px">EA released the full Dynasty &amp; Team Builder Deep Dive on June 4, 2026.</p>
+        <div style="display:grid;gap:10px">
+          <div class="notif-item"><div class="notif-icon gold">&#127942;</div><div><strong>Dynasty Blueprint</strong><br/><span style="font-size:13px;color:var(--muted)">Annual Dynasty Points budget. Spend on Coaching Staff, Facilities, or NIL each year.</span></div></div>
+          <div class="notif-item"><div class="notif-icon blue">&#127979;</div><div><strong>Athletic Director Expectations</strong><br/><span style="font-size:13px;color:var(--muted)">Every school has unique demeanor, priorities, and 3 active goals that affect your job security.</span></div></div>
+          <div class="notif-item"><div class="notif-icon green">&#128176;</div><div><strong>NIL System</strong><br/><span style="font-size:13px;color:var(--muted)">Recruiting NIL + Roster NIL split. Supplement recruiting pitches and retain current players.</span></div></div>
+          <div class="notif-item"><div class="notif-icon gold">&#128101;</div><div><strong>Support Staff Tiers</strong><br/><span style="font-size:13px;color:var(--muted)">Bronze → Silver → Gold → Platinum. Hire during preseason only. Slots tied to Team Prestige.</span></div></div>
+          <div class="notif-item"><div class="notif-icon blue">&#127970;</div><div><strong>Facilities Overhaul</strong><br/><span style="font-size:13px;color:var(--muted)">5 facility tiers (Basic → National Powerhouse). Separate equipment slots per tier.</span></div></div>
+          <div class="notif-item"><div class="notif-icon green">&#127381;</div><div><strong>2 New Teams Added</strong><br/><span style="font-size:13px;color:var(--muted)">North Dakota State Bison (FCS powerhouse) + Sacramento State Hornets (joining MAC 2026). Total: 138 teams.</span><span class="badge badge-new" style="margin-top:6px;display:inline-flex">New</span></div></div>
+          <div class="notif-item"><div class="notif-icon gold">&#128269;</div><div><strong>39 New Mascots</strong><br/><span style="font-size:13px;color:var(--muted)">119 total mascots. New college band-style music added.</span></div></div>
+          <div class="notif-item"><div class="notif-icon blue">&#128279;</div><div><strong>Crossplay Confirmed</strong><br/><span style="font-size:13px;color:var(--muted)">PlayStation 5, Xbox Series X|S, and PC (Steam/EA App). Releases July 9, 2026.</span></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════
+         PAGE: MEMBER — Profile
+    ══════════════════════════════════ -->
+    <div class="page" id="page-profile">
+      <div class="card">
+        <h1>&#128100; Account Profile</h1>
+        <p class="sub">Your identity across all leagues. Stored once, reused everywhere.</p>
+        <div class="grid">
+          <div class="field"><label for="name">Your Name</label><input id="name" type="text" placeholder="e.g. Sent"/></div>
+          <div class="field"><label for="email">Email Address</label><input id="email" type="email" placeholder="you@email.com"/></div>
+          <div class="field"><label for="phone">Phone Number</label><input id="phone" type="tel" placeholder="+1 (555) 000-0000"/></div>
+          <div class="field"><label for="timezone">Time Zone</label>
+            <select id="timezone">
+              <option>Eastern Time (ET)</option><option selected>Central Time (CT)</option>
+              <option>Mountain Time (MT)</option><option>Pacific Time (PT)</option>
+              <option>Alaska Time (AKT)</option><option>Hawaii Time (HST)</option><option>GMT / UTC</option>
+            </select>
+          </div>
+        </div>
+        <div class="divider"></div>
+        <h3>&#127918; Gaming Identities</h3>
+        <p class="sub" style="margin-top:6px;margin-bottom:14px">Add each platform you play on. Everyone also has a universal <strong>EA Username</strong> used across all platforms.</p>
+        <div class="field" style="max-width:360px;margin-bottom:16px">
+          <label>EA Username (Universal)</label>
+          <input id="eaUsername" type="text" placeholder="Your EA ID used on all platforms"/>
+        </div>
+        <div id="platformList" style="display:grid;gap:10px"></div>
+        <div class="btn-row">
+          <button class="btn btn-gold" onclick="saveProfile()">Save Profile</button>
+          <button class="btn btn-ghost" onclick="addPlatform()">+ Add Platform</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-head">
+          <div><h2>&#127942; League Memberships</h2><p class="sub" style="margin-bottom:0">Each league is tracked separately with its own team, role, platform, and notifications.</p></div>
+          <button class="btn btn-gold" onclick="openLeagueModal()">+ Add League</button>
+        </div>
+        <div class="league-list" id="leagueList"></div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════
+         PAGE: COMMISSIONER
+    ══════════════════════════════════ -->
+    <div class="page" id="page-commissioner">
+      <div class="card">
+        <h1>&#128081; Commissioner Panel</h1>
+        <p class="sub">Manage weekly advances, send notifications, and oversee your leagues.</p>
+      </div>
+      <div class="comm-grid">
+        <div class="advance-week">
+          <div style="font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Current Week</div>
+          <div class="week-display" id="weekDisplay">7</div>
+          <div style="font-size:13px;color:var(--muted);margin-bottom:16px">Regular Season</div>
+          <button class="btn btn-gold" style="width:100%;margin-bottom:10px" onclick="advanceWeek()">&#9654; Advance Week</button>
+          <button class="btn btn-ghost btn-sm" style="width:100%" onclick="sendAdvanceNotif()">&#128276; Notify All Members</button>
+        </div>
+        <div class="card" style="margin-bottom:0">
+          <h3>Send League Update</h3>
+          <p class="sub">Message sent via members' chosen channels (email, SMS, push).</p>
+          <div class="field" style="margin-bottom:12px"><label>League</label>
+            <select id="commLeague"><option>FFL</option><option>Saturday Dynasty</option></select>
+          </div>
+          <div class="field" style="margin-bottom:12px"><label>Message</label>
+            <textarea rows="3" id="commMessage" placeholder="Week advance complete. Game due by Sunday 11:59 PM CT."></textarea>
+          </div>
+          <div class="btn-row" style="margin-top:8px">
+            <button class="btn btn-gold" onclick="sendCommMessage()">&#128140; Send Update</button>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <h2 style="margin-bottom:14px">&#128101; Member Status</h2>
+        <table class="member-table">
+          <thead><tr><th>Member</th><th>Team</th><th>Platform</th><th>Game Status</th><th>Notif</th></tr></thead>
+          <tbody id="memberTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════
+         PAGE: ADMIN — Back Office
+    ══════════════════════════════════ -->
+    <div class="page" id="page-admin">
+      <div class="card">
+        <h1>&#128736; Admin Back Office</h1>
+        <p class="sub">Only visible to administrators. Manage leagues, users, notification services, and app settings.</p>
+        <div class="info-box">&#128274; This area is only accessible to admins. In the live version, this will require Firebase Admin role authentication before rendering.</div>
+      </div>
+      <div class="admin-grid">
+        <div class="stat-card"><div class="stat-number">3</div><div class="stat-label">Active Leagues</div></div>
+        <div class="stat-card"><div class="stat-number">11</div><div class="stat-label">Registered Members</div></div>
+        <div class="stat-card"><div class="stat-number">42</div><div class="stat-label">Notifications Sent (30d)</div></div>
+        <div class="stat-card"><div class="stat-number">0</div><div class="stat-label">Bounced Emails</div></div>
+      </div>
+      <div class="card">
+        <h2 style="margin-bottom:14px">&#128268; Service Connections</h2>
+        <div class="grid">
+          <div class="field"><label>Firebase Project ID</label><input type="text" placeholder="dynastyhq-app" value="dynastyhq-app"/></div>
+          <div class="field"><label>SendGrid API Key</label><input type="password" placeholder="SG.xxxxxxxx" value="SG.demo-key"/></div>
+          <div class="field"><label>Twilio Account SID</label><input type="text" placeholder="ACxxxxxxxx" value="AC-demo-sid"/></div>
+          <div class="field"><label>Twilio Auth Token</label><input type="password" placeholder="Auth Token" value="twilio-demo-token"/></div>
+          <div class="field"><label>Firebase Cloud Messaging Key</label><input type="password" placeholder="FCM Server Key" value="fcm-demo-key"/></div>
+          <div class="field"><label>App Environment</label>
+            <select><option>Development</option><option selected>Staging</option><option>Production</option></select>
+          </div>
+        </div>
+        <div class="btn-row"><button class="btn btn-gold" onclick="showToast('Services saved!')">Save Service Config</button></div>
+      </div>
+      <div class="card">
+        <h2 style="margin-bottom:14px">&#127942; Manage Leagues</h2>
+        <table class="member-table">
+          <thead><tr><th>League Name</th><th>Game</th><th>Commissioner</th><th>Members</th><th>Week</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td>FFL</td><td>CFB 27</td><td>Sent</td><td>8</td><td>7</td><td><span class="badge badge-active">Active</span></td></tr>
+            <tr><td>Saturday Dynasty</td><td>CFB 27</td><td>Sent</td><td>4</td><td>5</td><td><span class="badge badge-active">Active</span></td></tr>
+            <tr><td>Madden League 26</td><td>Madden 26</td><td>Chris</td><td>12</td><td>10</td><td><span class="badge badge-inactive">Inactive</span></td></tr>
+          </tbody>
+        </table>
+        <div class="btn-row"><button class="btn btn-gold">+ Create League</button><button class="btn btn-ghost">Export Data</button></div>
+      </div>
+      <div class="card">
+        <h2 style="margin-bottom:6px">&#128273; Firebase Authentication Setup</h2>
+        <p class="sub">Where we left off — steps to wire up real login.</p>
+        <div style="display:grid;gap:10px;margin-top:8px">
+          <div style="background:var(--panel-2);border:1px solid var(--border);border-radius:12px;padding:14px;font-size:13px;line-height:1.7">
+            <strong style="color:var(--accent)">Step 1 — Firebase Project</strong><br/>
+            Go to <a href="https://console.firebase.google.com" target="_blank" rel="noopener noreferrer" style="color:var(--accent)">console.firebase.google.com</a> → New Project → name it <code>dynastyhq-app</code>
+          </div>
+          <div style="background:var(--panel-2);border:1px solid var(--border);border-radius:12px;padding:14px;font-size:13px;line-height:1.7">
+            <strong style="color:var(--accent)">Step 2 — Enable Authentication</strong><br/>
+            Build → Authentication → Sign-in method → Enable <strong>Email/Password</strong> + <strong>Google</strong>
+          </div>
+          <div style="background:var(--panel-2);border:1px solid var(--border);border-radius:12px;padding:14px;font-size:13px;line-height:1.7">
+            <strong style="color:var(--accent)">Step 3 — Firestore Database</strong><br/>
+            Build → Firestore Database → Create database → Start in <strong>test mode</strong> first.<br/>
+            Collections needed: <span class="tag">users</span><span class="tag">leagues</span><span class="tag">memberships</span><span class="tag">notifications</span><span class="tag">weeks</span>
+          </div>
+          <div style="background:var(--panel-2);border:1px solid var(--border);border-radius:12px;padding:14px;font-size:13px;line-height:1.7">
+            <strong style="color:var(--accent)">Step 4 — Roles via Custom Claims</strong><br/>
+            Use Firebase Admin SDK (Cloud Function) to set <code>customClaims: {'role': 'admin'}</code> or <code>'commissioner'</code> per user. This controls which pages render — the HTML checks the claim and shows/hides Admin, Commissioner, or Member views.
+          </div>
+          <div style="background:var(--panel-2);border:1px solid var(--border);border-radius:12px;padding:14px;font-size:13px;line-height:1.7">
+            <strong style="color:var(--accent)">Step 5 — Notification Services</strong><br/>
+            <strong>Push:</strong> Firebase Cloud Messaging (free) → service worker in sw.js<br/>
+            <strong>Email:</strong> SendGrid free tier (100/day) → Cloud Function triggers on new notification doc<br/>
+            <strong>SMS:</strong> Twilio → Cloud Function reads user phone from Firestore, sends via REST
+          </div>
+          <div style="background:var(--panel-2);border:1px solid var(--border);border-radius:12px;padding:14px;font-size:13px;line-height:1.7">
+            <strong style="color:var(--accent)">Step 6 — Hosting</strong><br/>
+            Run <code>firebase init hosting</code> → <code>firebase deploy</code> → live at <code>dynastyhq-app.web.app</code> for free.
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- LEAGUE MODAL -->
+<div class="modal-overlay" id="leagueModal" onclick="handleOverlayClick(event)">
+  <div class="modal">
+    <h2 id="modalTitle">Add League Membership</h2>
+    <input type="hidden" id="editIdx" value="-1"/>
+    <div class="grid" style="margin-bottom:14px">
+      <div class="field"><label>League Name</label><input id="mLeague" placeholder="e.g. FFL, Saturday Dynasty"/></div>
+      <div class="field"><label>Game</label>
+        <select id="mGame">
+          <option>EA Sports College Football 27</option>
+          <option>EA Sports College Football 26</option>
+          <option>Madden NFL 26</option>
+          <option>Madden NFL 25</option>
+          <option>NBA 2K26</option>
+          <option>Other</option>
+        </select>
+      </div>
+      <div class="field"><label>Your School / Team</label><select id="mTeam" onchange="updateTeamColor()"><option value="">-- Select Team --</option></select></div>
+      <div class="field"><label>Your Role</label>
+        <select id="mRole">
+          <option>League Member</option><option>Commissioner</option>
+          <option>Co-Commissioner</option><option>Recruit</option><option>Spectator</option>
+        </select>
+      </div>
+      <div class="field"><label>Platform for This League</label>
+        <select id="mPlatform">
+          <option>Xbox Series X|S</option><option>PlayStation 5</option><option>Steam (PC)</option>
+        </select>
+      </div>
+      <div class="field"><label>EA Username (Universal)</label><input id="mEaUser" placeholder="Your EA ID"/></div>
+      <div class="field"><label>Platform Gamertag</label><input id="mGamertag" placeholder="Xbox GT / PSN ID / Steam Name"/></div>
+      <div class="field"><label>Status</label>
+        <select id="mStatus"><option>Active</option><option>Inactive</option><option>Left League</option></select>
+      </div>
+      <div class="field"><label>Notification Preferences</label>
+        <select id="mNotif">
+          <option>Push + Email + SMS</option><option>Push + Email</option>
+          <option>Push Only</option><option>Email Only</option>
+          <option>SMS Only</option><option>None</option>
+        </select>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-gold" onclick="saveLeague()">Save Membership</button>
+      <button class="btn btn-ghost" onclick="closeLeagueModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── TEAMS DATA ──────────────────────────────
+const TEAMS = {
+  "ACC":[
+    {name:"Boston College Eagles",abbr:"BC",color:"#8B0000"},{name:"Clemson Tigers",abbr:"CLEM",color:"#F56600"},
+    {name:"Duke Blue Devils",abbr:"DUKE",color:"#003087"},{name:"Florida State Seminoles",abbr:"FSU",color:"#782F40"},
+    {name:"Georgia Tech Yellow Jackets",abbr:"GT",color:"#B3A369"},{name:"Louisville Cardinals",abbr:"LOU",color:"#AD0000"},
+    {name:"Miami Hurricanes",abbr:"MIA",color:"#005030"},{name:"NC State Wolfpack",abbr:"NCST",color:"#CC0000"},
+    {name:"North Carolina Tar Heels",abbr:"UNC",color:"#7BAFD4"},{name:"Notre Dame Fighting Irish",abbr:"ND",color:"#0C2340"},
+    {name:"Pittsburgh Panthers",abbr:"PITT",color:"#003594"},{name:"SMU Mustangs",abbr:"SMU",color:"#0033A0"},
+    {name:"Stanford Cardinal",abbr:"STAN",color:"#8C1515"},{name:"Syracuse Orange",abbr:"SYR",color:"#D44500"},
+    {name:"Virginia Cavaliers",abbr:"UVA",color:"#232D4B"},{name:"Virginia Tech Hokies",abbr:"VT",color:"#630031"},
+    {name:"Wake Forest Demon Deacons",abbr:"WF",color:"#9E7E38"},{name:"California Golden Bears",abbr:"CAL",color:"#003262"},
+    {name:"Washington Huskies",abbr:"WASH",color:"#33006F"}
+  ],
+  "Big 12":[
+    {name:"Arizona Wildcats",abbr:"ARIZ",color:"#AB0520"},{name:"Arizona State Sun Devils",abbr:"ASU",color:"#8C1D40"},
+    {name:"Baylor Bears",abbr:"BAY",color:"#003015"},{name:"BYU Cougars",abbr:"BYU",color:"#002E5D"},
+    {name:"Cincinnati Bearcats",abbr:"CIN",color:"#E00122"},{name:"Colorado Buffaloes",abbr:"COLO",color:"#CFB87C"},
+    {name:"Houston Cougars",abbr:"HOU",color:"#C8102E"},{name:"Iowa State Cyclones",abbr:"ISU",color:"#C8102E"},
+    {name:"Kansas Jayhawks",abbr:"KU",color:"#0051A5"},{name:"Kansas State Wildcats",abbr:"KSU",color:"#512888"},
+    {name:"Oklahoma State Cowboys",abbr:"OKST",color:"#FF6600"},{name:"TCU Horned Frogs",abbr:"TCU",color:"#4D1979"},
+    {name:"Texas Tech Red Raiders",abbr:"TTU",color:"#CC0000"},{name:"UCF Knights",abbr:"UCF",color:"#FFC904"},
+    {name:"Utah Utes",abbr:"UTAH",color:"#CC0000"},{name:"West Virginia Mountaineers",abbr:"WVU",color:"#002855"}
+  ],
+  "Big Ten":[
+    {name:"Illinois Fighting Illini",abbr:"ILL",color:"#E84A27"},{name:"Indiana Hoosiers",abbr:"IND",color:"#990000"},
+    {name:"Iowa Hawkeyes",abbr:"IOWA",color:"#FFCD00"},{name:"Maryland Terrapins",abbr:"MD",color:"#E03A3E"},
+    {name:"Michigan Wolverines",abbr:"MICH",color:"#00274C"},{name:"Michigan State Spartans",abbr:"MSU",color:"#18453B"},
+    {name:"Minnesota Golden Gophers",abbr:"MINN",color:"#7A0019"},{name:"Nebraska Cornhuskers",abbr:"NEB",color:"#E41C38"},
+    {name:"Northwestern Wildcats",abbr:"NW",color:"#4E2A84"},{name:"Ohio State Buckeyes",abbr:"OSU",color:"#BA0C2F"},
+    {name:"Oregon Ducks",abbr:"ORE",color:"#154733"},{name:"Penn State Nittany Lions",abbr:"PSU",color:"#041E42"},
+    {name:"Purdue Boilermakers",abbr:"PUR",color:"#CEB888"},{name:"Rutgers Scarlet Knights",abbr:"RUT",color:"#CC0033"},
+    {name:"UCLA Bruins",abbr:"UCLA",color:"#2D68C4"},{name:"USC Trojans",abbr:"USC",color:"#990000"},
+    {name:"Wisconsin Badgers",abbr:"WISC",color:"#C5050C"}
+  ],
+  "SEC":[
+    {name:"Alabama Crimson Tide",abbr:"ALA",color:"#9E1B32"},{name:"Arkansas Razorbacks",abbr:"ARK",color:"#9D2235"},
+    {name:"Auburn Tigers",abbr:"AUB",color:"#0C2340"},{name:"Florida Gators",abbr:"FLA",color:"#0021A5"},
+    {name:"Georgia Bulldogs",abbr:"UGA",color:"#BA0C2F"},{name:"Kentucky Wildcats",abbr:"UK",color:"#0033A0"},
+    {name:"LSU Tigers",abbr:"LSU",color:"#461D7C"},{name:"Mississippi State Bulldogs",abbr:"MSST",color:"#660000"},
+    {name:"Missouri Tigers",abbr:"MIZ",color:"#F1B82D"},{name:"Oklahoma Sooners",abbr:"OU",color:"#841617"},
+    {name:"Ole Miss Rebels",abbr:"MISS",color:"#CE1126"},{name:"South Carolina Gamecocks",abbr:"SC",color:"#73000A"},
+    {name:"Tennessee Volunteers",abbr:"TENN",color:"#FF8200"},{name:"Texas Longhorns",abbr:"TEX",color:"#BF5700"},
+    {name:"Texas A&M Aggies",abbr:"TAMU",color:"#500000"},{name:"Vanderbilt Commodores",abbr:"VAN",color:"#866D4B"}
+  ],
+  "Mountain West":[
+    {name:"Air Force Falcons",abbr:"AFA",color:"#003087"},{name:"Boise State Broncos",abbr:"BSU",color:"#0033A0"},
+    {name:"Colorado State Rams",abbr:"CSU",color:"#1E4D2B"},{name:"Fresno State Bulldogs",abbr:"FRES",color:"#DB0032"},
+    {name:"Hawaii Rainbow Warriors",abbr:"HAW",color:"#024731"},{name:"Nevada Wolf Pack",abbr:"NEV",color:"#003366"},
+    {name:"New Mexico Lobos",abbr:"UNM",color:"#BA0C2F"},{name:"San Diego State Aztecs",abbr:"SDSU",color:"#A6192E"},
+    {name:"San Jose State Spartans",abbr:"SJSU",color:"#0055A2"},{name:"UNLV Rebels",abbr:"UNLV",color:"#CF0A2C"},
+    {name:"Utah State Aggies",abbr:"USU",color:"#00263A"},{name:"Wyoming Cowboys",abbr:"WYO",color:"#492F24"}
+  ],
+  "American Athletic":[
+    {name:"Army Black Knights",abbr:"ARMY",color:"#000000"},{name:"Charlotte 49ers",abbr:"CHAR",color:"#046A38"},
+    {name:"East Carolina Pirates",abbr:"ECU",color:"#4B1869"},{name:"Florida Atlantic Owls",abbr:"FAU",color:"#003366"},
+    {name:"Memphis Tigers",abbr:"MEM",color:"#003087"},{name:"Navy Midshipmen",abbr:"NAVY",color:"#00205B"},
+    {name:"North Texas Mean Green",abbr:"UNT",color:"#00853E"},{name:"Rice Owls",abbr:"RICE",color:"#00205B"},
+    {name:"South Florida Bulls",abbr:"USF",color:"#006747"},{name:"Temple Owls",abbr:"TEM",color:"#9D2235"},
+    {name:"Tulane Green Wave",abbr:"TUL",color:"#006747"},{name:"Tulsa Golden Hurricane",abbr:"TLSA",color:"#002D72"},
+    {name:"UTSA Roadrunners",abbr:"UTSA",color:"#002147"}
+  ],
+  "Sun Belt":[
+    {name:"Appalachian State Mountaineers",abbr:"APP",color:"#000000"},{name:"Arkansas State Red Wolves",abbr:"ARST",color:"#CC0000"},
+    {name:"Coastal Carolina Chanticleers",abbr:"CCU",color:"#006F51"},{name:"Georgia Southern Eagles",abbr:"GASO",color:"#011E41"},
+    {name:"Georgia State Panthers",abbr:"GAST",color:"#00B5E2"},{name:"James Madison Dukes",abbr:"JMU",color:"#450084"},
+    {name:"Louisiana Ragin Cajuns",abbr:"ULL",color:"#CE181E"},{name:"Louisiana Monroe Warhawks",abbr:"ULM",color:"#800000"},
+    {name:"Marshall Thundering Herd",abbr:"MRSH",color:"#00B140"},{name:"Old Dominion Monarchs",abbr:"ODU",color:"#00507D"},
+    {name:"South Alabama Jaguars",abbr:"USA",color:"#00205B"},{name:"Southern Miss Golden Eagles",abbr:"USM",color:"#FFD100"},
+    {name:"Texas State Bobcats",abbr:"TXST",color:"#461D7C"},{name:"Troy Trojans",abbr:"TROY",color:"#8B0000"}
+  ],
+  "MAC":[
+    {name:"Akron Zips",abbr:"AKR",color:"#002147"},{name:"Ball State Cardinals",abbr:"BALL",color:"#BA0C2F"},
+    {name:"Bowling Green Falcons",abbr:"BGSU",color:"#4F2C1D"},{name:"Buffalo Bulls",abbr:"BUFF",color:"#005BBB"},
+    {name:"Central Michigan Chippewas",abbr:"CMU",color:"#6A0032"},{name:"Eastern Michigan Eagles",abbr:"EMU",color:"#006633"},
+    {name:"Kent State Golden Flashes",abbr:"KENT",color:"#002664"},{name:"Miami (OH) RedHawks",abbr:"MIOH",color:"#B61E2E"},
+    {name:"Northern Illinois Huskies",abbr:"NIU",color:"#BA0C2F"},{name:"Ohio Bobcats",abbr:"OHIO",color:"#00694E"},
+    {name:"Sacramento State Hornets",abbr:"SACST",color:"#043927"},{name:"Toledo Rockets",abbr:"TOL",color:"#003B74"},
+    {name:"Western Michigan Broncos",abbr:"WMU",color:"#6C4023"}
+  ],
+  "CUSA":[
+    {name:"FIU Panthers",abbr:"FIU",color:"#081E3F"},{name:"Jacksonville State Gamecocks",abbr:"JVST",color:"#CC0000"},
+    {name:"Kennesaw State Owls",abbr:"KENN",color:"#FDBB30"},{name:"Liberty Flames",abbr:"LIB",color:"#002868"},
+    {name:"Louisiana Tech Bulldogs",abbr:"LT",color:"#002F8B"},{name:"Middle Tennessee Blue Raiders",abbr:"MTSU",color:"#0066CC"},
+    {name:"New Mexico State Aggies",abbr:"NMST",color:"#891216"},{name:"Sam Houston Bearkats",abbr:"SHSU",color:"#F47920"},
+    {name:"UTEP Miners",abbr:"UTEP",color:"#FF8200"},{name:"Western Kentucky Hilltoppers",abbr:"WKU",color:"#C60C30"}
+  ],
+  "Independents / FCS":[
+    {name:"Connecticut Huskies",abbr:"CONN",color:"#000E2F"},{name:"Massachusetts Minutemen",abbr:"UMASS",color:"#971B2F"},
+    {name:"North Dakota State Bison",abbr:"NDSU",color:"#0A5640"},{name:"Team Builder (Custom)",abbr:"CSTM",color:"#d6b25e"}
+  ]
+};
+
+const allTeams = [];
+for(const[conf,list] of Object.entries(TEAMS)) list.forEach(t=>allTeams.push({...t,conf}));
+
+function getTeam(abbr){return allTeams.find(t=>t.abbr===abbr)||null;}
+
+// ── ROLE SYSTEM ────────────────────────────
+const ROLES = ["public","user","commissioner","admin"];
+const ROLE_LABELS = {public:"Public",user:"Member",commissioner:"Commissioner",admin:"Admin"};
+const ROLE_NAV = {
+  public:["home"],
+  user:["home","profile"],
+  commissioner:["home","profile","commissioner"],
+  admin:["home","profile","commissioner","admin"]
+};
+const NAV_META = {
+  home:{label:"&#127968; Home",page:"page-home"},
+  profile:{label:"&#128100; My Profile",page:"page-profile"},
+  commissioner:{label:"&#128081; Commissioner",page:"page-commissioner"},
+  admin:{label:"&#128736; Admin",page:"page-admin"}
+};
+
+let currentRole = "public";
+let currentPage = "page-home";
+
+function cycleRole(){
+  const idx = (ROLES.indexOf(currentRole)+1)%ROLES.length;
+  setRole(ROLES[idx]);
+}
+
+function setRole(r){
+  currentRole = r;
+  const badge = document.getElementById("roleBadge");
+  badge.textContent = ROLE_LABELS[r];
+  badge.className = "role-badge role-"+r;
+  buildNav();
+  // If current page not accessible, go home
+  const allowed = ROLE_NAV[r].map(k=>NAV_META[k].page);
+  if(!allowed.includes(currentPage)) showPage("page-home");
+}
+
+function buildNav(){
+  const nav = document.getElementById("topNav");
+  nav.innerHTML = "";
+  ROLE_NAV[currentRole].forEach(k=>{
+    const m = NAV_META[k];
+    const btn = document.createElement("button");
+    btn.className = "nav-btn"+(NAV_META[k].page===currentPage?" active":"");
+    btn.innerHTML = m.label;
+    btn.onclick = ()=>showPage(m.page);
+    nav.appendChild(btn);
+  });
+}
+
+function showPage(pid){
+  currentPage = pid;
+  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+  document.getElementById(pid).classList.add("active");
+  buildNav();
+}
+
+// ── PLATFORM ROWS ──────────────────────────
+function initPlatforms(){
+  const list = document.getElementById("platformList");
+  list.innerHTML = "";
+  addPlatformRow("Xbox Series X|S","GamertagXBL");
+}
+function addPlatform(){addPlatformRow("","");}
+function addPlatformRow(platform,tag){
+  const row = document.createElement("div");
+  row.className = "platform-row";
+  row.innerHTML = '<select><option>Xbox Series X|S</option><option>PlayStation 5</option><option>Steam (PC)</option></select>'+
+    '<input type="text" placeholder="Gamertag / PSN ID / Steam Name"/>'+
+    '<button class="btn btn-ghost" style="padding:9px;border-radius:9px" onclick="removePlatform(this)" title="Remove">&#x2715;</button>';
+  if(platform) row.querySelector("select").value = platform;
+  if(tag) row.querySelector("input").value = tag;
+  document.getElementById("platformList").appendChild(row);
+}
+function removePlatform(btn){
+  const list = document.getElementById("platformList");
+  if(list.children.length>1) btn.closest(".platform-row").remove();
+  else showToast("At least one platform required.");
+}
+function saveProfile(){showToast("Profile saved!");}
+
+// ── LEAGUE DATA ────────────────────────────
+let leagues=[
+  {league:"FFL",game:"EA Sports College Football 27",teamAbbr:"TAMU",role:"Commissioner",platform:"Xbox Series X|S",eaUser:"SentEA",gamertag:"SentXBL",status:"Active",notif:"Push + Email + SMS",joined:"2026-01-14"},
+  {league:"Saturday Dynasty",game:"EA Sports College Football 27",teamAbbr:"NDSU",role:"League Member",platform:"Steam (PC)",eaUser:"SentEA",gamertag:"Sent_Steam",status:"Active",notif:"Push Only",joined:"2026-03-02"}
+];
+
+function buildTeamSelect(){
+  const sel = document.getElementById("mTeam");
+  sel.innerHTML = '<option value="">-- Select Team --</option>';
+  for(const[conf,list] of Object.entries(TEAMS)){
+    const grp = document.createElement("optgroup");
+    grp.label = conf;
+    list.forEach(t=>{
+      const opt = document.createElement("option");
+      opt.value = t.abbr;
+      opt.textContent = t.name+(conf==="Independents / FCS"&&(t.abbr==="NDSU"||t.abbr==="SACST")?" ⭐ NEW":"");
+      grp.appendChild(opt);
+    });
+    sel.appendChild(grp);
+  }
+}
+
+function updateTeamColor(){}
+
+function renderLeagues(){
+  const list = document.getElementById("leagueList");
+  if(!leagues.length){
+    list.innerHTML = '<div class="empty-state"><div style="font-size:36px;margin-bottom:12px">&#127942;</div><h3>No leagues yet</h3><p style="margin-top:6px;font-size:13px">Click + Add League to get started.</p></div>';
+    return;
+  }
+  list.innerHTML = leagues.map((l,i)=>{
+    const td = getTeam(l.teamAbbr);
+    const teamName = td?td.name:(l.teamAbbr||"Unknown Team");
+    const teamColor = td?td.color:"#d6b25e";
+    const isActive = l.status==="Active";
+    return '<article class="league-card" style="--team-color:'+teamColor+';background:linear-gradient(135deg,var(--panel) 70%,'+teamColor+'18)">'+
+      '<div class="league-top">'+
+        '<div>'+
+          '<h3 style="font-size:17px;margin-bottom:6px">'+l.league+'</h3>'+
+          '<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">'+
+            '<span class="badge '+(isActive?"badge-active":"badge-inactive")+'">'+l.status+'</span>'+
+            '<span class="badge badge-role">'+l.role+'</span>'+
+            '<span style="font-size:11px;color:var(--muted)">'+l.game+'</span>'+
+          '</div>'+
+        '</div>'+
+        '<div style="width:38px;height:38px;border-radius:50%;background:'+teamColor+';display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:900;color:#fff;border:2px solid rgba(255,255,255,.18);flex-shrink:0">'+
+          (l.teamAbbr||"?")+
+        '</div>'+
+      '</div>'+
+      '<div class="meta">'+
+        '<div class="meta-item"><strong>School</strong><span>'+teamName+'</span></div>'+
+        '<div class="meta-item"><strong>Platform</strong><span>'+l.platform+'</span></div>'+
+        '<div class="meta-item"><strong>EA Username</strong><span>'+((l.eaUser)||"—")+'</span></div>'+
+        '<div class="meta-item"><strong>Gamertag</strong><span>'+((l.gamertag)||"—")+'</span></div>'+
+        '<div class="meta-item"><strong>Joined</strong><span>'+l.joined+'</span></div>'+
+        '<div class="meta-item"><strong>Notifications</strong><span>'+l.notif+'</span></div>'+
+      '</div>'+
+      '<div class="btn-row" style="margin-top:4px">'+
+        '<button class="btn btn-ghost btn-sm" onclick="editLeague('+i+')">&#9998; Edit</button>'+
+        '<button class="btn btn-danger btn-sm" onclick="toggleArchive('+i+')">'+
+          (isActive?"Archive / Leave":"Reactivate")+
+        '</button>'+
+      '</div>'+
+    '</article>';
+  }).join("");
+}
+
+function openLeagueModal(idx){
+  idx = idx===undefined?-1:idx;
+  buildTeamSelect();
+  document.getElementById("editIdx").value = idx;
+  if(idx===-1){
+    document.getElementById("modalTitle").textContent="Add League Membership";
+    ["mLeague","mGamertag","mEaUser"].forEach(id=>document.getElementById(id).value="");
+    document.getElementById("mRole").value="League Member";
+    document.getElementById("mPlatform").value="Xbox Series X|S";
+    document.getElementById("mStatus").value="Active";
+    document.getElementById("mNotif").value="Push + Email + SMS";
+    document.getElementById("mTeam").value="";
+    document.getElementById("mGame").value="EA Sports College Football 27";
+  }else{
+    const l=leagues[idx];
+    document.getElementById("modalTitle").textContent="Edit League Membership";
+    document.getElementById("mLeague").value=l.league;
+    document.getElementById("mGame").value=l.game;
+    document.getElementById("mTeam").value=l.teamAbbr;
+    document.getElementById("mRole").value=l.role;
+    document.getElementById("mPlatform").value=l.platform;
+    document.getElementById("mEaUser").value=l.eaUser||"";
+    document.getElementById("mGamertag").value=l.gamertag;
+    document.getElementById("mStatus").value=l.status;
+    document.getElementById("mNotif").value=l.notif;
+  }
+  document.getElementById("leagueModal").classList.add("open");
+}
+function editLeague(i){openLeagueModal(i);}
+function saveLeague(){
+  const idx=parseInt(document.getElementById("editIdx").value);
+  const entry={
+    league:document.getElementById("mLeague").value||"Unnamed League",
+    game:document.getElementById("mGame").value,
+    teamAbbr:document.getElementById("mTeam").value,
+    role:document.getElementById("mRole").value,
+    platform:document.getElementById("mPlatform").value,
+    eaUser:document.getElementById("mEaUser").value,
+    gamertag:document.getElementById("mGamertag").value,
+    status:document.getElementById("mStatus").value,
+    notif:document.getElementById("mNotif").value,
+    joined:idx===-1?new Date().toISOString().slice(0,10):leagues[idx].joined
+  };
+  if(idx===-1) leagues.push(entry);
+  else leagues[idx]=entry;
+  closeLeagueModal();
+  renderLeagues();
+  showToast(idx===-1?"League added!":"Membership updated!");
+}
+function toggleArchive(i){
+  leagues[i].status=leagues[i].status==="Active"?"Inactive":"Active";
+  renderLeagues();
+  showToast("Status updated.");
+}
+function closeLeagueModal(){document.getElementById("leagueModal").classList.remove("open");}
+function handleOverlayClick(e){if(e.target===document.getElementById("leagueModal"))closeLeagueModal();}
+
+// ── COMMISSIONER ───────────────────────────
+let currentWeek = 7;
+const mockMembers=[
+  {name:"Sent",team:"TAMU",platform:"Xbox Series X|S",status:"ready",notif:"Push+Email+SMS"},
+  {name:"Chris",team:"OU",platform:"PlayStation 5",status:"ready",notif:"Push+Email"},
+  {name:"Marcus",team:"LSU",platform:"Xbox Series X|S",status:"pending",notif:"Email Only"},
+  {name:"Jay",team:"MICH",platform:"Steam (PC)",status:"offline",notif:"SMS Only"},
+];
+function renderMemberTable(){
+  const dots={ready:"dot-ready",pending:"dot-pending",offline:"dot-offline"};
+  document.getElementById("memberTableBody").innerHTML=mockMembers.map(m=>{
+    const td=getTeam(m.team);
+    return "<tr><td>"+m.name+"</td><td>"+(td?td.name:m.team)+"</td><td>"+m.platform+"</td>"+
+      "<td><span class='status-dot "+dots[m.status]+"'></span>"+m.status.charAt(0).toUpperCase()+m.status.slice(1)+"</td>"+
+      "<td>"+m.notif+"</td></tr>";
+  }).join("");
+}
+function advanceWeek(){
+  currentWeek++;
+  document.getElementById("weekDisplay").textContent=currentWeek;
+  showToast("Advanced to Week "+currentWeek+"!");
+}
+function sendAdvanceNotif(){showToast("Advance notification sent to all members!");}
+function sendCommMessage(){
+  const msg=document.getElementById("commMessage").value;
+  if(!msg.trim()){showToast("Message cannot be empty.");return;}
+  showToast("Update sent to "+document.getElementById("commLeague").value+"!");
+  document.getElementById("commMessage").value="";
+}
+
+// ── THEME TOGGLE ───────────────────────────
+(function(){
+  const btn=document.querySelector("[data-theme-toggle]");
+  const root=document.documentElement;
+  let d="dark";
+  root.setAttribute("data-theme",d);
+  if(btn) btn.addEventListener("click",()=>{
+    d=d==="dark"?"light":"dark";
+    root.setAttribute("data-theme",d);
+    btn.innerHTML=d==="dark"
+      ?'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>'
+      :'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>';
+  });
+})();
+
+// ── TOAST ──────────────────────────────────
+function showToast(msg){
+  const t=document.getElementById("toast");
+  t.textContent=msg;
+  t.classList.add("show");
+  setTimeout(()=>t.classList.remove("show"),2800);
+}
+
+// ── INIT ───────────────────────────────────
+setRole("public");
+showPage("page-home");
+initPlatforms();
+renderLeagues();
+renderMemberTable();
+</script>
 </body>
 </html>
