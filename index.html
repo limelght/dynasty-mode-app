@@ -3,182 +3,710 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="DynastyHQ — Dynasty Mode companion app for working people. Week-by-week updates, commissioner tools, and team notifications." />
   <title>DynastyHQ</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300..700&family=Bebas+Neue&display=swap" rel="stylesheet">
   <style>
     :root {
-      --font-display: 'Bebas Neue', Impact, sans-serif;
-      --font-body: 'Inter', system-ui, sans-serif;
-      --text-xs: clamp(0.75rem, 0.7rem + 0.25vw, 0.875rem);
-      --text-sm: clamp(0.875rem, 0.8rem + 0.35vw, 1rem);
-      --text-base: clamp(1rem, 0.95rem + 0.25vw, 1.125rem);
-      --text-lg: clamp(1.125rem, 1rem + 0.75vw, 1.5rem);
-      --text-xl: clamp(1.5rem, 1.2rem + 1.25vw, 2.25rem);
-      --text-2xl: clamp(2rem, 1.2rem + 2.5vw, 3.5rem);
-      --space-1: 0.25rem; --space-2: 0.5rem; --space-3: 0.75rem; --space-4: 1rem; --space-5: 1.25rem; --space-6: 1.5rem; --space-8: 2rem; --space-12: 3rem; --space-16: 4rem;
-      --radius-md: 0.5rem; --radius-lg: 0.75rem; --radius-xl: 1rem; --radius-full: 9999px;
-      --color-bg: #0c0d10; --color-surface: #13151a; --color-surface-2: #191c22; --color-surface-offset:#1e2129; --color-divider:#252830; --color-border:#2e323d;
-      --color-text:#e8eaf0; --color-text-muted:#8a8f9e; --color-text-faint:#4e5260; --color-text-inverse:#0c0d10;
-      --color-primary:#d4a017; --color-primary-hover:#b88510; --color-primary-highlight:#2c2410; --color-success:#3a9e5f; --color-success-highlight:#1a2e20; --color-error:#c04040; --color-error-highlight:#2e1010; --color-blue:#3d7fc7; --color-blue-highlight:#101e30;
-      --shadow-sm: 0 1px 3px rgba(0,0,0,.3); --shadow-lg: 0 12px 40px rgba(0,0,0,.5);
-      --transition: 180ms cubic-bezier(0.16, 1, 0.3, 1);
-      --content-wide: 1200px;
+      --bg: #0d0d0f;
+      --surface: #141416;
+      --surface-2: #1a1a1e;
+      --surface-3: #202024;
+      --border: #2a2a30;
+      --text: #f0f0f2;
+      --muted: #888890;
+      --faint: #444448;
+      --accent: #d4a847;
+      --accent-hover: #e8be5a;
+      --accent-dim: rgba(212,168,71,.12);
+      --danger: #c94f4f;
+      --success: #4caf7d;
+      --radius: 14px;
+      --radius-sm: 8px;
+      --transition: 160ms cubic-bezier(.16,1,.3,1);
     }
-    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:var(--font-body);font-size:var(--text-base);color:var(--color-text);background:var(--color-bg);min-height:100dvh;line-height:1.6}
-    button,input,select,textarea{font:inherit;color:inherit}
-    button{cursor:pointer;border:none;background:none}
-    a,button{transition:all var(--transition)}
-    .app-shell{display:flex;flex-direction:column;min-height:100dvh}
-    .topbar{position:sticky;top:0;z-index:100;background:rgba(12,13,16,.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--color-divider);padding:var(--space-3) var(--space-6);display:flex;align-items:center;justify-content:space-between;gap:var(--space-4)}
-    .topbar-left{display:flex;align-items:center;gap:var(--space-4)}
-    .logo{display:flex;align-items:center;gap:var(--space-2);text-decoration:none;color:var(--color-text)}
-    .logo-icon{width:32px;height:32px}.logo-name{font-family:var(--font-display);font-size:1.5rem;letter-spacing:.04em;line-height:1;color:var(--color-primary)}
-    .main-nav{display:flex;gap:var(--space-1)}
-    .nav-link{padding:var(--space-2) var(--space-3);border-radius:var(--radius-md);font-size:var(--text-sm);font-weight:500;text-decoration:none;color:var(--color-text-muted)}
-    .nav-link:hover,.nav-link.active{color:var(--color-text);background:var(--color-surface-2)}
-    .nav-link.active{color:var(--color-primary)}
-    .topbar-right{display:flex;align-items:center;gap:var(--space-3)}
-    .page{display:none;flex:1}.page.active{display:block}.page-inner{max-width:var(--content-wide);margin-inline:auto;width:100%;padding:var(--space-8) var(--space-6)}
-    .card{background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-xl);padding:var(--space-6);box-shadow:var(--shadow-sm)}
-    .card-title{font-size:var(--text-lg);font-weight:700;margin-bottom:var(--space-4)}
-    .card-muted,.page-sub{font-size:var(--text-sm);color:var(--color-text-muted)}
-    .page-header{margin-bottom:var(--space-8)}
-    .page-title,.dash-hero-title{font-family:var(--font-display);font-size:var(--text-2xl);letter-spacing:.04em;line-height:1.1}.dash-hero-title{color:var(--color-primary)}
-    .btn{display:inline-flex;align-items:center;gap:var(--space-2);padding:var(--space-2) var(--space-5);border-radius:var(--radius-md);font-size:var(--text-sm);font-weight:600;min-height:44px}
-    .btn-primary{background:var(--color-primary);color:var(--color-text-inverse)}.btn-primary:hover{background:var(--color-primary-hover)}
-    .btn-secondary{background:var(--color-surface-2);color:var(--color-text);border:1px solid var(--color-border)}
-    .btn-ghost{background:transparent;color:var(--color-text-muted)}.btn-ghost:hover{color:var(--color-text);background:var(--color-surface-2)}
-    .btn-danger{background:var(--color-error-highlight);color:#e08080;border:1px solid rgba(192,64,64,.35)}
-    .btn-sm{padding:var(--space-1) var(--space-3);min-height:36px;font-size:var(--text-xs)}
-    .btn-row{display:flex;flex-wrap:wrap;gap:var(--space-3);margin-top:var(--space-4)}
-    .form-group{display:flex;flex-direction:column;gap:var(--space-2);margin-bottom:var(--space-5)}
-    .form-label{font-size:var(--text-sm);font-weight:500;color:var(--color-text-muted)}
-    .form-input{background:var(--color-surface-2);border:1px solid var(--color-border);border-radius:var(--radius-md);padding:var(--space-3) var(--space-4);font-size:var(--text-sm);width:100%}
-    .form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:var(--space-4)}
-    .badge{display:inline-flex;align-items:center;padding:var(--space-1) var(--space-2);border-radius:var(--radius-full);font-size:var(--text-xs);font-weight:700}
-    .badge-gold{background:var(--color-primary-highlight);color:var(--color-primary)}.badge-green{background:var(--color-success-highlight);color:var(--color-success)}.badge-blue{background:var(--color-blue-highlight);color:var(--color-blue)}
-    #auth-wall{position:fixed;inset:0;z-index:200;background:var(--color-bg);display:flex;align-items:center;justify-content:center;padding:var(--space-6)}
-    .auth-card{max-width:420px;width:100%}.auth-logo{text-align:center;margin-bottom:var(--space-8)}.auth-logo-name{font-family:var(--font-display);font-size:3rem;color:var(--color-primary);letter-spacing:.06em;display:block}.auth-logo-tagline{color:var(--color-text-muted);font-size:var(--text-sm)}
-    .auth-tabs{display:flex;margin-bottom:var(--space-6);background:var(--color-surface-2);border-radius:var(--radius-lg);padding:var(--space-1)}
-    .auth-tab{flex:1;padding:var(--space-2);text-align:center;border-radius:var(--radius-md);font-size:var(--text-sm);font-weight:600;color:var(--color-text-muted);cursor:pointer}.auth-tab.active{background:var(--color-surface-offset);color:var(--color-text)}
-    .auth-form{display:none}.auth-form.active{display:block}.auth-divider{text-align:center;color:var(--color-text-faint);font-size:var(--text-xs);margin:var(--space-4) 0;position:relative}.auth-divider::before{content:'';position:absolute;top:50%;left:0;right:0;height:1px;background:var(--color-divider)}.auth-divider span{background:var(--color-surface);padding:0 var(--space-3);position:relative}
-    .auth-google-btn{width:100%;display:flex;align-items:center;justify-content:center;gap:var(--space-3);padding:var(--space-3);border:1px solid var(--color-border);border-radius:var(--radius-md);background:var(--color-surface-2);font-size:var(--text-sm);font-weight:600;min-height:44px}
-    .dash-hero{background:linear-gradient(135deg,var(--color-surface),var(--color-surface-2));border:1px solid var(--color-border);border-radius:var(--radius-xl);padding:var(--space-8);margin-bottom:var(--space-6)}
-    .dashboard-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:var(--space-6);margin-bottom:var(--space-8)}
-    .stat-card{background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-xl);padding:var(--space-5)}
-    .stat-label{font-size:var(--text-xs);color:var(--color-text-muted);font-weight:600;text-transform:uppercase;letter-spacing:.07em;margin-bottom:var(--space-2)}
-    .stat-value{font-family:var(--font-display);font-size:2.4rem;color:var(--color-primary);line-height:1}.stat-sub{font-size:var(--text-xs);color:var(--color-text-muted);margin-top:var(--space-1)}
-    .activity-list,.league-list,.update-list{display:flex;flex-direction:column;gap:var(--space-3)}
-    .activity-item,.update-card,.league-card{background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-xl);padding:var(--space-5)}
-    .activity-item{display:flex;align-items:flex-start;gap:var(--space-3)}.activity-icon{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}.activity-icon.gold{background:var(--color-primary-highlight)}.activity-icon.green{background:var(--color-success-highlight)}.activity-icon.blue{background:var(--color-blue-highlight)}
-    .activity-title{font-size:var(--text-sm);font-weight:600}.activity-meta,.update-time,.update-league,.char-count{font-size:var(--text-xs);color:var(--color-text-muted)}
-    .league-top,.update-header{display:flex;justify-content:space-between;align-items:flex-start;gap:var(--space-4);flex-wrap:wrap;margin-bottom:var(--space-4)}
-    .league-name{font-size:var(--text-lg);font-weight:700}.league-meta{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:var(--space-2);margin-bottom:var(--space-4)}
-    .league-meta-item{background:var(--color-surface-2);border:1px solid var(--color-divider);border-radius:var(--radius-md);padding:var(--space-2) var(--space-3)}
-    .league-meta-label{font-size:var(--text-xs);color:var(--color-text-faint);font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-bottom:var(--space-1)}.league-meta-value{font-size:var(--text-sm);font-weight:600}
-    .update-from{font-size:var(--text-sm);font-weight:700;color:var(--color-primary)}.update-body{font-size:var(--text-sm);color:var(--color-text-muted)}.update-channels,.channel-chips{display:flex;gap:var(--space-2);margin-top:var(--space-3);flex-wrap:wrap}
-    .pref-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:var(--space-4)}
-    .pref-card{background:var(--color-surface-2);border:2px solid var(--color-border);border-radius:var(--radius-xl);padding:var(--space-5);cursor:pointer}.pref-card.selected{border-color:var(--color-primary);background:var(--color-primary-highlight)}
-    .pref-icon{font-size:2rem;margin-bottom:var(--space-3)}.pref-name{font-size:var(--text-base);font-weight:700}.pref-desc{font-size:var(--text-xs);color:var(--color-text-muted)}
-    .channel-chip{padding:var(--space-1) var(--space-3);border-radius:var(--radius-full);font-size:var(--text-xs);font-weight:600;cursor:pointer;border:1px solid var(--color-border);background:var(--color-surface-2);color:var(--color-text-muted)}.channel-chip.selected{background:var(--color-primary-highlight);border-color:var(--color-primary);color:var(--color-primary)}
-    .profile-avatar{width:72px;height:72px;border-radius:50%;background:var(--color-primary-highlight);border:2px solid var(--color-primary);display:flex;align-items:center;justify-content:center;font-size:2rem;margin-bottom:var(--space-4)}
-    #toast-container{position:fixed;bottom:var(--space-6);right:var(--space-6);z-index:999;display:flex;flex-direction:column;gap:var(--space-2);pointer-events:none}.toast{background:var(--color-surface-2);border:1px solid var(--color-border);border-radius:var(--radius-lg);padding:var(--space-3) var(--space-5);font-size:var(--text-sm);box-shadow:var(--shadow-lg);opacity:0;transform:translateY(8px);transition:opacity .25s,transform .25s;pointer-events:auto;max-width:320px}.toast.show{opacity:1;transform:translateY(0)}.toast.success{border-color:rgba(58,158,95,.4)}.toast.error{border-color:rgba(192,64,64,.4)}
-    .user-chip{display:flex;align-items:center;gap:var(--space-2);padding:var(--space-1) var(--space-2);border-radius:var(--radius-full);background:var(--color-surface-2);border:1px solid var(--color-border)}.user-avatar-sm{width:28px;height:28px;border-radius:50%;background:var(--color-primary-highlight);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--color-primary)}.user-name-sm{font-size:var(--text-xs);font-weight:600}
-    .empty-state{display:flex;flex-direction:column;align-items:center;text-align:center;padding:var(--space-16) var(--space-8);color:var(--color-text-muted)}.empty-state-icon{font-size:3rem;margin-bottom:var(--space-4);opacity:.5}.empty-state h3{color:var(--color-text);margin-bottom:var(--space-2);font-size:var(--text-lg)}.empty-state p{max-width:36ch;margin-bottom:var(--space-6);font-size:var(--text-sm)}
-    .mobile-nav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:100;background:rgba(12,13,16,.96);backdrop-filter:blur(12px);border-top:1px solid var(--color-divider);padding:var(--space-2) var(--space-4) var(--space-3)}.mobile-nav-inner{display:flex;justify-content:space-around}.mobile-nav-btn{display:flex;flex-direction:column;align-items:center;gap:4px;padding:var(--space-2) var(--space-3);border-radius:var(--radius-md);color:var(--color-text-muted);font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;min-width:60px}.mobile-nav-btn.active{color:var(--color-primary)}.mobile-nav-btn svg{width:22px;height:22px}
-    @media (max-width:900px){.dashboard-grid{grid-template-columns:1fr 1fr}} @media (max-width:640px){.main-nav{display:none}.mobile-nav{display:block}.page-inner{padding:var(--space-5) var(--space-4) calc(var(--space-16) + var(--space-8))}.dash-hero{padding:var(--space-5)}} @media (max-width:600px){.dashboard-grid{grid-template-columns:1fr}}
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100dvh;
+      font-size: 15px;
+      line-height: 1.55;
+    }
+    button { cursor: pointer; border: none; font: inherit; }
+    input, textarea, select { font: inherit; color: inherit; }
+    a { color: inherit; text-decoration: none; }
+
+    /* ── AUTH SCREEN ── */
+    #auth-screen {
+      min-height: 100dvh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(212,168,71,.07) 0%, transparent 70%), var(--bg);
+    }
+    .auth-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 40px 36px;
+      width: 100%;
+      max-width: 420px;
+      box-shadow: 0 24px 64px rgba(0,0,0,.5);
+    }
+    .auth-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 6px;
+    }
+    .auth-logo svg { color: var(--accent); }
+    .auth-logo span {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      color: var(--accent);
+    }
+    .auth-tagline { color: var(--muted); font-size: 14px; margin-bottom: 28px; }
+    .auth-tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      background: var(--surface-2);
+      border-radius: var(--radius-sm);
+      padding: 4px;
+      gap: 4px;
+      margin-bottom: 24px;
+    }
+    .auth-tab {
+      padding: 9px;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 14px;
+      color: var(--muted);
+      background: transparent;
+      transition: all var(--transition);
+      text-align: center;
+    }
+    .auth-tab.active { background: var(--surface-3); color: var(--text); }
+    .auth-field { margin-bottom: 16px; }
+    .auth-field label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 6px; font-weight: 500; }
+    .auth-field input {
+      width: 100%;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 11px 14px;
+      font-size: 15px;
+      transition: border-color var(--transition), box-shadow var(--transition);
+    }
+    .auth-field input:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(212,168,71,.15);
+    }
+    .btn-primary {
+      width: 100%;
+      background: var(--accent);
+      color: #1a1200;
+      font-weight: 700;
+      font-size: 15px;
+      padding: 12px;
+      border-radius: var(--radius-sm);
+      transition: background var(--transition), transform var(--transition);
+    }
+    .btn-primary:hover { background: var(--accent-hover); }
+    .btn-primary:active { transform: scale(.98); }
+    .auth-divider { display: flex; align-items: center; gap: 12px; margin: 18px 0; color: var(--faint); font-size: 13px; }
+    .auth-divider::before, .auth-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+    .btn-google {
+      width: 100%;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 11px;
+      font-size: 14px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      transition: background var(--transition), border-color var(--transition);
+    }
+    .btn-google:hover { background: var(--surface-3); border-color: var(--faint); }
+    #auth-error { color: #f87171; font-size: 13px; margin-top: 14px; text-align: center; min-height: 18px; }
+
+    /* ── APP SHELL ── */
+    #app-shell { display: none; flex-direction: column; min-height: 100dvh; }
+    #app-shell.visible { display: flex; }
+
+    /* ── NAV ── */
+    .nav {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(13,13,15,.9);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 24px;
+      height: 56px;
+      gap: 0;
+    }
+    .nav-logo {
+      display: flex; align-items: center; gap: 8px;
+      font-weight: 800; font-size: 16px;
+      letter-spacing: .05em; text-transform: uppercase;
+      color: var(--accent); margin-right: 28px; flex-shrink: 0;
+    }
+    .nav-logo svg { color: var(--accent); }
+    .nav-links { display: flex; gap: 2px; flex: 1; }
+    .nav-link {
+      padding: 7px 14px;
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--muted);
+      background: transparent;
+      transition: color var(--transition), background var(--transition);
+    }
+    .nav-link:hover { color: var(--text); background: var(--surface-2); }
+    .nav-link.active { color: var(--text); background: var(--surface-2); }
+    .nav-right { display: flex; align-items: center; gap: 12px; margin-left: auto; }
+    .user-badge {
+      display: flex; align-items: center; gap: 8px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 5px 14px 5px 5px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .user-avatar {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      background: var(--accent-dim);
+      border: 1px solid var(--accent);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 700; color: var(--accent);
+      overflow: hidden;
+    }
+    .user-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .btn-signout {
+      padding: 7px 14px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--muted);
+      background: transparent;
+      border: 1px solid var(--border);
+      transition: all var(--transition);
+    }
+    .btn-signout:hover { color: var(--text); border-color: var(--faint); }
+
+    /* ── PAGES ── */
+    .page { display: none; flex: 1; padding: 28px 24px; max-width: 1100px; margin: 0 auto; width: 100%; }
+    .page.active { display: block; }
+
+    /* ── DASHBOARD ── */
+    .hero-card {
+      background: linear-gradient(135deg, var(--surface) 0%, var(--surface-2) 100%);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 32px;
+      margin-bottom: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero-card::before {
+      content: '';
+      position: absolute; top: -40px; right: -40px;
+      width: 200px; height: 200px;
+      background: radial-gradient(circle, rgba(212,168,71,.08) 0%, transparent 70%);
+      border-radius: 50%;
+    }
+    .hero-card h1 { font-size: clamp(22px,4vw,32px); font-weight: 800; text-transform: uppercase; letter-spacing: .03em; margin-bottom: 8px; }
+    .hero-card p { color: var(--muted); font-size: 15px; margin-bottom: 22px; max-width: 52ch; }
+    .hero-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+    .btn-outline {
+      padding: 10px 18px;
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      font-weight: 600;
+      background: var(--surface-3);
+      border: 1px solid var(--border);
+      color: var(--text);
+      transition: all var(--transition);
+    }
+    .btn-outline:hover { border-color: var(--faint); background: var(--surface-2); }
+    .btn-accent {
+      padding: 10px 18px;
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      font-weight: 700;
+      background: var(--accent);
+      color: #1a1200;
+      transition: background var(--transition);
+    }
+    .btn-accent:hover { background: var(--accent-hover); }
+
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px,1fr)); gap: 14px; margin-bottom: 24px; }
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px 22px;
+    }
+    .stat-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin-bottom: 8px; }
+    .stat-value { font-size: 32px; font-weight: 800; text-transform: uppercase; letter-spacing: .02em; color: var(--accent); line-height: 1; margin-bottom: 6px; }
+    .stat-sub { font-size: 13px; color: var(--muted); }
+
+    .section-title { font-size: 16px; font-weight: 700; margin-bottom: 14px; color: var(--text); }
+    .activity-list { display: grid; gap: 10px; }
+    .activity-item {
+      display: flex; align-items: center; gap: 14px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 18px;
+      transition: border-color var(--transition);
+    }
+    .activity-item:hover { border-color: var(--faint); }
+    .activity-icon {
+      width: 38px; height: 38px; border-radius: 50%;
+      background: var(--accent-dim);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 17px; flex-shrink: 0;
+    }
+    .activity-body { flex: 1; }
+    .activity-title { font-size: 14px; font-weight: 600; margin-bottom: 2px; }
+    .activity-meta { font-size: 12px; color: var(--muted); }
+    .activity-time { font-size: 12px; color: var(--faint); flex-shrink: 0; }
+
+    /* ── SETTINGS ── */
+    .settings-grid { display: grid; gap: 20px; }
+    .settings-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+    }
+    .settings-card h2 { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+    .settings-card > p { color: var(--muted); font-size: 13px; margin-bottom: 20px; }
+    .notif-channels { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px,1fr)); gap: 12px; margin-bottom: 18px; }
+    .channel-card {
+      background: var(--surface-2);
+      border: 2px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px 16px;
+      cursor: pointer;
+      transition: border-color var(--transition), background var(--transition);
+    }
+    .channel-card.selected { border-color: var(--accent); background: var(--accent-dim); }
+    .channel-icon { font-size: 24px; margin-bottom: 8px; }
+    .channel-name { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+    .channel-desc { font-size: 12px; color: var(--muted); }
+    .field-group { margin-bottom: 16px; }
+    .field-group label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 6px; font-weight: 500; }
+    .field-group input {
+      width: 100%;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 10px 14px;
+      font-size: 14px;
+      transition: border-color var(--transition);
+    }
+    .field-group input:focus { outline: none; border-color: var(--accent); }
+    .save-btn {
+      padding: 10px 22px;
+      border-radius: var(--radius-sm);
+      background: var(--accent);
+      color: #1a1200;
+      font-weight: 700;
+      font-size: 14px;
+      transition: background var(--transition);
+    }
+    .save-btn:hover { background: var(--accent-hover); }
+    .danger-btn {
+      padding: 10px 22px;
+      border-radius: var(--radius-sm);
+      background: transparent;
+      border: 1px solid rgba(201,79,79,.4);
+      color: #f87171;
+      font-weight: 600;
+      font-size: 14px;
+      transition: all var(--transition);
+    }
+    .danger-btn:hover { background: rgba(201,79,79,.1); border-color: var(--danger); }
+    .toast {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px);
+      background: var(--surface-3); border: 1px solid var(--border);
+      border-radius: 999px; padding: 11px 22px;
+      font-size: 14px; font-weight: 600;
+      box-shadow: 0 8px 32px rgba(0,0,0,.4);
+      transition: transform .3s cubic-bezier(.16,1,.3,1);
+      z-index: 9999; white-space: nowrap;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+    .toast.success { border-color: rgba(76,175,125,.4); color: var(--success); }
+
+    /* ── COMMISSIONER ── */
+    .commissioner-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      margin-bottom: 20px;
+    }
+    .commissioner-card h2 { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+    .commissioner-card > p { color: var(--muted); font-size: 13px; margin-bottom: 20px; }
+    .msg-textarea {
+      width: 100%;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 12px 14px;
+      font-size: 14px;
+      color: var(--text);
+      resize: vertical;
+      min-height: 120px;
+      margin-bottom: 14px;
+      transition: border-color var(--transition);
+    }
+    .msg-textarea:focus { outline: none; border-color: var(--accent); }
+    .channel-pills { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+    .pill {
+      padding: 5px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      background: var(--surface-3);
+      border: 1px solid var(--border);
+      cursor: pointer;
+      transition: all var(--transition);
+      color: var(--muted);
+    }
+    .pill.active { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); }
+
+    /* ── LEAGUES ── */
+    .empty-state {
+      text-align: center;
+      padding: 60px 24px;
+      color: var(--muted);
+    }
+    .empty-state .empty-icon { font-size: 48px; margin-bottom: 16px; }
+    .empty-state h3 { font-size: 18px; font-weight: 700; color: var(--text); margin-bottom: 8px; }
+    .empty-state p { font-size: 14px; max-width: 36ch; margin: 0 auto 20px; }
+
+    /* ── UPDATES ── */
+    .update-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px 20px;
+      margin-bottom: 12px;
+      transition: border-color var(--transition);
+    }
+    .update-item:hover { border-color: var(--faint); }
+    .update-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 8px; flex-wrap: wrap; }
+    .update-title { font-size: 15px; font-weight: 700; }
+    .update-badge { padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; background: var(--accent-dim); color: var(--accent); flex-shrink: 0; }
+    .update-body { font-size: 13px; color: var(--muted); }
+    .update-time { font-size: 12px; color: var(--faint); margin-top: 8px; }
+
+    @media (max-width: 640px) {
+      .nav { padding: 0 14px; }
+      .nav-links { display: none; }
+      .page { padding: 16px 14px; }
+      .hero-card { padding: 22px; }
+    }
   </style>
 </head>
 <body>
-<div id="auth-wall">
-  <div class="auth-card card">
+
+<!-- AUTH SCREEN -->
+<div id="auth-screen">
+  <div class="auth-card">
     <div class="auth-logo">
-      <span class="auth-logo-name">DynastyHQ</span>
-      <span class="auth-logo-tagline">Your dynasty. On your schedule.</span>
+      <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+        <polygon points="14,2 26,8 26,20 14,26 2,20 2,8" fill="currentColor" opacity=".15"/>
+        <polygon points="14,2 26,8 26,20 14,26 2,20 2,8" stroke="currentColor" stroke-width="2" fill="none"/>
+        <polygon points="14,8 20,11 20,17 14,20 8,17 8,11" fill="currentColor"/>
+      </svg>
+      <span>DynastyHQ</span>
     </div>
+    <p class="auth-tagline">Your dynasty. On your schedule.</p>
+
     <div class="auth-tabs">
-      <div class="auth-tab active" data-auth-tab="login">Sign In</div>
-      <div class="auth-tab" data-auth-tab="register">Create Account</div>
+      <button class="auth-tab active" id="tab-signin" onclick="switchTab('signin')">Sign In</button>
+      <button class="auth-tab" id="tab-signup" onclick="switchTab('signup')">Create Account</button>
     </div>
-    <div class="auth-form active" id="auth-login">
-      <div class="form-group"><label class="form-label">Email</label><input class="form-input" type="email" id="login-email" placeholder="you@email.com" /></div>
-      <div class="form-group"><label class="form-label">Password</label><input class="form-input" type="password" id="login-password" placeholder="••••••••" /></div>
-      <button class="btn btn-primary" id="btn-login" style="width:100%;justify-content:center;margin-bottom:var(--space-3);">Sign In</button>
-      <div class="auth-divider"><span>or</span></div>
-      <button class="auth-google-btn" id="btn-google-login">
-        <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
-        Continue with Google
-      </button>
+
+    <div id="form-signin">
+      <div class="auth-field">
+        <label>Email</label>
+        <input id="signin-email" type="email" placeholder="you@email.com" />
+      </div>
+      <div class="auth-field">
+        <label>Password</label>
+        <input id="signin-password" type="password" placeholder="••••••••" />
+      </div>
+      <button class="btn-primary" id="btn-signin">Sign In</button>
     </div>
-    <div class="auth-form" id="auth-register">
-      <div class="form-group"><label class="form-label">Display Name</label><input class="form-input" type="text" id="reg-name" placeholder="Your name" /></div>
-      <div class="form-group"><label class="form-label">Email</label><input class="form-input" type="email" id="reg-email" placeholder="you@email.com" /></div>
-      <div class="form-group"><label class="form-label">Password</label><input class="form-input" type="password" id="reg-password" placeholder="Create a password" /></div>
-      <button class="btn btn-primary" id="btn-register" style="width:100%;justify-content:center;">Create Account</button>
+
+    <div id="form-signup" style="display:none;">
+      <div class="auth-field">
+        <label>Display Name</label>
+        <input id="signup-name" type="text" placeholder="Your name" />
+      </div>
+      <div class="auth-field">
+        <label>Email</label>
+        <input id="signup-email" type="email" placeholder="you@email.com" />
+      </div>
+      <div class="auth-field">
+        <label>Password</label>
+        <input id="signup-password" type="password" placeholder="Min. 6 characters" />
+      </div>
+      <button class="btn-primary" id="btn-signup">Create Account</button>
     </div>
-    <p id="auth-error" style="color:#e08080;font-size:var(--text-xs);text-align:center;margin-top:var(--space-4);display:none;"></p>
+
+    <div class="auth-divider">or</div>
+    <button class="btn-google" id="btn-google">
+      <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 0 1-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615Z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18Z"/><path fill="#FBBC05" d="M3.964 10.706A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.706V4.962H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.038l3.007-2.332Z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.962L3.964 6.294C4.672 4.169 6.656 3.58 9 3.58Z"/></svg>
+      Continue with Google
+    </button>
+    <div id="auth-error"></div>
   </div>
 </div>
 
-<div class="app-shell" id="main-app" style="display:none;">
-  <header class="topbar">
-    <div class="topbar-left">
-      <a href="#" class="logo" data-nav="dashboard">
-        <svg class="logo-icon" viewBox="0 0 32 32" fill="none" aria-label="DynastyHQ"><rect width="32" height="32" rx="8" fill="#d4a017" opacity="0.15"/><polygon points="16,4 20,12 29,13 22,20 24,29 16,25 8,29 10,20 3,13 12,12" fill="#d4a017" opacity="0.85"/></svg>
-        <span class="logo-name">DynastyHQ</span>
-      </a>
-      <nav class="main-nav" aria-label="Main navigation">
-        <a href="#" class="nav-link active" id="nav-dashboard" data-nav="dashboard">Dashboard</a>
-        <a href="#" class="nav-link" id="nav-leagues" data-nav="leagues">Leagues</a>
-        <a href="#" class="nav-link" id="nav-updates" data-nav="updates">Updates</a>
-        <a href="#" class="nav-link" id="nav-commissioner" data-nav="commissioner">Commissioner</a>
-        <a href="#" class="nav-link" id="nav-settings" data-nav="settings">Settings</a>
-      </nav>
+<!-- APP SHELL -->
+<div id="app-shell">
+  <nav class="nav">
+    <div class="nav-logo">
+      <svg width="22" height="22" viewBox="0 0 28 28" fill="none">
+        <polygon points="14,2 26,8 26,20 14,26 2,20 2,8" fill="currentColor" opacity=".15"/>
+        <polygon points="14,2 26,8 26,20 14,26 2,20 2,8" stroke="currentColor" stroke-width="2" fill="none"/>
+        <polygon points="14,8 20,11 20,17 14,20 8,17 8,11" fill="currentColor"/>
+      </svg>
+      DynastyHQ
     </div>
-    <div class="topbar-right">
-      <div class="user-chip" data-nav="profile"><div class="user-avatar-sm" id="topbar-avatar">?</div><span class="user-name-sm" id="topbar-name">Loading…</span></div>
-      <button class="btn btn-ghost btn-sm" id="btn-signout">Sign out</button>
+    <div class="nav-links">
+      <button class="nav-link active" onclick="showPage('dashboard')">Dashboard</button>
+      <button class="nav-link" onclick="showPage('leagues')">Leagues</button>
+      <button class="nav-link" onclick="showPage('updates')">Updates</button>
+      <button class="nav-link" onclick="showPage('commissioner')">Commissioner</button>
+      <button class="nav-link" onclick="showPage('settings')">Settings</button>
     </div>
-  </header>
+    <div class="nav-right">
+      <div class="user-badge">
+        <div class="user-avatar" id="nav-avatar">?</div>
+        <span id="nav-username">Loading…</span>
+      </div>
+      <button class="btn-signout" id="btn-signout">Sign out</button>
+    </div>
+  </nav>
 
-  <section class="page active" id="page-dashboard"><div class="page-inner">
-    <div class="dash-hero"><div class="dash-hero-title" id="dash-greeting">Welcome Back</div><div class="page-sub" style="margin-top:var(--space-2)">Here's where your dynasty stands this week. Stay up-to-date without being chained to your console.</div><div class="btn-row"><button class="btn btn-primary" data-nav="commissioner">📣 Send Update</button><button class="btn btn-secondary" data-nav="updates">📬 See Inbox</button></div></div>
-    <div class="dashboard-grid"><div class="stat-card"><div class="stat-label">Active Leagues</div><div class="stat-value" id="stat-leagues">0</div><div class="stat-sub">Leagues you're in</div></div><div class="stat-card"><div class="stat-label">Unread Updates</div><div class="stat-value" id="stat-updates">2</div><div class="stat-sub">Commissioner messages</div></div><div class="stat-card"><div class="stat-label">Current Week</div><div class="stat-value" id="stat-week">Wk 1</div><div class="stat-sub">Dynasty season progress</div></div></div>
-    <h2 class="card-title" style="margin-bottom:var(--space-4);">Recent Activity</h2>
-    <div class="activity-list"><div class="activity-item"><div class="activity-icon gold">📣</div><div><div class="activity-title">Commissioner sent a league update</div><div class="activity-meta">FFL · Just now</div></div></div><div class="activity-item"><div class="activity-icon green">✅</div><div><div class="activity-title">Week 5 advance confirmed</div><div class="activity-meta">Saturday Dynasty · 2 hours ago</div></div></div></div>
-  </div></section>
+  <!-- DASHBOARD -->
+  <div class="page active" id="page-dashboard">
+    <div class="hero-card">
+      <h1>Welcome Back <span id="hero-name"></span></h1>
+      <p>Here's where your dynasty stands this week. Stay up-to-date without being chained to your console.</p>
+      <div class="hero-actions">
+        <button class="btn-accent" onclick="showPage('commissioner')">📢 Send Update</button>
+        <button class="btn-outline" onclick="showPage('updates')">📥 See Inbox</button>
+      </div>
+    </div>
 
-  <section class="page" id="page-leagues"><div class="page-inner"><div class="page-header" style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:var(--space-4);"><div><h1 class="page-title">My Leagues</h1><p class="page-sub">Manage your dynasty memberships and team info.</p></div><button class="btn btn-primary" id="btn-open-add-league">+ Add League</button></div><div class="league-list" id="league-list"></div><div id="add-league-form" style="display:none;margin-top:var(--space-6);"><div class="card"><div class="card-title">Add League</div><div class="form-grid"><div class="form-group"><label class="form-label">League Name</label><input class="form-input" type="text" id="new-league-name" placeholder="e.g. FFL" /></div><div class="form-group"><label class="form-label">School / Team</label><input class="form-input" type="text" id="new-league-school" placeholder="e.g. Texas A&M" /></div><div class="form-group"><label class="form-label">Platform</label><select class="form-input" id="new-league-platform"><option>Xbox</option><option>PlayStation</option><option>Steam</option><option>EA App</option></select></div><div class="form-group"><label class="form-label">Gamertag / ID</label><input class="form-input" type="text" id="new-league-gamertag" placeholder="Your gaming ID" /></div><div class="form-group"><label class="form-label">Role</label><select class="form-input" id="new-league-role"><option>Member</option><option>Commissioner</option><option>Co-Commissioner</option></select></div><div class="form-group"><label class="form-label">Current Week</label><input class="form-input" type="number" id="new-league-week" value="1" min="1" max="16" /></div></div><div class="btn-row"><button class="btn btn-primary" id="btn-save-league">Save League</button><button class="btn btn-secondary" id="btn-close-add-league">Cancel</button></div></div></div></div></section>
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Active Leagues</div>
+        <div class="stat-value">0</div>
+        <div class="stat-sub">Leagues you're in</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Unread Updates</div>
+        <div class="stat-value" id="stat-unread">2</div>
+        <div class="stat-sub">Commissioner messages</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Current Week</div>
+        <div class="stat-value">WK 1</div>
+        <div class="stat-sub">Dynasty season progress</div>
+      </div>
+    </div>
 
-  <section class="page" id="page-updates"><div class="page-inner"><div class="page-header"><h1 class="page-title">Updates Inbox</h1><p class="page-sub">Commissioner messages and league notifications.</p></div><div class="update-list" id="update-list"><div class="update-card"><div class="update-header"><div><div class="update-from">Commissioner · Sent</div><div class="update-league">FFL</div></div><div class="update-time">Today, 2:14 PM</div></div><div class="update-body">Week 6 advance is set for this Saturday at 9 PM. Make sure your depth chart is set.</div><div class="update-channels"><span class="badge badge-green">✓ Email</span><span class="badge badge-blue">✓ Push</span></div></div></div></div></section>
+    <div class="section-title">Recent Activity</div>
+    <div class="activity-list">
+      <div class="activity-item">
+        <div class="activity-icon">📢</div>
+        <div class="activity-body">
+          <div class="activity-title">Commissioner sent a league update</div>
+          <div class="activity-meta">FFL</div>
+        </div>
+        <div class="activity-time">Just now</div>
+      </div>
+      <div class="activity-item">
+        <div class="activity-icon">✅</div>
+        <div class="activity-body">
+          <div class="activity-title">Week 5 advance confirmed</div>
+          <div class="activity-meta">Saturday Dynasty</div>
+        </div>
+        <div class="activity-time">2 hours ago</div>
+      </div>
+    </div>
+  </div>
 
-  <section class="page" id="page-commissioner"><div class="page-inner"><div class="page-header"><h1 class="page-title">Commissioner Tools</h1><p class="page-sub">Send updates to your league. Members receive them via their chosen channels.</p></div><div class="card" style="max-width:680px;"><div class="card-title">Send League Update</div><div class="form-group"><label class="form-label">League</label><select class="form-input" id="comm-league"><option value="">— Select a league —</option></select></div><div class="form-group"><label class="form-label">Week / Event</label><input class="form-input" type="text" id="comm-week" placeholder="e.g. Week 6 Advance" /></div><div class="form-group"><label class="form-label">Message</label><textarea class="form-input" id="comm-message" maxlength="500" placeholder="Type your update for the league..." style="resize:vertical;min-height:120px"></textarea><div class="char-count"><span id="char-count">0</span>/500</div></div><div class="form-group"><label class="form-label">Send via</label><div class="channel-chips"><span class="channel-chip selected" data-channel="push">📲 Push</span><span class="channel-chip selected" data-channel="email">📧 Email</span><span class="channel-chip" data-channel="sms">💬 SMS</span></div></div><div class="btn-row"><button class="btn btn-primary" id="btn-send-update">📣 Send Update</button><button class="btn btn-secondary" id="btn-clear-compose">Clear</button></div></div></div></section>
+  <!-- LEAGUES -->
+  <div class="page" id="page-leagues">
+    <div class="empty-state">
+      <div class="empty-icon">🏟️</div>
+      <h3>No leagues yet</h3>
+      <p>Create or join a dynasty league to get started tracking your season.</p>
+      <button class="btn-accent">+ Create League</button>
+    </div>
+  </div>
 
-  <section class="page" id="page-settings"><div class="page-inner"><div class="page-header"><h1 class="page-title">Settings</h1><p class="page-sub">Control how and when you receive dynasty updates.</p></div><div style="display:grid;gap:var(--space-6);max-width:680px;"><div class="card"><div class="card-title">Notification Channels</div><p class="card-muted">Choose how you want to receive league updates from commissioners.</p><div class="pref-grid"><div class="pref-card selected" data-pref="push"><div class="pref-icon">📲</div><div class="pref-name">Push</div><div class="pref-desc">In-app & browser push notifications</div></div><div class="pref-card selected" data-pref="email"><div class="pref-icon">📧</div><div class="pref-name">Email</div><div class="pref-desc">Sent to your registered email</div></div><div class="pref-card" data-pref="sms"><div class="pref-icon">💬</div><div class="pref-name">SMS</div><div class="pref-desc">Text message to your phone number</div></div></div><div class="btn-row"><button class="btn btn-primary" id="btn-save-prefs">Save Preferences</button></div></div><div class="card"><div class="card-title">Phone Number (for SMS)</div><p class="card-muted">Required if you want to receive text messages.</p><div class="form-group"><label class="form-label">Phone Number</label><input class="form-input" type="tel" id="sms-phone" placeholder="+1 (555) 000-0000" /></div><button class="btn btn-secondary" id="btn-save-phone">Save Phone Number</button></div><div class="card"><div class="card-title">Account</div><div class="btn-row"><button class="btn btn-danger" id="btn-signout-settings">Sign Out</button></div></div></div></div></section>
+  <!-- UPDATES -->
+  <div class="page" id="page-updates">
+    <div class="section-title">League Updates</div>
+    <div class="update-item">
+      <div class="update-header">
+        <div class="update-title">Week 5 Advance — Reminder</div>
+        <span class="update-badge">FFL</span>
+      </div>
+      <div class="update-body">Advance goes out Sunday at 9PM CT. Make sure your depth charts are locked in before then.</div>
+      <div class="update-time">Today at 3:42 PM</div>
+    </div>
+    <div class="update-item">
+      <div class="update-header">
+        <div class="update-title">Week 4 Results Posted</div>
+        <span class="update-badge">Saturday Dynasty</span>
+      </div>
+      <div class="update-body">Full week 4 results are now in the portal. Check your matchup history.</div>
+      <div class="update-time">Yesterday at 11:15 AM</div>
+    </div>
+  </div>
 
-  <section class="page" id="page-profile"><div class="page-inner"><div class="page-header"><h1 class="page-title">My Profile</h1></div><div class="card" style="max-width:520px;"><div class="profile-avatar" id="profile-avatar-icon">👤</div><div class="form-group"><label class="form-label">Display Name</label><input class="form-input" type="text" id="profile-name" placeholder="Your name" /></div><div class="form-group"><label class="form-label">Email</label><input class="form-input" type="email" id="profile-email" disabled style="opacity:.6" /></div><div class="form-group"><label class="form-label">Time Zone</label><select class="form-input" id="profile-tz"><option value="America/Chicago">Central Time (CT)</option><option value="America/New_York">Eastern Time (ET)</option><option value="America/Denver">Mountain Time (MT)</option><option value="America/Los_Angeles">Pacific Time (PT)</option></select></div><div class="btn-row"><button class="btn btn-primary" id="btn-save-profile">Save Profile</button></div></div></div></section>
+  <!-- COMMISSIONER -->
+  <div class="page" id="page-commissioner">
+    <div class="commissioner-card">
+      <h2>📢 Send League Update</h2>
+      <p>Broadcast a message to your league members via their preferred notification channels.</p>
+      <textarea class="msg-textarea" id="broadcast-msg" placeholder="Type your league update here... (e.g. Week 6 advance is tonight at 9PM CT)"></textarea>
+      <div style="margin-bottom:14px;">
+        <div style="font-size:13px;color:var(--muted);margin-bottom:8px;font-weight:500;">Send via:</div>
+        <div class="channel-pills">
+          <button class="pill active" onclick="togglePill(this)">📲 Push</button>
+          <button class="pill active" onclick="togglePill(this)">📧 Email</button>
+          <button class="pill" onclick="togglePill(this)">💬 SMS</button>
+        </div>
+      </div>
+      <button class="btn-accent" onclick="sendBroadcast()">Send Update</button>
+    </div>
+    <div class="commissioner-card">
+      <h2>⏩ Week Advance</h2>
+      <p>Notify all members that the dynasty week is advancing.</p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:16px;">
+        <div class="field-group" style="margin:0;flex:1;min-width:160px;">
+          <label>Current Week</label>
+          <input type="number" id="current-week" value="1" min="1" max="20" style="width:100%;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;font-size:14px;" />
+        </div>
+        <div class="field-group" style="margin:0;flex:1;min-width:160px;">
+          <label>Advance Time</label>
+          <input type="datetime-local" id="advance-time" style="width:100%;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;font-size:14px;" />
+        </div>
+      </div>
+      <button class="btn-accent" onclick="sendAdvance()">📣 Notify Week Advance</button>
+    </div>
+  </div>
+
+  <!-- SETTINGS -->
+  <div class="page" id="page-settings">
+    <div class="settings-grid">
+      <div class="settings-card">
+        <h2>Notification Channels</h2>
+        <p>Choose how you want to receive league updates from commissioners.</p>
+        <div class="notif-channels">
+          <div class="channel-card selected" onclick="toggleChannel(this)">
+            <div class="channel-icon">📲</div>
+            <div class="channel-name">Push</div>
+            <div class="channel-desc">In-app &amp; browser push notifications</div>
+          </div>
+          <div class="channel-card selected" onclick="toggleChannel(this)">
+            <div class="channel-icon">📧</div>
+            <div class="channel-name">Email</div>
+            <div class="channel-desc">Sent to your registered email</div>
+          </div>
+          <div class="channel-card" onclick="toggleChannel(this)">
+            <div class="channel-icon">💬</div>
+            <div class="channel-name">SMS</div>
+            <div class="channel-desc">Text message to your phone number</div>
+          </div>
+        </div>
+        <button class="save-btn" onclick="savePrefs()">Save Preferences</button>
+      </div>
+
+      <div class="settings-card">
+        <h2>Phone Number (for SMS)</h2>
+        <p>Required if you want to receive text messages.</p>
+        <div class="field-group">
+          <label>Phone Number</label>
+          <input id="phone-input" type="tel" placeholder="+1 (555) 000-0000" />
+        </div>
+        <button class="save-btn" onclick="savePhone()">Save Phone Number</button>
+      </div>
+
+      <div class="settings-card">
+        <h2>Display Name</h2>
+        <p>Update how your name appears in the app.</p>
+        <div class="field-group">
+          <label>Your Name</label>
+          <input id="displayname-input" type="text" placeholder="Your name" />
+        </div>
+        <button class="save-btn" onclick="saveName()">Save Name</button>
+      </div>
+
+      <div class="settings-card">
+        <h2>Account</h2>
+        <p>Sign out of DynastyHQ on this device.</p>
+        <button class="danger-btn" id="settings-signout">Sign Out</button>
+      </div>
+    </div>
+  </div>
 </div>
 
-<div id="toast-container"></div>
-<nav class="mobile-nav" id="mobile-nav" aria-label="Mobile navigation"><div class="mobile-nav-inner"><button class="mobile-nav-btn active" data-nav="dashboard">Home</button><button class="mobile-nav-btn" data-nav="leagues">Leagues</button><button class="mobile-nav-btn" data-nav="updates">Updates</button><button class="mobile-nav-btn" data-nav="commissioner">Send</button><button class="mobile-nav-btn" data-nav="settings">Settings</button></div></nav>
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
 
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-  import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, addDoc, query, where, getDocs, serverTimestamp, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+  import {
+    getAuth,
+    onAuthStateChanged,
+    signInWithEmailAndPassword,
+    createUserWithEmailAndPassword,
+    signInWithPopup,
+    GoogleAuthProvider,
+    signOut,
+    updateProfile
+  } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+  import {
+    getFirestore,
+    doc,
+    getDoc,
+    setDoc,
+    updateDoc
+  } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
+  // ── FIREBASE CONFIG ── Replace with your own config
   const firebaseConfig = {
-    apiKey: "AIzaSyAuEmIjug9xY-S89x669VGBjhcbyDjbAgo",
-    authDomain: "dynastyhq-app.firebaseapp.com",
-    projectId: "dynastyhq-app",
-    storageBucket: "dynastyhq-app.firebasestorage.app",
-    messagingSenderId: "79814204364",
-    appId: "1:79814204364:web:64480eb6e1405ef41c5b69",
-    measurementId: "G-5MX0M176HX"
+    apiKey: "AIzaSyBxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    authDomain: "your-project.firebaseapp.com",
+    projectId: "your-project",
+    storageBucket: "your-project.appspot.com",
+    messagingSenderId: "000000000000",
+    appId: "1:000000000000:web:xxxxxxxxxxxxxxxx"
   };
 
   const app = initializeApp(firebaseConfig);
@@ -186,302 +714,226 @@
   const db = getFirestore(app);
   const provider = new GoogleAuthProvider();
 
-  let currentUser = null;
-  let userProfile = {};
-  let leagues = [];
-
-  const $ = (s) => document.querySelector(s);
-  const $$ = (s) => [...document.querySelectorAll(s)];
-  const esc = (str='') => String(str).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-
-  function showToast(msg, type='') {
-    const tc = $('#toast-container');
-    const t = document.createElement('div');
-    t.className = 'toast ' + type;
-    t.textContent = msg;
-    tc.appendChild(t);
-    requestAnimationFrame(() => requestAnimationFrame(() => t.classList.add('show')));
-    setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 300); }, 3200);
-  }
-
-  function showAuthError(msg) {
-    const el = $('#auth-error');
-    el.textContent = msg;
-    el.style.display = msg ? 'block' : 'none';
-  }
-
-  function friendlyError(e) {
-    const code = e?.code || '';
-    if (code === 'auth/operation-not-allowed') return 'This sign-in method is disabled in Firebase Console.';
-    if (code === 'auth/unauthorized-domain') return 'This domain is not authorized in Firebase Authentication settings.';
-    if (code === 'auth/popup-blocked') return 'Popup was blocked by your browser. Allow popups and try again.';
-    if (code === 'auth/popup-closed-by-user') return 'Google sign-in popup was closed before finishing.';
-    if (code === 'auth/invalid-credential') return 'Invalid credentials. Double-check email and password.';
-    if (code === 'auth/email-already-in-use') return 'That email is already in use. Try signing in instead.';
-    if (code === 'auth/weak-password') return 'Password must be at least 6 characters.';
-    if (code === 'auth/user-not-found' || code === 'auth/wrong-password' || code === 'auth/invalid-login-credentials') return 'Invalid email or password.';
-    return e?.message || 'Something went wrong.';
-  }
-
-  function switchAuthTab(tab) {
-    $$('.auth-tab').forEach(el => el.classList.toggle('active', el.dataset.authTab === tab));
-    $('#auth-login').classList.toggle('active', tab === 'login');
-    $('#auth-register').classList.toggle('active', tab === 'register');
-    showAuthError('');
-  }
-
-  async function doEmailLogin() {
-    showAuthError('');
-    const email = $('#login-email').value.trim();
-    const password = $('#login-password').value;
-    if (!email || !password) return showAuthError('Enter your email and password.');
-    try {
-      await signInWithEmailAndPassword(auth, email, password);
-    } catch (e) {
-      showAuthError(friendlyError(e));
-    }
-  }
-
-  async function doGoogleLogin() {
-    showAuthError('');
-    try {
-      await signInWithPopup(auth, provider);
-    } catch (e) {
-      showAuthError(friendlyError(e));
-    }
-  }
-
-  async function doRegister() {
-    showAuthError('');
-    const name = $('#reg-name').value.trim();
-    const email = $('#reg-email').value.trim();
-    const password = $('#reg-password').value;
-    if (!name || !email || !password) return showAuthError('Fill out name, email, and password.');
-    try {
-      const cred = await createUserWithEmailAndPassword(auth, email, password);
-      await updateProfile(cred.user, { displayName: name });
-      await setDoc(doc(db, 'users', cred.user.uid), {
-        displayName: name,
-        email,
-        timezone: 'America/Chicago',
-        notificationPrefs: { push: true, email: true, sms: false },
-        phone: '',
-        createdAt: serverTimestamp()
-      });
-    } catch (e) {
-      showAuthError(friendlyError(e));
-    }
-  }
-
-  async function doSignOut() {
-    await signOut(auth);
-  }
-
-  function navigate(page) {
-    ['dashboard','leagues','updates','commissioner','settings','profile'].forEach(p => {
-      const pageEl = $('#page-' + p);
-      const navEl = $('#nav-' + p);
-      pageEl && pageEl.classList.toggle('active', p === page);
-      navEl && navEl.classList.toggle('active', p === page);
-    });
-    $$('[data-nav]').forEach(el => {
-      if (el.classList.contains('mobile-nav-btn')) el.classList.toggle('active', el.dataset.nav === page);
-    });
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }
-
-  async function loadUserProfile(user) {
-    const ref = doc(db, 'users', user.uid);
-    const snap = await getDoc(ref);
-    if (snap.exists()) {
-      userProfile = snap.data();
-    } else {
-      userProfile = {
-        displayName: user.displayName || user.email?.split('@')[0] || 'Player',
-        email: user.email || '',
-        timezone: 'America/Chicago',
-        notificationPrefs: { push: true, email: true, sms: false },
-        phone: ''
-      };
-      await setDoc(ref, { ...userProfile, createdAt: serverTimestamp() });
-    }
-    const name = userProfile.displayName || user.displayName || 'Player';
-    $('#topbar-name').textContent = name;
-    $('#topbar-avatar').textContent = name.charAt(0).toUpperCase();
-    $('#dash-greeting').textContent = 'Welcome Back, ' + name.split(' ')[0];
-    $('#profile-name').value = name;
-    $('#profile-email').value = userProfile.email || user.email || '';
-    $('#profile-tz').value = userProfile.timezone || 'America/Chicago';
-    $('#sms-phone').value = userProfile.phone || '';
-    $$('.pref-card').forEach(card => card.classList.toggle('selected', !!userProfile.notificationPrefs?.[card.dataset.pref]));
-  }
-
-  async function loadLeagues() {
-    const q = query(collection(db, 'leagues'), where('uid', '==', currentUser.uid));
-    const snap = await getDocs(q);
-    leagues = [];
-    snap.forEach(d => leagues.push({ id: d.id, ...d.data() }));
-    renderLeagues();
-    renderLeagueOptions();
-    $('#stat-leagues').textContent = leagues.length;
-    $('#stat-week').textContent = leagues.length ? 'Wk ' + (leagues[0].week || 1) : 'Wk 1';
-  }
-
-  function renderLeagues() {
-    const list = $('#league-list');
-    if (!leagues.length) {
-      list.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🏟️</div><h3>No leagues yet</h3><p>Add your first dynasty league to start tracking updates and teammates.</p><button class="btn btn-primary" id="btn-empty-add-league">Add League</button></div>';
-      $('#btn-empty-add-league')?.addEventListener('click', openAddLeague);
-      return;
-    }
-    list.innerHTML = leagues.map(l => `
-      <div class="league-card">
-        <div class="league-top"><div><div class="league-name">${esc(l.name)}</div></div><span class="badge badge-green">Active</span></div>
-        <div class="league-meta">
-          <div class="league-meta-item"><div class="league-meta-label">School</div><div class="league-meta-value">${esc(l.school || '—')}</div></div>
-          <div class="league-meta-item"><div class="league-meta-label">Platform</div><div class="league-meta-value">${esc(l.platform || '—')}</div></div>
-          <div class="league-meta-item"><div class="league-meta-label">Gamertag</div><div class="league-meta-value">${esc(l.gamertag || '—')}</div></div>
-          <div class="league-meta-item"><div class="league-meta-label">Role</div><div class="league-meta-value">${esc(l.role || 'Member')}</div></div>
-          <div class="league-meta-item"><div class="league-meta-label">Week</div><div class="league-meta-value">Week ${esc(l.week || 1)}</div></div>
-        </div>
-        <div class="btn-row">
-          ${(l.role === 'Commissioner' || l.role === 'Co-Commissioner') ? '<button class="btn btn-primary btn-sm" data-nav="commissioner">📣 Send Update</button>' : ''}
-          <button class="btn btn-danger btn-sm" data-delete-league="${l.id}">Leave</button>
-        </div>
-      </div>`).join('');
-    $$('[data-delete-league]').forEach(btn => btn.addEventListener('click', async () => {
-      if (!confirm('Leave this league?')) return;
-      await deleteDoc(doc(db, 'leagues', btn.dataset.deleteLeague));
-      await loadLeagues();
-      showToast('League removed', 'success');
-    }));
-    $$('[data-nav="commissioner"]').forEach(btn => btn.addEventListener('click', (e) => { e.preventDefault(); navigate('commissioner'); }));
-  }
-
-  function renderLeagueOptions() {
-    $('#comm-league').innerHTML = '<option value="">— Select a league —</option>' + leagues.map(l => `<option value="${l.id}">${esc(l.name)}</option>`).join('');
-  }
-
-  function openAddLeague() { $('#add-league-form').style.display = 'block'; }
-  function closeAddLeague() { $('#add-league-form').style.display = 'none'; }
-
-  async function saveLeague() {
-    const name = $('#new-league-name').value.trim();
-    if (!name) return showToast('League name is required', 'error');
-    await addDoc(collection(db, 'leagues'), {
-      uid: currentUser.uid,
-      name,
-      school: $('#new-league-school').value.trim(),
-      platform: $('#new-league-platform').value,
-      gamertag: $('#new-league-gamertag').value.trim(),
-      role: $('#new-league-role').value,
-      week: parseInt($('#new-league-week').value || '1', 10),
-      createdAt: serverTimestamp()
-    });
-    closeAddLeague();
-    await loadLeagues();
-    showToast('League added ✓', 'success');
-  }
-
-  async function saveProfile() {
-    const name = $('#profile-name').value.trim();
-    const timezone = $('#profile-tz').value;
-    await updateDoc(doc(db, 'users', currentUser.uid), { displayName: name, timezone });
-    await updateProfile(currentUser, { displayName: name });
-    userProfile.displayName = name;
-    userProfile.timezone = timezone;
-    $('#topbar-name').textContent = name;
-    $('#topbar-avatar').textContent = name.charAt(0).toUpperCase();
-    showToast('Profile saved ✓', 'success');
-  }
-
-  async function savePrefs() {
-    const prefs = {};
-    $$('.pref-card').forEach(card => prefs[card.dataset.pref] = card.classList.contains('selected'));
-    await updateDoc(doc(db, 'users', currentUser.uid), { notificationPrefs: prefs });
-    userProfile.notificationPrefs = prefs;
-    showToast('Preferences saved ✓', 'success');
-  }
-
-  async function savePhone() {
-    const phone = $('#sms-phone').value.trim();
-    await updateDoc(doc(db, 'users', currentUser.uid), { phone });
-    userProfile.phone = phone;
-    showToast('Phone number saved ✓', 'success');
-  }
-
-  function updateCharCount() { $('#char-count').textContent = $('#comm-message').value.length; }
-
-  async function sendUpdate() {
-    const leagueId = $('#comm-league').value;
-    const message = $('#comm-message').value.trim();
-    const week = $('#comm-week').value.trim();
-    if (!leagueId) return showToast('Select a league first', 'error');
-    if (!message) return showToast('Message is required', 'error');
-    const channels = $$('.channel-chip.selected').map(el => el.dataset.channel);
-    const league = leagues.find(l => l.id === leagueId);
-    await addDoc(collection(db, 'updates'), {
-      from: currentUser.uid,
-      fromName: userProfile.displayName || currentUser.displayName || 'Commissioner',
-      leagueId,
-      leagueName: league?.name || 'League',
-      week,
-      message,
-      channels,
-      createdAt: serverTimestamp()
-    });
-    const card = document.createElement('div');
-    card.className = 'update-card';
-    card.innerHTML = `<div class="update-header"><div><div class="update-from">${esc(userProfile.displayName || 'Commissioner')}</div><div class="update-league">${esc(league?.name || 'League')}${week ? ' · ' + esc(week) : ''}</div></div><div class="update-time">Just now</div></div><div class="update-body">${esc(message)}</div><div class="update-channels">${channels.map(c => `<span class="badge badge-gold">${esc(c)}</span>`).join('')}</div>`;
-    $('#update-list').prepend(card);
-    $('#comm-message').value = '';
-    $('#comm-week').value = '';
-    updateCharCount();
-    showToast('Update sent ✓', 'success');
-  }
-
-  function wireStaticEvents() {
-    $('#btn-login').addEventListener('click', doEmailLogin);
-    $('#btn-google-login').addEventListener('click', doGoogleLogin);
-    $('#btn-register').addEventListener('click', doRegister);
-    $('#btn-signout').addEventListener('click', doSignOut);
-    $('#btn-signout-settings').addEventListener('click', doSignOut);
-    $('#btn-open-add-league').addEventListener('click', openAddLeague);
-    $('#btn-close-add-league').addEventListener('click', closeAddLeague);
-    $('#btn-save-league').addEventListener('click', saveLeague);
-    $('#btn-save-profile').addEventListener('click', saveProfile);
-    $('#btn-save-prefs').addEventListener('click', savePrefs);
-    $('#btn-save-phone').addEventListener('click', savePhone);
-    $('#btn-send-update').addEventListener('click', sendUpdate);
-    $('#btn-clear-compose').addEventListener('click', () => { $('#comm-message').value=''; $('#comm-week').value=''; updateCharCount(); });
-    $('#comm-message').addEventListener('input', updateCharCount);
-    $$('.auth-tab').forEach(tab => tab.addEventListener('click', () => switchAuthTab(tab.dataset.authTab)));
-    $$('.pref-card').forEach(card => card.addEventListener('click', () => card.classList.toggle('selected')));
-    $$('.channel-chip').forEach(chip => chip.addEventListener('click', () => chip.classList.toggle('selected')));
-    document.addEventListener('click', (e) => {
-      const nav = e.target.closest('[data-nav]');
-      if (nav) {
-        e.preventDefault();
-        navigate(nav.dataset.nav);
-      }
-    });
-  }
-
+  // ── AUTH STATE ──
   onAuthStateChanged(auth, async (user) => {
     if (user) {
-      currentUser = user;
-      $('#auth-wall').style.display = 'none';
-      $('#main-app').style.display = 'flex';
-      await loadUserProfile(user);
-      await loadLeagues();
+      // Resolve display name with fallbacks — NEVER stay stuck on "Loading…"
+      let name = user.displayName
+        || user.email?.split('@')[0]
+        || 'Player';
+
+      // Try to load Firestore profile; if it fails or doesn't exist, use fallback
+      try {
+        const snap = await getDoc(doc(db, 'users', user.uid));
+        if (snap.exists() && snap.data().displayName) {
+          name = snap.data().displayName;
+        } else {
+          // Create a basic profile doc so future saves work
+          await setDoc(doc(db, 'users', user.uid), {
+            displayName: name,
+            email: user.email,
+            notifPrefs: { push: true, email: true, sms: false },
+            createdAt: new Date().toISOString()
+          }, { merge: true });
+        }
+      } catch (e) {
+        // Firestore unavailable — use fallback name, still show app
+        console.warn('Firestore unavailable, using fallback:', e.message);
+      }
+
+      setUserUI(user, name);
+      showApp();
     } else {
-      currentUser = null;
-      $('#auth-wall').style.display = 'flex';
-      $('#main-app').style.display = 'none';
+      showAuth();
     }
   });
 
-  wireStaticEvents();
+  function setUserUI(user, name) {
+    document.getElementById('nav-username').textContent = name;
+    document.getElementById('hero-name').textContent = name.split(' ')[0];
+    document.getElementById('displayname-input').value = name;
+
+    const avatar = document.getElementById('nav-avatar');
+    if (user.photoURL) {
+      avatar.innerHTML = `<img src="${user.photoURL}" alt="${name}" />`;
+    } else {
+      avatar.textContent = name.charAt(0).toUpperCase();
+    }
+  }
+
+  function showApp() {
+    document.getElementById('auth-screen').style.display = 'none';
+    document.getElementById('app-shell').classList.add('visible');
+  }
+
+  function showAuth() {
+    document.getElementById('auth-screen').style.display = 'flex';
+    document.getElementById('app-shell').classList.remove('visible');
+  }
+
+  // ── SIGN IN ──
+  document.getElementById('btn-signin').addEventListener('click', async () => {
+    const email = document.getElementById('signin-email').value.trim();
+    const pass = document.getElementById('signin-password').value;
+    const errEl = document.getElementById('auth-error');
+    errEl.textContent = '';
+    if (!email || !pass) { errEl.textContent = 'Please enter your email and password.'; return; }
+    try {
+      await signInWithEmailAndPassword(auth, email, pass);
+    } catch (e) {
+      errEl.textContent = friendlyError(e.code);
+    }
+  });
+
+  // ── SIGN UP ──
+  document.getElementById('btn-signup').addEventListener('click', async () => {
+    const name = document.getElementById('signup-name').value.trim();
+    const email = document.getElementById('signup-email').value.trim();
+    const pass = document.getElementById('signup-password').value;
+    const errEl = document.getElementById('auth-error');
+    errEl.textContent = '';
+    if (!email || !pass) { errEl.textContent = 'Please fill in all fields.'; return; }
+    try {
+      const cred = await createUserWithEmailAndPassword(auth, email, pass);
+      if (name) await updateProfile(cred.user, { displayName: name });
+    } catch (e) {
+      errEl.textContent = friendlyError(e.code);
+    }
+  });
+
+  // ── GOOGLE ──
+  document.getElementById('btn-google').addEventListener('click', async () => {
+    const errEl = document.getElementById('auth-error');
+    errEl.textContent = '';
+    try {
+      await signInWithPopup(auth, provider);
+    } catch (e) {
+      if (e.code === 'auth/unauthorized-domain') {
+        errEl.textContent = '⚠️ Add this domain to Firebase Auth → Settings → Authorized Domains.';
+      } else if (e.code === 'auth/popup-closed-by-user') {
+        errEl.textContent = 'Popup closed. Please try again.';
+      } else {
+        errEl.textContent = friendlyError(e.code);
+      }
+    }
+  });
+
+  // ── SIGN OUT ──
+  function doSignOut() { signOut(auth); }
+  document.getElementById('btn-signout').addEventListener('click', doSignOut);
+  document.getElementById('settings-signout').addEventListener('click', doSignOut);
+
+  // ── SAVE NAME ──
+  window.saveName = async () => {
+    const name = document.getElementById('displayname-input').value.trim();
+    if (!name) return;
+    const user = auth.currentUser;
+    if (!user) return;
+    try {
+      await updateProfile(user, { displayName: name });
+      await setDoc(doc(db, 'users', user.uid), { displayName: name }, { merge: true });
+      document.getElementById('nav-username').textContent = name;
+      document.getElementById('hero-name').textContent = name.split(' ')[0];
+      showToast('Name saved!', 'success');
+    } catch (e) {
+      showToast('Could not save. Check console.', '');
+    }
+  };
+
+  // ── SAVE PHONE ──
+  window.savePhone = async () => {
+    const phone = document.getElementById('phone-input').value.trim();
+    const user = auth.currentUser;
+    if (!user) return;
+    try {
+      await setDoc(doc(db, 'users', user.uid), { phone }, { merge: true });
+      showToast('Phone number saved!', 'success');
+    } catch (e) {
+      showToast('Could not save phone number.', '');
+    }
+  };
+
+  // ── SAVE NOTIF PREFS ──
+  window.savePrefs = async () => {
+    const cards = document.querySelectorAll('.channel-card');
+    const prefs = {};
+    cards.forEach(c => {
+      const key = c.querySelector('.channel-name').textContent.toLowerCase();
+      prefs[key] = c.classList.contains('selected');
+    });
+    const user = auth.currentUser;
+    if (!user) return;
+    try {
+      await setDoc(doc(db, 'users', user.uid), { notifPrefs: prefs }, { merge: true });
+      showToast('Preferences saved!', 'success');
+    } catch (e) {
+      showToast('Could not save preferences.', '');
+    }
+  };
+
+  function friendlyError(code) {
+    const map = {
+      'auth/invalid-email': 'Invalid email address.',
+      'auth/user-not-found': 'No account found with that email.',
+      'auth/wrong-password': 'Incorrect password.',
+      'auth/email-already-in-use': 'An account with that email already exists.',
+      'auth/weak-password': 'Password must be at least 6 characters.',
+      'auth/network-request-failed': 'Network error. Check your connection.',
+      'auth/too-many-requests': 'Too many attempts. Try again later.',
+      'auth/popup-blocked': 'Popup was blocked. Allow popups and try again.',
+    };
+    return map[code] || `Auth error: ${code}`;
+  }
+</script>
+
+<script>
+  // ── PAGE NAV ──
+  window.showPage = (name) => {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+    document.getElementById('page-' + name)?.classList.add('active');
+    document.querySelectorAll('.nav-link').forEach(l => {
+      if (l.textContent.toLowerCase().includes(name.substring(0,4))) l.classList.add('active');
+    });
+  };
+
+  // ── TAB SWITCH ──
+  window.switchTab = (tab) => {
+    document.getElementById('form-signin').style.display = tab === 'signin' ? 'block' : 'none';
+    document.getElementById('form-signup').style.display = tab === 'signup' ? 'block' : 'none';
+    document.getElementById('tab-signin').classList.toggle('active', tab === 'signin');
+    document.getElementById('tab-signup').classList.toggle('active', tab === 'signup');
+    document.getElementById('auth-error').textContent = '';
+  };
+
+  // ── CHANNEL TOGGLE ──
+  window.toggleChannel = (el) => el.classList.toggle('selected');
+
+  // ── PILL TOGGLE ──
+  window.togglePill = (el) => el.classList.toggle('active');
+
+  // ── BROADCAST ──
+  window.sendBroadcast = () => {
+    const msg = document.getElementById('broadcast-msg').value.trim();
+    if (!msg) { showToast('Please type a message first.', ''); return; }
+    document.getElementById('broadcast-msg').value = '';
+    showToast('Update sent to league members!', 'success');
+  };
+
+  // ── ADVANCE ──
+  window.sendAdvance = () => {
+    const wk = document.getElementById('current-week').value;
+    showToast(`Week ${wk} advance notification sent!`, 'success');
+  };
+
+  // ── TOAST ──
+  window.showToast = (msg, type) => {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast' + (type ? ' ' + type : '');
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3000);
+  };
 </script>
 </body>
 </html>
