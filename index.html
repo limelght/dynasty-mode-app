@@ -1,806 +1,338 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<meta name="description" content="Dynasty Mode Companion — manage your online dynasty league from anywhere."/>
-<title>Dynasty Mode Companion</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Oswald:wght@500;700&display=swap" rel="stylesheet">
-<style>
-/* ── TOKENS ─────────────────────────────────────────── */
-:root{
-  --bg:#0d0d0f;--surface:#141418;--surface2:#1c1c22;--surface3:#242430;
-  --border:rgba(255,255,255,.08);--border2:rgba(255,255,255,.14);
-  --text:#e8e6f0;--muted:#9994b0;--faint:#4e4a62;
-  --primary:#c8a84b;--primary-hover:#e0c06a;--primary-dim:rgba(200,168,75,.12);
-  --green:#3dba6f;--red:#e05252;--blue:#5b9cf6;
-  --radius:16px;--radius-sm:10px;--radius-full:999px;
-  --shadow:0 8px 32px rgba(0,0,0,.45);
-  --font-body:'Inter',system-ui,sans-serif;
-  --font-display:'Oswald',sans-serif;
-  --transition:180ms cubic-bezier(.16,1,.3,1);
-}
-[data-theme="light"]{
-  --bg:#f4f2ec;--surface:#fffdf7;--surface2:#f0ede4;--surface3:#e8e4d8;
-  --border:rgba(0,0,0,.08);--border2:rgba(0,0,0,.14);
-  --text:#1a1820;--muted:#5a5670;--faint:#b0adc0;
-  --shadow:0 8px 32px rgba(0,0,0,.10);
-}
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Dynasty Mode Profile — manage account identity, platform accounts, and league memberships." />
+  <title>Dynasty Mode Profile</title>
+  <style>
+    :root{
+      --bg:#0a0a12;
+      --panel:#12131d;
+      --panel-2:#171925;
+      --border:#2b2f42;
+      --text:#f4f6fb;
+      --muted:#9ea6c2;
+      --accent:#d6b25e;
+      --danger:#d46b6b;
+      --radius:16px;
+    }
 
-/* ── RESET ──────────────────────────────────────────── */
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html{scroll-behavior:smooth;scroll-padding-top:80px}
-body{font-family:var(--font-body);font-size:1rem;background:var(--bg);color:var(--text);min-height:100dvh;line-height:1.6;-webkit-font-smoothing:antialiased}
-img,svg{display:block;max-width:100%}
-button,input,select,textarea{font:inherit;color:inherit}
-button{cursor:pointer;background:none;border:none}
-a{color:inherit;text-decoration:none}
-h1,h2,h3,h4{font-family:var(--font-display);text-wrap:balance;line-height:1.1;letter-spacing:.01em}
-p{text-wrap:pretty;max-width:68ch}
+    *{
+      box-sizing:border-box;
+    }
 
-/* ── LAYOUT ─────────────────────────────────────────── */
-.app{display:flex;flex-direction:column;min-height:100dvh}
-.container{max-width:1100px;margin-inline:auto;padding-inline:clamp(16px,4vw,40px)}
+    body{
+      margin:0;
+      font-family:Inter,system-ui,sans-serif;
+      background:linear-gradient(180deg,#07070d,#0f1220);
+      color:var(--text);
+      padding:24px;
+      min-height:100vh;
+    }
 
-/* ── HEADER ─────────────────────────────────────────── */
-.header{position:sticky;top:0;z-index:100;background:rgba(13,13,15,.85);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);padding:14px 0}
-.header-inner{display:flex;align-items:center;justify-content:space-between;gap:16px}
-.logo{display:flex;align-items:center;gap:10px;font-family:var(--font-display);font-size:1.25rem;font-weight:700;color:var(--primary);letter-spacing:.04em}
-.logo svg{flex-shrink:0}
-.header-actions{display:flex;align-items:center;gap:10px}
-.theme-btn{width:38px;height:38px;border-radius:var(--radius-full);background:var(--surface2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--muted);transition:all var(--transition)}
-.theme-btn:hover{color:var(--text);border-color:var(--border2)}
+    .container{
+      max-width:1100px;
+      margin:0 auto;
+      display:grid;
+      gap:24px;
+    }
 
-/* ── NAV TABS ───────────────────────────────────────── */
-.nav-tabs{display:flex;gap:4px;padding:12px 0 0;overflow-x:auto;scrollbar-width:none}
-.nav-tabs::-webkit-scrollbar{display:none}
-.tab-btn{flex-shrink:0;padding:8px 18px;border-radius:var(--radius-full);font-size:.875rem;font-weight:600;color:var(--muted);transition:all var(--transition);border:1px solid transparent;white-space:nowrap}
-.tab-btn:hover{color:var(--text);background:var(--surface2)}
-.tab-btn.active{background:var(--primary-dim);color:var(--primary);border-color:rgba(200,168,75,.25)}
+    .card{
+      background:rgba(18,19,29,.95);
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      padding:24px;
+      box-shadow:0 10px 30px rgba(0,0,0,.25);
+    }
 
-/* ── PAGES ──────────────────────────────────────────── */
-.page{display:none;padding:28px 0 60px;animation:fadeIn .25s ease}
-.page.active{display:block}
-@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+    h1,
+    h2,
+    h3{
+      margin:0 0 14px;
+    }
 
-/* ── HERO ───────────────────────────────────────────── */
-.hero{padding:48px 0 36px;text-align:center}
-.hero-badge{display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border-radius:var(--radius-full);background:var(--primary-dim);border:1px solid rgba(200,168,75,.25);color:var(--primary);font-size:.8rem;font-weight:600;margin-bottom:20px;text-transform:uppercase;letter-spacing:.06em}
-.hero h1{font-size:clamp(2.5rem,6vw,4.5rem);color:var(--text);margin-bottom:16px}
-.hero h1 span{color:var(--primary)}
-.hero p{font-size:1.1rem;color:var(--muted);margin-inline:auto;margin-bottom:28px}
-.hero-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+    p{
+      margin:0 0 18px;
+      color:var(--muted);
+    }
 
-/* ── BUTTONS ────────────────────────────────────────── */
-.btn{display:inline-flex;align-items:center;gap:8px;padding:12px 22px;border-radius:var(--radius-full);font-weight:700;font-size:.9rem;transition:all var(--transition);border:1.5px solid transparent;white-space:nowrap}
-.btn-primary{background:var(--primary);color:#0d0d0f;border-color:var(--primary)}
-.btn-primary:hover{background:var(--primary-hover);border-color:var(--primary-hover)}
-.btn-outline{background:transparent;color:var(--text);border-color:var(--border2)}
-.btn-outline:hover{background:var(--surface2);border-color:var(--border2)}
-.btn-ghost{background:transparent;color:var(--muted);border-color:transparent}
-.btn-ghost:hover{color:var(--text);background:var(--surface2)}
-.btn-sm{padding:8px 16px;font-size:.82rem}
-.btn-danger{background:rgba(224,82,82,.12);color:var(--red);border-color:rgba(224,82,82,.2)}
-.btn-danger:hover{background:rgba(224,82,82,.2)}
-.btn-success{background:rgba(61,186,111,.12);color:var(--green);border-color:rgba(61,186,111,.2)}
-.btn-success:hover{background:rgba(61,186,111,.2)}
+    .grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+      gap:16px;
+    }
 
-/* ── CARDS ──────────────────────────────────────────── */
-.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:clamp(16px,3vw,28px);box-shadow:var(--shadow)}
-.card-header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:20px}
-.card-title{font-size:1.1rem;font-weight:700;font-family:var(--font-display);letter-spacing:.02em}
-.grid-2{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr))}
-.grid-3{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(min(260px,100%),1fr))}
+    label{
+      display:block;
+      font-size:14px;
+      color:var(--muted);
+      margin-bottom:8px;
+    }
 
-/* ── STATS ──────────────────────────────────────────── */
-.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;display:flex;flex-direction:column;gap:6px}
-.stat-label{font-size:.78rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
-.stat-value{font-size:2rem;font-family:var(--font-display);font-weight:700;color:var(--primary)}
-.stat-sub{font-size:.82rem;color:var(--muted)}
+    input,
+    select,
+    textarea{
+      width:100%;
+      background:var(--panel-2);
+      color:var(--text);
+      border:1px solid var(--border);
+      border-radius:12px;
+      padding:14px 16px;
+      font-size:15px;
+      outline:none;
+    }
 
-/* ── FEED ───────────────────────────────────────────── */
-.feed-item{display:flex;gap:14px;padding:16px 0;border-bottom:1px solid var(--border)}
-.feed-item:last-child{border-bottom:0}
-.feed-dot{width:10px;height:10px;border-radius:50%;background:var(--primary);flex-shrink:0;margin-top:6px}
-.feed-dot.green{background:var(--green)}
-.feed-dot.blue{background:var(--blue)}
-.feed-dot.red{background:var(--red)}
-.feed-content h4{font-size:.95rem;font-weight:600;margin-bottom:2px}
-.feed-content p{font-size:.85rem;color:var(--muted)}
-.feed-time{font-size:.78rem;color:var(--faint);margin-top:4px;font-style:italic}
+    input:focus,
+    select:focus,
+    textarea:focus{
+      border-color:var(--accent);
+      box-shadow:0 0 0 3px rgba(214,178,94,.15);
+    }
 
-/* ── FORMS ──────────────────────────────────────────── */
-.form-group{display:flex;flex-direction:column;gap:6px}
-.form-label{font-size:.85rem;font-weight:600;color:var(--muted)}
-.form-input,.form-select,.form-textarea{width:100%;padding:11px 14px;border-radius:var(--radius-sm);border:1.5px solid var(--border);background:var(--surface2);color:var(--text);transition:border-color var(--transition),box-shadow var(--transition);font-size:.95rem}
-.form-input:focus,.form-select:focus,.form-textarea:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(200,168,75,.12)}
-.form-textarea{min-height:130px;resize:vertical;line-height:1.6}
-.form-select{appearance:none;cursor:pointer}
-.form-row{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
-.form-stack{display:flex;flex-direction:column;gap:14px}
+    .platform-list{
+      display:grid;
+      gap:12px;
+    }
 
-/* ── TOGGLE ROWS ────────────────────────────────────── */
-.toggle-row{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 0;border-bottom:1px solid var(--border)}
-.toggle-row:last-child{border-bottom:0}
-.toggle-info h4{font-size:.95rem;font-weight:600;margin-bottom:2px}
-.toggle-info p{font-size:.82rem;color:var(--muted)}
-.toggle{position:relative;width:44px;height:24px;flex-shrink:0}
-.toggle input{opacity:0;width:0;height:0;position:absolute}
-.toggle-track{position:absolute;inset:0;background:var(--surface3);border-radius:var(--radius-full);border:1.5px solid var(--border);cursor:pointer;transition:all var(--transition)}
-.toggle input:checked+.toggle-track{background:var(--primary);border-color:var(--primary)}
-.toggle-thumb{position:absolute;top:3px;left:3px;width:16px;height:16px;background:#fff;border-radius:50%;transition:transform var(--transition);pointer-events:none}
-.toggle input:checked~.toggle-thumb{transform:translateX(20px)}
+    .platform-row{
+      display:grid;
+      grid-template-columns:160px 1fr;
+      gap:12px;
+      align-items:center;
+    }
 
-/* ── BADGE / TAG ────────────────────────────────────── */
-.badge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:var(--radius-full);font-size:.78rem;font-weight:600}
-.badge-gold{background:var(--primary-dim);color:var(--primary)}
-.badge-green{background:rgba(61,186,111,.12);color:var(--green)}
-.badge-red{background:rgba(224,82,82,.12);color:var(--red)}
-.badge-blue{background:rgba(91,156,246,.12);color:var(--blue)}
-.badge-muted{background:var(--surface2);color:var(--muted)}
+    .btn-row{
+      display:flex;
+      flex-wrap:wrap;
+      gap:12px;
+      margin-top:18px;
+    }
 
-/* ── TEAM LIST ──────────────────────────────────────── */
-.team-row{display:flex;align-items:center;gap:14px;padding:14px 0;border-bottom:1px solid var(--border)}
-.team-row:last-child{border-bottom:0}
-.team-avatar{width:40px;height:40px;border-radius:var(--radius-sm);background:var(--surface3);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:700;font-size:.9rem;color:var(--primary);flex-shrink:0;border:1px solid var(--border)}
-.team-info{flex:1}
-.team-info h4{font-size:.95rem;font-weight:600;margin-bottom:2px}
-.team-info p{font-size:.82rem;color:var(--muted)}
-.team-actions{display:flex;gap:6px}
+    button{
+      border:none;
+      border-radius:12px;
+      padding:12px 16px;
+      font-weight:600;
+      cursor:pointer;
+    }
 
-/* ── SETUP PROFILE ──────────────────────────────────── */
-.setup-header{text-align:center;padding:32px 0 24px}
-.setup-header h2{font-size:clamp(1.8rem,4vw,2.8rem);margin-bottom:10px}
-.setup-header p{color:var(--muted);margin-inline:auto}
-.step-indicator{display:flex;align-items:center;justify-content:center;gap:0;margin:0 auto 32px;max-width:320px}
-.step-dot{width:32px;height:32px;border-radius:50%;background:var(--surface2);border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:700;color:var(--muted);flex-shrink:0;transition:all var(--transition)}
-.step-dot.active{background:var(--primary-dim);border-color:var(--primary);color:var(--primary)}
-.step-dot.done{background:var(--green);border-color:var(--green);color:#fff}
-.step-line{height:2px;flex:1;background:var(--border)}
-.step-line.done{background:var(--green)}
+    .btn-primary{
+      background:var(--accent);
+      color:#1a1a1a;
+    }
 
-/* ── ALERTS ─────────────────────────────────────────── */
-.alert{padding:14px 16px;border-radius:var(--radius-sm);font-size:.9rem;display:flex;align-items:flex-start;gap:10px;margin-bottom:16px}
-.alert-success{background:rgba(61,186,111,.10);border:1px solid rgba(61,186,111,.2);color:var(--green)}
-.alert-warning{background:rgba(200,168,75,.10);border:1px solid rgba(200,168,75,.2);color:var(--primary)}
-.alert-error{background:rgba(224,82,82,.10);border:1px solid rgba(224,82,82,.2);color:var(--red)}
-.alert{display:none}
-.alert.show{display:flex}
+    .btn-secondary{
+      background:transparent;
+      border:1px solid var(--border);
+      color:var(--text);
+    }
 
-/* ── DIVIDER ────────────────────────────────────────── */
-.divider{height:1px;background:var(--border);margin:20px 0}
+    .btn-danger{
+      background:transparent;
+      border:1px solid rgba(212,107,107,.35);
+      color:#f0b4b4;
+    }
 
-/* ── EMPTY STATE ────────────────────────────────────── */
-.empty{text-align:center;padding:48px 20px;color:var(--muted)}
-.empty-icon{font-size:2.5rem;margin-bottom:12px;opacity:.5}
-.empty h3{font-size:1rem;margin-bottom:6px;color:var(--text)}
-.empty p{font-size:.88rem}
+    .league-list{
+      display:grid;
+      gap:16px;
+      margin-top:10px;
+    }
 
-/* ── MODAL ──────────────────────────────────────────── */
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);z-index:200;display:none;align-items:center;justify-content:center;padding:20px}
-.modal-overlay.open{display:flex}
-.modal{background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);padding:28px;width:100%;max-width:480px;box-shadow:var(--shadow);animation:modalIn .2s ease}
-@keyframes modalIn{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:scale(1)}}
-.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
-.modal-title{font-size:1.1rem;font-family:var(--font-display)}
-.modal-close{color:var(--muted);font-size:1.2rem;line-height:1;padding:4px}
-.modal-close:hover{color:var(--text)}
+    .league-card{
+      background:var(--panel-2);
+      border:1px solid var(--border);
+      border-radius:14px;
+      padding:18px;
+      display:grid;
+      gap:14px;
+    }
 
-/* ── MOBILE ─────────────────────────────────────────── */
-@media(max-width:640px){
-  .hero{padding:32px 0 24px}.hero-btns{flex-direction:column;align-items:stretch}
-  .btn{justify-content:center}.grid-2,.grid-3{grid-template-columns:1fr}
-  .form-row{grid-template-columns:1fr}.header-actions .btn{display:none}
-}
-</style>
+    .league-top{
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      align-items:flex-start;
+      flex-wrap:wrap;
+    }
+
+    .badge{
+      display:inline-block;
+      padding:6px 10px;
+      border-radius:999px;
+      font-size:12px;
+      font-weight:700;
+      background:rgba(214,178,94,.15);
+      color:var(--accent);
+    }
+
+    .meta{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
+      gap:10px;
+    }
+
+    .meta div{
+      background:#11131c;
+      border:1px solid #25283a;
+      border-radius:12px;
+      padding:10px 12px;
+    }
+
+    .meta strong{
+      display:block;
+      font-size:12px;
+      color:var(--muted);
+      margin-bottom:6px;
+      font-weight:600;
+    }
+
+    .section-head{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+
+    .helper{
+      font-size:13px;
+      color:var(--muted);
+    }
+
+    @media (max-width:700px){
+      body{
+        padding:16px;
+      }
+
+      .platform-row{
+        grid-template-columns:1fr;
+      }
+    }
+  </style>
 </head>
-<body class="app">
-
-<!-- ══ HEADER ══════════════════════════════════════════ -->
-<header class="header">
+<body>
   <div class="container">
-    <div class="header-inner">
-      <div class="logo">
-        <svg width="28" height="28" viewBox="0 0 28 28" fill="none" aria-label="Dynasty Mode Logo">
-          <rect width="28" height="28" rx="7" fill="rgba(200,168,75,.15)"/>
-          <path d="M7 8h5l3 4 3-4h3l-5 6.5L21 21h-3l-4-5-4 5H7l5-6.5L7 8Z" fill="#c8a84b"/>
-        </svg>
-        DYNASTY MODE
-      </div>
-      <div class="header-actions">
-        <button class="theme-btn" id="themeToggle" aria-label="Toggle theme">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-        </button>
-        <button class="btn btn-outline btn-sm" id="headerJoinBtn" onclick="showPage('setup')">Join League</button>
-      </div>
-    </div>
-    <!-- NAV TABS -->
-    <nav class="nav-tabs" aria-label="Main navigation">
-      <button class="tab-btn active" data-page="dashboard">Dashboard</button>
-      <button class="tab-btn" data-page="roster">My Team</button>
-      <button class="tab-btn" data-page="commissioner">Commissioner</button>
-      <button class="tab-btn" data-page="notifications">Notifications</button>
-      <button class="tab-btn" data-page="setup">My Profile</button>
-    </nav>
-  </div>
-</header>
+    <section class="card">
+      <h1>Account Profile</h1>
+      <p>This section stores the user’s core identity once, then reuses it across all leagues.</p>
 
-<!-- ══ MAIN ════════════════════════════════════════════ -->
-<main style="flex:1">
-  <div class="container">
-
-    <!-- ── DASHBOARD ── -->
-    <section id="page-dashboard" class="page active">
-      <div class="hero">
-        <div class="hero-badge">
-          <svg width="10" height="10" viewBox="0 0 10 10"><circle cx="5" cy="5" r="5" fill="currentColor"/></svg>
-          League Season Active
+      <div class="grid">
+        <div>
+          <label for="name">Your Name</label>
+          <input id="name" type="text" placeholder="Sent" />
         </div>
-        <h1>Your <span>Dynasty</span> Starts Here</h1>
-        <p>Stay connected with your league. Get notified your way. Never miss a week advance again.</p>
-        <div class="hero-btns">
-          <button class="btn btn-primary" onclick="showPage('setup')">Set Up My Profile</button>
-          <button class="btn btn-outline" onclick="showPage('notifications')">Choose Notifications</button>
+        <div>
+          <label for="email">Email Address</label>
+          <input id="email" type="email" placeholder="you@email.com" />
+        </div>
+        <div>
+          <label for="phone">Phone Number</label>
+          <input id="phone" type="tel" placeholder="+1 (555) 000-0000" />
+        </div>
+        <div>
+          <label for="timezone">Time Zone</label>
+          <select id="timezone">
+            <option>Central Time (CT)</option>
+            <option>Eastern Time (ET)</option>
+            <option>Mountain Time (MT)</option>
+            <option>Pacific Time (PT)</option>
+          </select>
         </div>
       </div>
 
-      <!-- STATS -->
-      <div class="grid-3" style="margin-bottom:20px">
-        <div class="stat-card">
-          <span class="stat-label">Current Week</span>
-          <span class="stat-value" id="statWeek">—</span>
-          <span class="stat-sub">Set by commissioner</span>
+      <h3 style="margin-top:22px;">Platform Accounts</h3>
+      <p class="helper">Store multiple gaming identities once, then attach the right one to each league membership.</p>
+
+      <div class="platform-list">
+        <div class="platform-row">
+          <select>
+            <option>Xbox</option>
+            <option>PlayStation</option>
+            <option>Steam</option>
+            <option>EA App</option>
+          </select>
+          <input type="text" placeholder="Gamertag / PSN / Steam / EA ID" />
         </div>
-        <div class="stat-card">
-          <span class="stat-label">League Members</span>
-          <span class="stat-value" id="statMembers">—</span>
-          <span class="stat-sub">Teams registered</span>
-        </div>
-        <div class="stat-card">
-          <span class="stat-label">Next Advance</span>
-          <span class="stat-value" id="statAdvance">TBD</span>
-          <span class="stat-sub">Deadline for games</span>
+        <div class="platform-row">
+          <select>
+            <option>Steam</option>
+            <option>Xbox</option>
+            <option>PlayStation</option>
+            <option>EA App</option>
+          </select>
+          <input type="text" placeholder="Gamertag / PSN / Steam / EA ID" />
         </div>
       </div>
 
-      <!-- FEED -->
-      <div class="card">
-        <div class="card-header">
-          <span class="card-title">League Activity</span>
-          <span class="badge badge-gold" id="feedCount">0 updates</span>
-        </div>
-        <div id="activityFeed">
-          <div class="empty">
-            <div class="empty-icon">📋</div>
-            <h3>No activity yet</h3>
-            <p>Commissioner updates and week advances will appear here.</p>
-          </div>
-        </div>
+      <div class="btn-row">
+        <button class="btn-primary">Save Account Profile</button>
+        <button class="btn-secondary">Add Another Platform</button>
       </div>
     </section>
 
-    <!-- ── MY TEAM ── -->
-    <section id="page-roster" class="page">
-      <div class="card" style="margin-bottom:16px">
-        <div class="card-header">
-          <span class="card-title">My Team Info</span>
-          <span class="badge badge-muted" id="myTeamBadge">Not set up</span>
-        </div>
-        <div class="form-stack" id="myTeamDisplay">
-          <div class="empty">
-            <div class="empty-icon">🏈</div>
-            <h3>Profile not set up</h3>
-            <p>Go to My Profile tab to set up your team and preferences.</p>
-          </div>
-        </div>
-      </div>
-      <div class="card">
-        <div class="card-header">
-          <span class="card-title">League Roster</span>
-        </div>
-        <div id="leagueRoster">
-          <div class="empty">
-            <div class="empty-icon">👥</div>
-            <h3>No teams yet</h3>
-            <p>Teams will appear here as members join the league.</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ── COMMISSIONER ── -->
-    <section id="page-commissioner" class="page">
-      <div class="grid-2">
+    <section class="card">
+      <div class="section-head">
         <div>
-          <div class="card" style="margin-bottom:16px">
-            <div class="card-header">
-              <span class="card-title">Send League Update</span>
-              <span class="badge badge-gold">Commissioner</span>
-            </div>
-            <div class="form-stack">
-              <div class="form-group">
-                <label class="form-label">Update Type</label>
-                <select class="form-select" id="updateType">
-                  <option value="week_advance">📅 Week Advance</option>
-                  <option value="reminder">⏰ Reminder — Play Your Game</option>
-                  <option value="announcement">📣 General Announcement</option>
-                  <option value="trade">🔄 Trade Block</option>
-                  <option value="playoffs">🏆 Playoffs / Championship</option>
-                  <option value="custom">✏️ Custom Message</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label class="form-label">Subject</label>
-                <input class="form-input" id="msgSubject" type="text" placeholder="e.g. Week 5 — Advance Tonight at 9PM">
-              </div>
-              <div class="form-group">
-                <label class="form-label">Message</label>
-                <textarea class="form-textarea" id="msgBody" placeholder="Type your message to the league here..."></textarea>
-              </div>
-              <div class="form-group">
-                <label class="form-label">Notify via</label>
-                <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:4px">
-                  <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:.9rem"><input type="checkbox" id="sendEmail" checked> Email</label>
-                  <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:.9rem"><input type="checkbox" id="sendSMS"> SMS</label>
-                  <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:.9rem"><input type="checkbox" id="sendPush"> Push</label>
-                </div>
-              </div>
-              <div id="commAlert" class="alert alert-success">
-                <span>✅</span><span id="commAlertMsg">Update sent!</span>
-              </div>
-              <button class="btn btn-primary" onclick="sendBroadcast()">Send to All Members</button>
-            </div>
-          </div>
-          <!-- WEEK CONTROL -->
-          <div class="card">
-            <div class="card-header"><span class="card-title">Week Control</span></div>
-            <div class="form-row">
-              <div class="form-group">
-                <label class="form-label">Current Week</label>
-                <input class="form-input" id="weekInput" type="number" min="1" max="20" placeholder="1" value="">
-              </div>
-              <div class="form-group">
-                <label class="form-label">Advance Deadline</label>
-                <input class="form-input" id="deadlineInput" type="datetime-local">
-              </div>
-            </div>
-            <button class="btn btn-outline btn-sm" style="margin-top:14px" onclick="saveWeek()">Update Week Info</button>
-          </div>
+          <h2>League Memberships</h2>
+          <p>Each membership is a separate record so users can belong to multiple leagues, teams, and roles at the same time.</p>
         </div>
-
-        <div>
-          <div class="card">
-            <div class="card-header">
-              <span class="card-title">Broadcast History</span>
-              <button class="btn btn-ghost btn-sm" onclick="clearHistory()">Clear</button>
-            </div>
-            <div id="broadcastHistory">
-              <div class="empty">
-                <div class="empty-icon">📨</div>
-                <h3>No messages sent yet</h3>
-                <p>Sent broadcasts will appear here.</p>
-              </div>
-            </div>
-          </div>
-        </div>
+        <button class="btn-primary">+ Add League</button>
       </div>
-    </section>
 
-    <!-- ── NOTIFICATIONS ── -->
-    <section id="page-notifications" class="page">
-      <div class="grid-2">
-        <div class="card">
-          <div class="card-header">
-            <span class="card-title">How to Notify Me</span>
-          </div>
-          <p style="font-size:.88rem;color:var(--muted);margin-bottom:18px">Choose which channels you want the commissioner to use when sending you league updates.</p>
-          <div>
-            <div class="toggle-row">
-              <div class="toggle-info">
-                <h4>📧 Email Notifications</h4>
-                <p>Get updates sent to your email address</p>
-              </div>
-              <label class="toggle">
-                <input type="checkbox" id="toggleEmail" checked onchange="saveNotifPrefs()">
-                <div class="toggle-track"></div>
-                <div class="toggle-thumb"></div>
-              </label>
-            </div>
-            <div class="toggle-row">
-              <div class="toggle-info">
-                <h4>📱 SMS Text Messages</h4>
-                <p>Receive texts directly to your phone</p>
-              </div>
-              <label class="toggle">
-                <input type="checkbox" id="toggleSMS" onchange="saveNotifPrefs()">
-                <div class="toggle-track"></div>
-                <div class="toggle-thumb"></div>
-              </label>
-            </div>
-            <div class="toggle-row">
-              <div class="toggle-info">
-                <h4>🔔 Push Notifications</h4>
-                <p>Browser or app push alerts</p>
-              </div>
-              <label class="toggle">
-                <input type="checkbox" id="togglePush" onchange="saveNotifPrefs()">
-                <div class="toggle-track"></div>
-                <div class="toggle-thumb"></div>
-              </label>
-            </div>
-          </div>
-          <div class="divider"></div>
-          <div class="form-stack">
-            <div class="form-group">
-              <label class="form-label">Email Address</label>
-              <input class="form-input" id="notifEmail" type="email" placeholder="your@email.com" onchange="saveNotifPrefs()">
-            </div>
-            <div class="form-group">
-              <label class="form-label">Phone Number (for SMS)</label>
-              <input class="form-input" id="notifPhone" type="tel" placeholder="+1 (555) 000-0000" onchange="saveNotifPrefs()">
-            </div>
-          </div>
-          <div id="notifSaved" class="alert alert-success" style="margin-top:14px">
-            <span>✅</span><span>Preferences saved!</span>
-          </div>
-          <button class="btn btn-primary" style="margin-top:14px;width:100%" onclick="saveNotifPrefs(true)">Save Preferences</button>
-        </div>
-
-        <div>
-          <div class="card" style="margin-bottom:16px">
-            <div class="card-header"><span class="card-title">Notify Me About</span></div>
+      <div class="league-list">
+        <article class="league-card">
+          <div class="league-top">
             <div>
-              <div class="toggle-row">
-                <div class="toggle-info"><h4>Week Advances</h4><p>When the commissioner advances the week</p></div>
-                <label class="toggle"><input type="checkbox" id="notifWeek" checked onchange="saveNotifPrefs()"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
-              </div>
-              <div class="toggle-row">
-                <div class="toggle-info"><h4>Game Reminders</h4><p>Deadline reminders before advance</p></div>
-                <label class="toggle"><input type="checkbox" id="notifReminder" checked onchange="saveNotifPrefs()"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
-              </div>
-              <div class="toggle-row">
-                <div class="toggle-info"><h4>Announcements</h4><p>General league news from commissioner</p></div>
-                <label class="toggle"><input type="checkbox" id="notifAnnounce" checked onchange="saveNotifPrefs()"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
-              </div>
-              <div class="toggle-row">
-                <div class="toggle-info"><h4>Trade Alerts</h4><p>Trade proposals and block updates</p></div>
-                <label class="toggle"><input type="checkbox" id="notifTrade" onchange="saveNotifPrefs()"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
-              </div>
+              <h3>FFL</h3>
+              <p class="helper">Membership ID: mem-001</p>
             </div>
+            <span class="badge">Active</span>
           </div>
-          <div class="card">
-            <div class="card-header"><span class="card-title">Quiet Hours</span></div>
-            <p style="font-size:.88rem;color:var(--muted);margin-bottom:14px">No notifications during these hours.</p>
-            <div class="form-row">
-              <div class="form-group">
-                <label class="form-label">From</label>
-                <input class="form-input" type="time" id="quietFrom" value="22:00" onchange="saveNotifPrefs()">
-              </div>
-              <div class="form-group">
-                <label class="form-label">Until</label>
-                <input class="form-input" type="time" id="quietUntil" value="08:00" onchange="saveNotifPrefs()">
-              </div>
+
+          <div class="meta">
+            <div><strong>School / Team</strong>Texas A&amp;M</div>
+            <div><strong>Role</strong>League Member</div>
+            <div><strong>Platform</strong>Xbox</div>
+            <div><strong>Gamertag</strong>SentXBL</div>
+            <div><strong>Joined</strong>2026-01-14</div>
+            <div><strong>Commissioner</strong>Yes</div>
+          </div>
+
+          <div class="btn-row">
+            <button class="btn-secondary">Edit Membership</button>
+            <button class="btn-secondary">Change Team</button>
+            <button class="btn-danger">Archive / Leave League</button>
+          </div>
+        </article>
+
+        <article class="league-card">
+          <div class="league-top">
+            <div>
+              <h3>Saturday Dynasty</h3>
+              <p class="helper">Membership ID: mem-002</p>
             </div>
+            <span class="badge">Active</span>
           </div>
-        </div>
+
+          <div class="meta">
+            <div><strong>School / Team</strong>LSU</div>
+            <div><strong>Role</strong>Commissioner</div>
+            <div><strong>Platform</strong>Steam</div>
+            <div><strong>Gamertag</strong>Sent_Steam</div>
+            <div><strong>Joined</strong>2026-03-02</div>
+            <div><strong>Commissioner</strong>Primary</div>
+          </div>
+
+          <div class="btn-row">
+            <button class="btn-secondary">Edit Membership</button>
+            <button class="btn-secondary">Send League Update</button>
+            <button class="btn-danger">Archive / Leave League</button>
+          </div>
+        </article>
       </div>
     </section>
-
-    <!-- ── SETUP / PROFILE ── -->
-    <section id="page-setup" class="page">
-      <div class="setup-header">
-        <h2>Set Up Your Profile</h2>
-        <p>Tell us about yourself and your team so the commissioner can reach you.</p>
-      </div>
-
-      <div style="max-width:600px;margin-inline:auto">
-        <div class="card">
-          <div class="form-stack">
-            <div class="form-group">
-              <label class="form-label">Your Name</label>
-              <input class="form-input" id="setupName" type="text" placeholder="Full name or gamertag">
-            </div>
-            <div class="form-group">
-              <label class="form-label">League Name</label>
-              <input class="form-input" id="setupLeague" type="text" placeholder="e.g. Friday Night Dynasty League">
-            </div>
-            <div class="form-group">
-              <label class="form-label">Your School / Team</label>
-              <input class="form-input" id="setupTeam" type="text" placeholder="e.g. Alabama Crimson Tide">
-            </div>
-            <div class="form-group">
-              <label class="form-label">Your Role</label>
-              <select class="form-select" id="setupRole">
-                <option value="member">League Member</option>
-                <option value="commissioner">Commissioner</option>
-                <option value="co-commissioner">Co-Commissioner</option>
-              </select>
-            </div>
-            <div class="divider"></div>
-            <div class="form-group">
-              <label class="form-label">Email Address</label>
-              <input class="form-input" id="setupEmail" type="email" placeholder="your@email.com">
-            </div>
-            <div class="form-group">
-              <label class="form-label">Phone Number</label>
-              <input class="form-input" id="setupPhone" type="tel" placeholder="+1 (555) 000-0000">
-            </div>
-            <div class="form-group">
-              <label class="form-label">Platform / Console</label>
-              <select class="form-select" id="setupPlatform">
-                <option value="">Select platform</option>
-                <option value="ps5">PlayStation 5</option>
-                <option value="xbox">Xbox Series X/S</option>
-                <option value="pc">PC</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Gamertag / PSN / Xbox ID</label>
-              <input class="form-input" id="setupGamertag" type="text" placeholder="Your online username">
-            </div>
-            <div class="form-group">
-              <label class="form-label">Time Zone</label>
-              <select class="form-select" id="setupTimezone">
-                <option value="ET">Eastern Time (ET)</option>
-                <option value="CT" selected>Central Time (CT)</option>
-                <option value="MT">Mountain Time (MT)</option>
-                <option value="PT">Pacific Time (PT)</option>
-                <option value="AKT">Alaska Time</option>
-                <option value="HT">Hawaii Time</option>
-              </select>
-            </div>
-            <div id="setupAlert" class="alert alert-success">
-              <span>✅</span><span>Profile saved successfully!</span>
-            </div>
-            <button class="btn btn-primary" style="width:100%" onclick="saveProfile()">Save My Profile</button>
-          </div>
-        </div>
-      </div>
-    </section>
-
-  </div><!-- /container -->
-</main>
-
-<!-- ══ MODAL ════════════════════════════════════════════ -->
-<div class="modal-overlay" id="broadcastModal">
-  <div class="modal">
-    <div class="modal-header">
-      <span class="modal-title">Broadcast Preview</span>
-      <button class="modal-close" onclick="closeModal()">✕</button>
-    </div>
-    <div id="modalContent"></div>
-    <div style="display:flex;gap:10px;margin-top:20px;justify-content:flex-end">
-      <button class="btn btn-outline btn-sm" onclick="closeModal()">Cancel</button>
-      <button class="btn btn-primary btn-sm" onclick="confirmBroadcast()">Confirm &amp; Send</button>
-    </div>
   </div>
-</div>
-
-<script>
-// ── STATE ──────────────────────────────────────────────
-let state = {
-  profile: {},
-  notifPrefs: { email:true, sms:false, push:false, week:true, reminder:true, announce:true, trade:false, quietFrom:'22:00', quietUntil:'08:00' },
-  members: [],
-  broadcasts: [],
-  week: null,
-  deadline: null
-};
-
-// ── THEME ──────────────────────────────────────────────
-const html = document.documentElement;
-const themeBtn = document.getElementById('themeToggle');
-themeBtn.addEventListener('click', () => {
-  const d = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-  html.setAttribute('data-theme', d);
-  themeBtn.innerHTML = d === 'dark'
-    ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>'
-    : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>';
-});
-
-// ── NAV ────────────────────────────────────────────────
-function showPage(id) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-  const page = document.getElementById('page-' + id);
-  const btn = document.querySelector('[data-page="' + id + '"]');
-  if (page) page.classList.add('active');
-  if (btn) btn.classList.add('active');
-}
-document.querySelectorAll('.tab-btn').forEach(btn => {
-  btn.addEventListener('click', () => showPage(btn.dataset.page));
-});
-
-// ── PROFILE ────────────────────────────────────────────
-function saveProfile() {
-  const name = document.getElementById('setupName').value.trim();
-  const league = document.getElementById('setupLeague').value.trim();
-  const team = document.getElementById('setupTeam').value.trim();
-  const role = document.getElementById('setupRole').value;
-  const email = document.getElementById('setupEmail').value.trim();
-  const phone = document.getElementById('setupPhone').value.trim();
-  const platform = document.getElementById('setupPlatform').value;
-  const gamertag = document.getElementById('setupGamertag').value.trim();
-  const tz = document.getElementById('setupTimezone').value;
-
-  if (!name) { alert('Please enter your name.'); return; }
-
-  state.profile = { name, league, team, role, email, phone, platform, gamertag, tz };
-
-  // pre-fill notification contact info
-  if (email) document.getElementById('notifEmail').value = email;
-  if (phone) document.getElementById('notifPhone').value = phone;
-
-  // update member list
-  const existing = state.members.find(m => m.name === name);
-  if (!existing) {
-    state.members.push({ name, team, role, platform, gamertag, email, phone });
-  }
-
-  updateDashboard();
-  updateRoster();
-  showAlert('setupAlert', 'Profile saved! Welcome, ' + name + '!');
-
-  setTimeout(() => showPage('dashboard'), 1200);
-}
-
-// ── NOTIFICATION PREFS ─────────────────────────────────
-function saveNotifPrefs(explicit) {
-  state.notifPrefs = {
-    email: document.getElementById('toggleEmail').checked,
-    sms: document.getElementById('toggleSMS').checked,
-    push: document.getElementById('togglePush').checked,
-    week: document.getElementById('notifWeek').checked,
-    reminder: document.getElementById('notifReminder').checked,
-    announce: document.getElementById('notifAnnounce').checked,
-    trade: document.getElementById('notifTrade').checked,
-    quietFrom: document.getElementById('quietFrom').value,
-    quietUntil: document.getElementById('quietUntil').value,
-    emailAddr: document.getElementById('notifEmail').value,
-    phone: document.getElementById('notifPhone').value
-  };
-  if (explicit) showAlert('notifSaved', 'Preferences saved!');
-}
-
-// ── BROADCAST ──────────────────────────────────────────
-function sendBroadcast() {
-  const subject = document.getElementById('msgSubject').value.trim();
-  const body = document.getElementById('msgBody').value.trim();
-  if (!subject || !body) { alert('Please fill in the subject and message.'); return; }
-  const channels = [];
-  if (document.getElementById('sendEmail').checked) channels.push('Email');
-  if (document.getElementById('sendSMS').checked) channels.push('SMS');
-  if (document.getElementById('sendPush').checked) channels.push('Push');
-  const type = document.getElementById('updateType').value;
-  document.getElementById('modalContent').innerHTML = `
-    <div class="form-stack" style="font-size:.9rem">
-      <div><strong>Type:</strong> ${document.getElementById('updateType').options[document.getElementById('updateType').selectedIndex].text}</div>
-      <div><strong>Subject:</strong> ${subject}</div>
-      <div style="background:var(--surface2);padding:12px;border-radius:10px;white-space:pre-wrap">${body}</div>
-      <div><strong>Channels:</strong> ${channels.length ? channels.join(', ') : 'None selected'}</div>
-      <div><strong>Recipients:</strong> ${state.members.length || 1} member(s)</div>
-    </div>`;
-  document.getElementById('broadcastModal').classList.add('open');
-}
-
-function confirmBroadcast() {
-  closeModal();
-  const subject = document.getElementById('msgSubject').value.trim();
-  const body = document.getElementById('msgBody').value.trim();
-  const type = document.getElementById('updateType').value;
-  const channels = [];
-  if (document.getElementById('sendEmail').checked) channels.push('Email');
-  if (document.getElementById('sendSMS').checked) channels.push('SMS');
-  if (document.getElementById('sendPush').checked) channels.push('Push');
-  const entry = { subject, body, type, channels, time: new Date().toLocaleString() };
-  state.broadcasts.unshift(entry);
-  addToFeed(subject, body, type);
-  updateBroadcastHistory();
-  document.getElementById('msgSubject').value = '';
-  document.getElementById('msgBody').value = '';
-  showAlert('commAlert', '✅ Broadcast sent to ' + (state.members.length || 1) + ' member(s) via ' + (channels.join(', ') || 'app feed'));
-}
-
-function clearHistory() {
-  state.broadcasts = [];
-  updateBroadcastHistory();
-}
-
-function updateBroadcastHistory() {
-  const el = document.getElementById('broadcastHistory');
-  if (!state.broadcasts.length) {
-    el.innerHTML = '<div class="empty"><div class="empty-icon">📨</div><h3>No messages sent yet</h3><p>Sent broadcasts will appear here.</p></div>';
-    return;
-  }
-  el.innerHTML = state.broadcasts.map(b => `
-    <div class="feed-item">
-      <div class="feed-dot"></div>
-      <div class="feed-content">
-        <h4>${b.subject}</h4>
-        <p>${b.body.substring(0,100)}${b.body.length>100?'...':''}</p>
-        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">${b.channels.map(c=>`<span class="badge badge-muted">${c}</span>`).join('')}</div>
-        <span class="feed-time">${b.time}</span>
-      </div>
-    </div>`).join('');
-}
-
-function closeModal() {
-  document.getElementById('broadcastModal').classList.remove('open');
-}
-
-// ── WEEK ───────────────────────────────────────────────
-function saveWeek() {
-  state.week = document.getElementById('weekInput').value;
-  state.deadline = document.getElementById('deadlineInput').value;
-  updateDashboard();
-  alert('Week info updated!');
-}
-
-// ── DASHBOARD ──────────────────────────────────────────
-function updateDashboard() {
-  document.getElementById('statWeek').textContent = state.week ? 'Week ' + state.week : '—';
-  document.getElementById('statMembers').textContent = state.members.length || '—';
-  if (state.deadline) {
-    const d = new Date(state.deadline);
-    document.getElementById('statAdvance').textContent = d.toLocaleDateString('en-US', {month:'short', day:'numeric', hour:'numeric', minute:'2-digit'});
-  }
-}
-
-// ── FEED ───────────────────────────────────────────────
-function addToFeed(title, body, type) {
-  const colors = { week_advance:'', reminder:'blue', announcement:'green', trade:'', playoffs:'', custom:'' };
-  const el = document.getElementById('activityFeed');
-  const existing = el.querySelector('.empty');
-  if (existing) el.innerHTML = '';
-  const item = document.createElement('div');
-  item.className = 'feed-item';
-  item.innerHTML = `<div class="feed-dot ${colors[type]||''}"></div><div class="feed-content"><h4>${title}</h4><p>${body.substring(0,120)}</p><span class="feed-time">${new Date().toLocaleString()}</span></div>`;
-  el.prepend(item);
-  const count = el.querySelectorAll('.feed-item').length;
-  document.getElementById('feedCount').textContent = count + ' update' + (count !== 1 ? 's' : '');
-}
-
-// ── ROSTER ─────────────────────────────────────────────
-function updateRoster() {
-  const p = state.profile;
-  document.getElementById('myTeamBadge').textContent = p.role || 'Member';
-  document.getElementById('myTeamBadge').className = 'badge ' + (p.role === 'commissioner' ? 'badge-gold' : 'badge-green');
-  document.getElementById('myTeamDisplay').innerHTML = p.name ? `
-    <div class="form-row">
-      <div><span class="form-label">Name</span><p>${p.name}</p></div>
-      <div><span class="form-label">Team</span><p>${p.team || '—'}</p></div>
-      <div><span class="form-label">Platform</span><p>${p.platform || '—'}</p></div>
-      <div><span class="form-label">Gamertag</span><p>${p.gamertag || '—'}</p></div>
-      <div><span class="form-label">Time Zone</span><p>${p.tz || '—'}</p></div>
-      <div><span class="form-label">Email</span><p>${p.email || '—'}</p></div>
-    </div>` : '<div class="empty"><div class="empty-icon">🏈</div><h3>Profile not set up</h3></div>';
-
-  const roster = document.getElementById('leagueRoster');
-  if (!state.members.length) {
-    roster.innerHTML = '<div class="empty"><div class="empty-icon">👥</div><h3>No teams yet</h3><p>Teams will appear here as members join.</p></div>';
-    return;
-  }
-  roster.innerHTML = state.members.map(m => `
-    <div class="team-row">
-      <div class="team-avatar">${m.name ? m.name[0].toUpperCase() : '?'}</div>
-      <div class="team-info"><h4>${m.name}</h4><p>${m.team || 'No team set'} · ${m.platform || ''} · ${m.gamertag || ''}</p></div>
-      <span class="badge ${m.role==='commissioner'?'badge-gold':m.role==='co-commissioner'?'badge-blue':'badge-muted'}">${m.role||'member'}</span>
-    </div>`).join('');
-}
-
-// ── UTIL ───────────────────────────────────────────────
-function showAlert(id, msg) {
-  const el = document.getElementById(id);
-  if (!el) return;
-  if (msg) { const span = el.querySelectorAll('span'); if (span[1]) span[1].textContent = msg; }
-  el.classList.add('show');
-  setTimeout(() => el.classList.remove('show'), 3000);
-}
-
-// close modal on overlay click
-document.getElementById('broadcastModal').addEventListener('click', e => { if (e.target === e.currentTarget) closeModal(); });
-</script>
 </body>
 </html>
