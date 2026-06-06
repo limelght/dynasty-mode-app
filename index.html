@@ -1,1318 +1,1282 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>DynastyHQ</title>
+  <meta name="description" content="Dynasty Mode App — manage your college football dynasty league, send commissioner updates, and control notifications." />
+  <title>Dynasty Mode</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300..700&family=Bebas+Neue&display=swap" rel="stylesheet">
   <style>
+    /* ===== DESIGN TOKENS ===== */
     :root {
-      --bg: #f7f6f2;
-      --surface: #fbfaf7;
-      --surface-2: #f1efe8;
-      --surface-3: #e9e5dc;
-      --border: #d8d2c4;
-      --text: #1d1c18;
-      --muted: #6f6a5f;
-      --faint: #a39c8d;
-      --accent: #b8860b;
-      --accent-hover: #9e7409;
-      --accent-dim: rgba(184,134,11,.12);
-      --danger: #c94f4f;
-      --success: #2e8b57;
-      --radius: 14px;
-      --radius-sm: 8px;
-      --transition: 160ms cubic-bezier(.16,1,.3,1);
-      --shadow: 0 20px 60px rgba(17,17,17,.08);
+      --font-display: 'Bebas Neue', 'Impact', sans-serif;
+      --font-body: 'Inter', system-ui, sans-serif;
+
+      --text-xs:   clamp(0.75rem,  0.7rem  + 0.25vw, 0.875rem);
+      --text-sm:   clamp(0.875rem, 0.8rem  + 0.35vw, 1rem);
+      --text-base: clamp(1rem,     0.95rem + 0.25vw, 1.125rem);
+      --text-lg:   clamp(1.125rem, 1rem    + 0.75vw, 1.5rem);
+      --text-xl:   clamp(1.5rem,   1.2rem  + 1.25vw, 2.25rem);
+      --text-2xl:  clamp(2rem,     1.2rem  + 2.5vw,  3.5rem);
+
+      --space-1: 0.25rem; --space-2: 0.5rem; --space-3: 0.75rem; --space-4: 1rem;
+      --space-5: 1.25rem; --space-6: 1.5rem; --space-8: 2rem; --space-10: 2.5rem;
+      --space-12: 3rem; --space-16: 4rem;
+
+      --radius-sm: 0.375rem; --radius-md: 0.5rem; --radius-lg: 0.75rem;
+      --radius-xl: 1rem; --radius-2xl: 1.5rem; --radius-full: 9999px;
+
+      --transition: 180ms cubic-bezier(0.16, 1, 0.3, 1);
+
+      /* Dark theme (default) */
+      --bg:             #0d0e12;
+      --surface:        #13151b;
+      --surface-2:      #181a22;
+      --surface-3:      #1f2130;
+      --border:         rgba(255,255,255,0.08);
+      --border-strong:  rgba(255,255,255,0.14);
+      --text:           #e8eaf0;
+      --text-muted:     #7b8099;
+      --text-faint:     #454860;
+      --text-inverse:   #0d0e12;
+      --accent:         #c9a84c;
+      --accent-hover:   #e0be6a;
+      --accent-dim:     rgba(201,168,76,0.12);
+      --accent-glow:    rgba(201,168,76,0.25);
+      --success:        #4caf7a;
+      --success-dim:    rgba(76,175,122,0.12);
+      --error:          #e05c6a;
+      --error-dim:      rgba(224,92,106,0.12);
+      --info:           #5b8dee;
+      --info-dim:       rgba(91,141,238,0.12);
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
+      --shadow-md: 0 4px 16px rgba(0,0,0,0.4);
+      --shadow-lg: 0 12px 40px rgba(0,0,0,0.5);
     }
-    [data-theme="dark"] {
-      --bg: #0d0d0f;
-      --surface: #141416;
-      --surface-2: #1a1a1e;
-      --surface-3: #202024;
-      --border: #2a2a30;
-      --text: #f0f0f2;
-      --muted: #888890;
-      --faint: #444448;
-      --accent: #d4a847;
-      --accent-hover: #e8be5a;
-      --accent-dim: rgba(212,168,71,.12);
-      --danger: #c94f4f;
-      --success: #4caf7d;
-      --shadow: 0 24px 64px rgba(0,0,0,.5);
+
+    [data-theme="light"] {
+      --bg:             #f5f4f0;
+      --surface:        #faf9f6;
+      --surface-2:      #ffffff;
+      --surface-3:      #f0ede8;
+      --border:         rgba(0,0,0,0.08);
+      --border-strong:  rgba(0,0,0,0.15);
+      --text:           #1a1c24;
+      --text-muted:     #5c6070;
+      --text-faint:     #9ea3b5;
+      --text-inverse:   #faf9f6;
+      --accent:         #a07820;
+      --accent-hover:   #7d5c10;
+      --accent-dim:     rgba(160,120,32,0.10);
+      --accent-glow:    rgba(160,120,32,0.20);
+      --success:        #2e7d52;
+      --success-dim:    rgba(46,125,82,0.10);
+      --error:          #c0394a;
+      --error-dim:      rgba(192,57,74,0.10);
+      --info:           #2c5ec7;
+      --info-dim:       rgba(44,94,199,0.10);
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
+      --shadow-md: 0 4px 16px rgba(0,0,0,0.10);
+      --shadow-lg: 0 12px 40px rgba(0,0,0,0.14);
     }
-    @media (prefers-color-scheme: dark) {
-      html:not([data-theme]) {
-        --bg: #0d0d0f;
-        --surface: #141416;
-        --surface-2: #1a1a1e;
-        --surface-3: #202024;
-        --border: #2a2a30;
-        --text: #f0f0f2;
-        --muted: #888890;
-        --faint: #444448;
-        --accent: #d4a847;
-        --accent-hover: #e8be5a;
-        --accent-dim: rgba(212,168,71,.12);
-        --danger: #c94f4f;
-        --success: #4caf7d;
-        --shadow: 0 24px 64px rgba(0,0,0,.5);
-      }
-    }
+
+    /* ===== BASE ===== */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html { scroll-behavior: smooth; }
+    html { scroll-behavior: smooth; -webkit-text-size-adjust: none; }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      min-height: 100dvh;
+      font-family: var(--font-body);
+      font-size: var(--text-base);
+      color: var(--text);
       background: var(--bg);
-      color: var(--text);
-      min-height: 100dvh;
-      font-size: 15px;
-      line-height: 1.55;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
     }
-    button { cursor: pointer; border: none; font: inherit; }
-    input, textarea, select { font: inherit; color: inherit; }
+    img { display: block; max-width: 100%; height: auto; }
+    button { cursor: pointer; font: inherit; border: none; background: none; }
+    input, select, textarea { font: inherit; color: inherit; }
     a { color: inherit; text-decoration: none; }
+    ul { list-style: none; }
 
-
-    .theme-toggle {
-      position: fixed;
-      top: 16px;
-      right: 16px;
-      z-index: 2000;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 12px;
-      border-radius: 999px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      color: var(--text);
-      box-shadow: var(--shadow);
-      transition: all var(--transition);
-    }
-    .theme-toggle:hover { background: var(--surface-2); }
-    .theme-toggle .theme-icon { font-size: 14px; }
-    .theme-toggle .theme-label { font-size: 12px; font-weight: 700; letter-spacing: .02em; }
-
-    .page-header {
-      display:flex;
-      justify-content:space-between;
-      align-items:flex-start;
-      gap:16px;
-      flex-wrap:wrap;
-      margin-bottom:18px;
-    }
-    .page-header h1, .page-header h2 { margin-bottom: 6px; }
-    .page-header p { color: var(--muted); }
-
-    .league-grid {
-      display:grid;
-      grid-template-columns: 1.2fr .8fr;
-      gap:20px;
-      align-items:start;
-    }
-    .league-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 22px;
-      margin-bottom: 16px;
-    }
-    .league-card h3 { font-size:16px; font-weight:700; margin-bottom:4px; }
-    .league-card p { font-size:13px; color: var(--muted); margin-bottom:16px; }
-    .league-form-grid {
-      display:grid;
-      grid-template-columns: repeat(2, minmax(0,1fr));
-      gap: 14px;
-      margin-bottom: 16px;
-    }
-    .league-list {
-      display:grid;
-      gap:12px;
-    }
-    .league-item {
-      border:1px solid var(--border);
-      background: var(--surface-2);
-      border-radius: 12px;
-      padding: 16px;
-    }
-    .league-item-top {
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      margin-bottom:10px;
-      flex-wrap:wrap;
-    }
-    .league-item-name { font-size:15px; font-weight:700; }
-    .league-tag {
-      padding:4px 10px;
-      border-radius:999px;
-      font-size:11px;
-      font-weight:700;
-      background: var(--accent-dim);
-      color: var(--accent);
-    }
-    .league-meta {
-      display:grid;
-      grid-template-columns: repeat(2, minmax(0,1fr));
-      gap:8px;
-      font-size:12px;
-      color: var(--muted);
-    }
-    .quick-actions {
-      display:grid;
-      gap:12px;
-    }
-    .quick-action-btn {
-      width:100%;
-      text-align:left;
-      padding:14px 16px;
-      border-radius:12px;
-      border:1px solid var(--border);
-      background: var(--surface-2);
-      color: var(--text);
-      transition: all var(--transition);
-    }
-    .quick-action-btn:hover { background: var(--surface-3); }
-    .quick-action-btn strong { display:block; font-size:14px; margin-bottom:4px; }
-    .quick-action-btn span { font-size:12px; color: var(--muted); }
-
-    @media (max-width: 860px) {
-      .league-grid { grid-template-columns: 1fr; }
-    }
-    @media (max-width: 640px) {
-      .league-form-grid, .league-meta { grid-template-columns: 1fr; }
-      .theme-toggle { top: 12px; right: 12px; padding: 8px 10px; }
-      .theme-toggle .theme-label { display:none; }
-    }
-
-    /* ── AUTH SCREEN ── */
-    #auth-screen {
-      min-height: 100dvh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 24px;
-      background: radial-gradient(ellipse 80% 60% at 50% 0%, var(--accent-dim) 0%, transparent 70%), var(--bg);
-    }
-    .auth-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 40px 36px;
-      width: 100%;
-      max-width: 420px;
-      box-shadow: var(--shadow);
-    }
-    .auth-logo {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 6px;
-    }
-    .auth-logo svg { color: var(--accent); }
-    .auth-logo span {
-      font-size: 22px;
-      font-weight: 800;
-      letter-spacing: .04em;
-      text-transform: uppercase;
-      color: var(--accent);
-    }
-    .auth-tagline { color: var(--muted); font-size: 14px; margin-bottom: 28px; }
-    .auth-tabs {
+    /* ===== LAYOUT ===== */
+    .app-shell {
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      background: var(--surface-2);
-      border-radius: var(--radius-sm);
-      padding: 4px;
-      gap: 4px;
-      margin-bottom: 24px;
+      grid-template-columns: 240px 1fr;
+      min-height: 100dvh;
     }
-    .auth-tab {
-      padding: 9px;
-      border-radius: 6px;
+    @media (max-width: 768px) {
+      .app-shell { grid-template-columns: 1fr; }
+    }
+
+    /* ===== SIDEBAR ===== */
+    .sidebar {
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      padding: var(--space-6) 0;
+      position: sticky;
+      top: 0;
+      height: 100dvh;
+      overflow-y: auto;
+    }
+    .sidebar-brand {
+      padding: 0 var(--space-6) var(--space-6);
+      border-bottom: 1px solid var(--border);
+      margin-bottom: var(--space-4);
+    }
+    .brand-logo {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+    }
+    .brand-icon {
+      width: 36px; height: 36px;
+      background: var(--accent);
+      border-radius: var(--radius-md);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .brand-name {
+      font-family: var(--font-display);
+      font-size: var(--text-lg);
+      letter-spacing: 0.04em;
+      color: var(--text);
+      line-height: 1;
+    }
+    .brand-sub {
+      font-size: var(--text-xs);
+      color: var(--text-muted);
+      margin-top: var(--space-1);
+    }
+    .nav-section {
+      padding: 0 var(--space-3);
+      margin-bottom: var(--space-2);
+    }
+    .nav-label {
+      font-size: var(--text-xs);
       font-weight: 600;
-      font-size: 14px;
-      color: var(--muted);
-      background: transparent;
-      transition: all var(--transition);
+      color: var(--text-faint);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: var(--space-2) var(--space-3);
+      margin-bottom: var(--space-1);
+    }
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      padding: var(--space-2) var(--space-3);
+      border-radius: var(--radius-md);
+      font-size: var(--text-sm);
+      color: var(--text-muted);
+      transition: color var(--transition), background var(--transition);
+      cursor: pointer;
+      width: 100%;
+      text-align: left;
+    }
+    .nav-item:hover { color: var(--text); background: var(--surface-2); }
+    .nav-item.active { color: var(--accent); background: var(--accent-dim); font-weight: 500; }
+    .nav-item svg { flex-shrink: 0; opacity: 0.7; }
+    .nav-item.active svg { opacity: 1; }
+    .nav-badge {
+      margin-left: auto;
+      background: var(--accent);
+      color: var(--text-inverse);
+      font-size: 10px;
+      font-weight: 700;
+      padding: 1px 6px;
+      border-radius: var(--radius-full);
+      min-width: 18px;
       text-align: center;
     }
-    .auth-tab.active { background: var(--surface-3); color: var(--text); }
-    .auth-field { margin-bottom: 16px; }
-    .auth-field label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 6px; font-weight: 500; }
-    .auth-field input {
-      width: 100%;
-      background: var(--surface-2);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
-      padding: 11px 14px;
-      font-size: 15px;
-      transition: border-color var(--transition), box-shadow var(--transition);
-    }
-    .auth-field input:focus {
-      outline: none;
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px rgba(212,168,71,.15);
-    }
-    .btn-primary {
-      width: 100%;
-      background: var(--accent);
-      color: #1a1200;
-      font-weight: 700;
-      font-size: 15px;
-      padding: 12px;
-      border-radius: var(--radius-sm);
-      transition: background var(--transition), transform var(--transition);
-    }
-    .btn-primary:hover { background: var(--accent-hover); }
-    .btn-primary:active { transform: scale(.98); }
-    .auth-divider { display: flex; align-items: center; gap: 12px; margin: 18px 0; color: var(--faint); font-size: 13px; }
-    .auth-divider::before, .auth-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
-    .btn-google {
-      width: 100%;
-      background: var(--surface-2);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
-      padding: 11px;
-      font-size: 14px;
-      font-weight: 600;
+    .sidebar-footer {
+      margin-top: auto;
+      padding: var(--space-4) var(--space-6) 0;
+      border-top: 1px solid var(--border);
       display: flex;
       align-items: center;
-      justify-content: center;
-      gap: 10px;
-      transition: background var(--transition), border-color var(--transition);
+      justify-content: space-between;
     }
-    .btn-google:hover { background: var(--surface-3); border-color: var(--faint); }
-    #auth-error { color: #f87171; font-size: 13px; margin-top: 14px; text-align: center; min-height: 18px; }
-
-    /* ── APP SHELL ── */
-    #app-shell { display: none; flex-direction: column; min-height: 100dvh; }
-    #app-shell.visible { display: flex; }
-
-    /* ── NAV ── */
-    .nav {
-      position: sticky; top: 0; z-index: 100;
-      background: rgba(13,13,15,.9);
-      backdrop-filter: blur(12px);
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      padding: 0 24px;
-      height: 56px;
-      gap: 0;
+    .user-mini {
+      display: flex; align-items: center; gap: var(--space-2);
     }
-    .nav-logo {
-      display: flex; align-items: center; gap: 8px;
-      font-weight: 800; font-size: 16px;
-      letter-spacing: .05em; text-transform: uppercase;
-      color: var(--accent); margin-right: 28px; flex-shrink: 0;
-    }
-    .nav-logo svg { color: var(--accent); }
-    .nav-links { display: flex; gap: 2px; flex: 1; }
-    .nav-link {
-      padding: 7px 14px;
-      border-radius: var(--radius-sm);
-      font-size: 14px;
-      font-weight: 500;
-      color: var(--muted);
-      background: transparent;
-      transition: color var(--transition), background var(--transition);
-    }
-    .nav-link:hover { color: var(--text); background: var(--surface-2); }
-    .nav-link.active { color: var(--text); background: var(--surface-2); }
-    .nav-right { display: flex; align-items: center; gap: 12px; margin-left: auto; }
-    .user-badge {
-      display: flex; align-items: center; gap: 8px;
-      background: var(--surface-2);
-      border: 1px solid var(--border);
-      border-radius: 999px;
-      padding: 5px 14px 5px 5px;
-      font-size: 13px;
-      font-weight: 600;
-    }
-    .user-avatar {
-      width: 28px; height: 28px;
-      border-radius: 50%;
+    .user-avatar-sm {
+      width: 30px; height: 30px;
+      border-radius: var(--radius-full);
       background: var(--accent-dim);
       border: 1px solid var(--accent);
       display: flex; align-items: center; justify-content: center;
       font-size: 12px; font-weight: 700; color: var(--accent);
-      overflow: hidden;
     }
-    .user-avatar img { width: 100%; height: 100%; object-fit: cover; }
-    .btn-signout {
-      padding: 7px 14px;
-      border-radius: var(--radius-sm);
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--muted);
-      background: transparent;
-      border: 1px solid var(--border);
-      transition: all var(--transition);
-    }
-    .btn-signout:hover { color: var(--text); border-color: var(--faint); }
+    .user-mini-name { font-size: var(--text-sm); font-weight: 500; }
 
-    /* ── PAGES ── */
-    .page { display: none; flex: 1; padding: 28px 24px; max-width: 1100px; margin: 0 auto; width: 100%; }
-    .page.active { display: block; }
+    /* ===== MOBILE NAV ===== */
+    .mobile-header {
+      display: none;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: var(--space-4);
+      align-items: center;
+      justify-content: space-between;
+      position: sticky; top: 0; z-index: 100;
+    }
+    .mobile-nav-bar {
+      display: none;
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      padding: var(--space-2) var(--space-4) env(safe-area-inset-bottom);
+      z-index: 100;
+      justify-content: space-around;
+    }
+    .mobile-nav-item {
+      display: flex; flex-direction: column; align-items: center;
+      gap: 2px; padding: var(--space-2); min-width: 56px;
+      font-size: 10px; color: var(--text-muted);
+      transition: color var(--transition);
+      cursor: pointer; border: none; background: none; font-family: inherit;
+    }
+    .mobile-nav-item.active { color: var(--accent); }
+    @media (max-width: 768px) {
+      .sidebar { display: none; }
+      .mobile-header { display: flex; }
+      .mobile-nav-bar { display: flex; }
+      .main-content { padding-bottom: 80px; }
+    }
 
-    /* ── DASHBOARD ── */
-    .hero-card {
-      background: linear-gradient(135deg, var(--surface) 0%, var(--surface-2) 100%);
-      border: 1px solid var(--border);
-      border-radius: 18px;
-      padding: 32px;
-      margin-bottom: 20px;
-      position: relative;
-      overflow: hidden;
+    /* ===== MAIN CONTENT ===== */
+    .main-content {
+      padding: var(--space-8);
+      max-width: 900px;
     }
-    .hero-card::before {
-      content: '';
-      position: absolute; top: -40px; right: -40px;
-      width: 200px; height: 200px;
-      background: radial-gradient(circle, rgba(212,168,71,.08) 0%, transparent 70%);
-      border-radius: 50%;
+    @media (max-width: 768px) {
+      .main-content { padding: var(--space-4); }
     }
-    .hero-card h1 { font-size: clamp(22px,4vw,32px); font-weight: 800; text-transform: uppercase; letter-spacing: .03em; margin-bottom: 8px; }
-    .hero-card p { color: var(--muted); font-size: 15px; margin-bottom: 22px; max-width: 52ch; }
-    .hero-actions { display: flex; gap: 12px; flex-wrap: wrap; }
-    .btn-outline {
-      padding: 10px 18px;
-      border-radius: var(--radius-sm);
-      font-size: 14px;
+
+    /* ===== PAGE HEADER ===== */
+    .page-header { margin-bottom: var(--space-8); }
+    .page-eyebrow {
+      font-size: var(--text-xs);
       font-weight: 600;
-      background: var(--surface-3);
-      border: 1px solid var(--border);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: var(--space-2);
+    }
+    .page-title {
+      font-family: var(--font-display);
+      font-size: var(--text-2xl);
+      letter-spacing: 0.03em;
       color: var(--text);
-      transition: all var(--transition);
+      line-height: 1.05;
     }
-    .btn-outline:hover { border-color: var(--faint); background: var(--surface-2); }
-    .btn-accent {
-      padding: 10px 18px;
-      border-radius: var(--radius-sm);
-      font-size: 14px;
-      font-weight: 700;
-      background: var(--accent);
-      color: #1a1200;
+    .page-desc {
+      font-size: var(--text-sm);
+      color: var(--text-muted);
+      margin-top: var(--space-2);
+      max-width: 56ch;
+    }
+
+    /* ===== CARDS ===== */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      padding: var(--space-6);
+      box-shadow: var(--shadow-sm);
+    }
+    .card-title {
+      font-size: var(--text-lg);
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: var(--space-4);
+      display: flex; align-items: center; gap: var(--space-2);
+    }
+    .card + .card { margin-top: var(--space-4); }
+
+    /* ===== STAT GRID ===== */
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(min(180px, 100%), 1fr));
+      gap: var(--space-4);
+      margin-bottom: var(--space-6);
+    }
+    .stat-card {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-5);
+    }
+    .stat-label { font-size: var(--text-xs); color: var(--text-muted); font-weight: 500; margin-bottom: var(--space-2); }
+    .stat-value { font-size: var(--text-xl); font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; line-height: 1; }
+    .stat-sub { font-size: var(--text-xs); color: var(--text-muted); margin-top: var(--space-1); }
+    .stat-accent { color: var(--accent); }
+    .stat-success { color: var(--success); }
+
+    /* ===== BUTTONS ===== */
+    .btn {
+      display: inline-flex; align-items: center; gap: var(--space-2);
+      padding: var(--space-3) var(--space-5);
+      border-radius: var(--radius-md);
+      font-size: var(--text-sm); font-weight: 600;
+      transition: all var(--transition);
+      min-height: 44px; cursor: pointer; border: none;
+    }
+    .btn-primary { background: var(--accent); color: var(--text-inverse); }
+    .btn-primary:hover { background: var(--accent-hover); transform: translateY(-1px); box-shadow: 0 4px 12px var(--accent-glow); }
+    .btn-secondary { background: var(--surface-2); color: var(--text); border: 1px solid var(--border-strong); }
+    .btn-secondary:hover { background: var(--surface-3); }
+    .btn-ghost { background: transparent; color: var(--text-muted); }
+    .btn-ghost:hover { color: var(--text); background: var(--surface-2); }
+    .btn-danger { background: var(--error-dim); color: var(--error); border: 1px solid rgba(224,92,106,0.2); }
+    .btn-danger:hover { background: var(--error); color: white; }
+    .btn-sm { padding: var(--space-2) var(--space-3); font-size: var(--text-xs); min-height: 36px; }
+    .btn-row { display: flex; flex-wrap: wrap; gap: var(--space-3); margin-top: var(--space-4); }
+
+    /* ===== FORMS ===== */
+    .form-group { margin-bottom: var(--space-5); }
+    .form-label { display: block; font-size: var(--text-sm); font-weight: 500; color: var(--text-muted); margin-bottom: var(--space-2); }
+    .form-input, .form-select, .form-textarea {
+      width: 100%;
+      background: var(--surface-2);
+      color: var(--text);
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-md);
+      padding: var(--space-3) var(--space-4);
+      font-size: var(--text-base);
+      transition: border-color var(--transition), box-shadow var(--transition);
+      outline: none;
+    }
+    .form-input:focus, .form-select:focus, .form-textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+    .form-textarea { resize: vertical; min-height: 100px; line-height: 1.6; }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); }
+    @media (max-width: 540px) { .form-grid { grid-template-columns: 1fr; } }
+    .form-hint { font-size: var(--text-xs); color: var(--text-muted); margin-top: var(--space-1); }
+
+    /* ===== TOGGLE ROW ===== */
+    .toggle-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: var(--space-4);
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      margin-bottom: var(--space-3);
+    }
+    .toggle-info .toggle-name { font-size: var(--text-sm); font-weight: 500; }
+    .toggle-info .toggle-desc { font-size: var(--text-xs); color: var(--text-muted); margin-top: 2px; }
+    .toggle-switch {
+      position: relative; width: 44px; height: 24px; flex-shrink: 0;
+    }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; position: absolute; }
+    .toggle-track {
+      position: absolute; inset: 0;
+      background: var(--surface-3);
+      border-radius: var(--radius-full);
+      cursor: pointer;
       transition: background var(--transition);
     }
-    .btn-accent:hover { background: var(--accent-hover); }
-
-    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px,1fr)); gap: 14px; margin-bottom: 24px; }
-    .stat-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 20px 22px;
+    .toggle-track::after {
+      content: '';
+      position: absolute; top: 3px; left: 3px;
+      width: 18px; height: 18px;
+      background: white;
+      border-radius: 50%;
+      transition: transform var(--transition);
     }
-    .stat-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin-bottom: 8px; }
-    .stat-value { font-size: 32px; font-weight: 800; text-transform: uppercase; letter-spacing: .02em; color: var(--accent); line-height: 1; margin-bottom: 6px; }
-    .stat-sub { font-size: 13px; color: var(--muted); }
+    .toggle-switch input:checked + .toggle-track { background: var(--accent); }
+    .toggle-switch input:checked + .toggle-track::after { transform: translateX(20px); }
 
-    .section-title { font-size: 16px; font-weight: 700; margin-bottom: 14px; color: var(--text); }
-    .activity-list { display: grid; gap: 10px; }
-    .activity-item {
-      display: flex; align-items: center; gap: 14px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 16px 18px;
-      transition: border-color var(--transition);
+    /* ===== BADGES ===== */
+    .badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 3px 10px;
+      border-radius: var(--radius-full);
+      font-size: var(--text-xs); font-weight: 600;
     }
-    .activity-item:hover { border-color: var(--faint); }
-    .activity-icon {
-      width: 38px; height: 38px; border-radius: 50%;
+    .badge-gold { background: var(--accent-dim); color: var(--accent); }
+    .badge-green { background: var(--success-dim); color: var(--success); }
+    .badge-blue { background: var(--info-dim); color: var(--info); }
+    .badge-red { background: var(--error-dim); color: var(--error); }
+
+    /* ===== LEAGUE CARDS ===== */
+    .league-list { display: grid; gap: var(--space-4); }
+    .league-card {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-5);
+      transition: border-color var(--transition), box-shadow var(--transition);
+    }
+    .league-card:hover { border-color: var(--border-strong); box-shadow: var(--shadow-md); }
+    .league-card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-3); margin-bottom: var(--space-4); flex-wrap: wrap; }
+    .league-name { font-size: var(--text-lg); font-weight: 700; }
+    .league-meta { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: var(--space-3); }
+    .league-meta-item { }
+    .league-meta-label { font-size: var(--text-xs); color: var(--text-muted); font-weight: 500; }
+    .league-meta-value { font-size: var(--text-sm); font-weight: 600; margin-top: 2px; }
+
+    /* ===== ANNOUNCEMENT FEED ===== */
+    .feed { display: grid; gap: var(--space-4); }
+    .feed-item {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-5);
+    }
+    .feed-item-top { display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-3); }
+    .feed-avatar {
+      width: 36px; height: 36px;
+      border-radius: var(--radius-full);
       background: var(--accent-dim);
+      border: 1px solid var(--accent);
       display: flex; align-items: center; justify-content: center;
-      font-size: 17px; flex-shrink: 0;
+      font-size: var(--text-xs); font-weight: 700; color: var(--accent);
+      flex-shrink: 0;
     }
-    .activity-body { flex: 1; }
-    .activity-title { font-size: 14px; font-weight: 600; margin-bottom: 2px; }
-    .activity-meta { font-size: 12px; color: var(--muted); }
-    .activity-time { font-size: 12px; color: var(--faint); flex-shrink: 0; }
+    .feed-sender { font-size: var(--text-sm); font-weight: 600; }
+    .feed-time { font-size: var(--text-xs); color: var(--text-muted); }
+    .feed-body { font-size: var(--text-sm); color: var(--text-muted); line-height: 1.6; }
+    .feed-channel-tags { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-3); }
 
-    /* ── SETTINGS ── */
-    .settings-grid { display: grid; gap: 20px; }
-    .settings-card {
-      background: var(--surface);
+    /* ===== WEEK TRACKER ===== */
+    .week-tracker { display: grid; gap: var(--space-3); }
+    .week-row {
+      display: flex; align-items: center; gap: var(--space-4);
+      padding: var(--space-4);
+      background: var(--surface-2);
       border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 24px;
+      border-radius: var(--radius-md);
     }
-    .settings-card h2 { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
-    .settings-card > p { color: var(--muted); font-size: 13px; margin-bottom: 20px; }
-    .notif-channels { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px,1fr)); gap: 12px; margin-bottom: 18px; }
+    .week-num {
+      font-family: var(--font-display);
+      font-size: var(--text-lg);
+      color: var(--text-faint);
+      width: 52px; flex-shrink: 0; text-align: center;
+    }
+    .week-num.current { color: var(--accent); }
+    .week-details { flex: 1; }
+    .week-title { font-size: var(--text-sm); font-weight: 600; }
+    .week-status { font-size: var(--text-xs); color: var(--text-muted); }
+    .week-progress {
+      height: 4px; border-radius: var(--radius-full);
+      background: var(--surface-3); margin-top: var(--space-2);
+    }
+    .week-bar { height: 100%; border-radius: var(--radius-full); background: var(--accent); }
+
+    /* ===== MEMBER TABLE ===== */
+    .member-list { display: grid; gap: var(--space-3); }
+    .member-row {
+      display: flex; align-items: center; gap: var(--space-3);
+      padding: var(--space-4);
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      flex-wrap: wrap;
+    }
+    .member-avatar {
+      width: 40px; height: 40px;
+      border-radius: var(--radius-full);
+      background: var(--surface-3);
+      border: 1px solid var(--border-strong);
+      display: flex; align-items: center; justify-content: center;
+      font-size: var(--text-sm); font-weight: 700; color: var(--text-muted);
+      flex-shrink: 0;
+    }
+    .member-info { flex: 1; min-width: 120px; }
+    .member-name { font-size: var(--text-sm); font-weight: 600; }
+    .member-school { font-size: var(--text-xs); color: var(--text-muted); }
+    .member-actions { display: flex; gap: var(--space-2); flex-wrap: wrap; }
+
+    /* ===== DIVIDER ===== */
+    .divider { border: none; border-top: 1px solid var(--border); margin: var(--space-6) 0; }
+
+    /* ===== TOAST ===== */
+    .toast-container {
+      position: fixed; bottom: var(--space-6); right: var(--space-6);
+      z-index: 1000; display: flex; flex-direction: column; gap: var(--space-3);
+      pointer-events: none;
+    }
+    @media (max-width: 768px) {
+      .toast-container { bottom: 90px; left: var(--space-4); right: var(--space-4); }
+    }
+    .toast {
+      background: var(--surface-2);
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-lg);
+      padding: var(--space-4) var(--space-5);
+      box-shadow: var(--shadow-lg);
+      display: flex; align-items: center; gap: var(--space-3);
+      font-size: var(--text-sm); pointer-events: all;
+      animation: slideInToast 0.3s cubic-bezier(0.16,1,0.3,1);
+      max-width: 360px;
+    }
+    @keyframes slideInToast {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .toast-icon { font-size: 18px; flex-shrink: 0; }
+
+    /* ===== THEME TOGGLE ===== */
+    .theme-toggle {
+      width: 36px; height: 36px;
+      border-radius: var(--radius-full);
+      background: var(--surface-2);
+      border: 1px solid var(--border-strong);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--text-muted);
+      transition: all var(--transition);
+    }
+    .theme-toggle:hover { color: var(--text); background: var(--surface-3); }
+
+    /* ===== SCREEN VISIBILITY ===== */
+    .screen { display: none; }
+    .screen.active { display: block; }
+
+    /* ===== EMPTY STATE ===== */
+    .empty-state {
+      display: flex; flex-direction: column; align-items: center;
+      text-align: center; padding: var(--space-16) var(--space-8);
+      color: var(--text-muted);
+    }
+    .empty-state-icon { font-size: 48px; margin-bottom: var(--space-4); opacity: 0.4; }
+    .empty-state h3 { color: var(--text); margin-bottom: var(--space-2); font-size: var(--text-lg); }
+    .empty-state p { max-width: 36ch; margin-bottom: var(--space-6); font-size: var(--text-sm); }
+
+    /* ===== MODAL ===== */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.7); z-index: 200;
+      align-items: center; justify-content: center; padding: var(--space-4);
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-xl);
+      padding: var(--space-6);
+      max-width: 480px; width: 100%;
+      box-shadow: var(--shadow-lg);
+      animation: modalIn 0.25s cubic-bezier(0.16,1,0.3,1);
+    }
+    @keyframes modalIn {
+      from { opacity: 0; transform: scale(0.96) translateY(8px); }
+      to   { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    .modal-title { font-size: var(--text-lg); font-weight: 700; margin-bottom: var(--space-4); }
+    .modal-footer { display: flex; gap: var(--space-3); justify-content: flex-end; margin-top: var(--space-6); }
+
+    /* ===== COMMISSIONER SCREEN ===== */
+    .channel-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: var(--space-3);
+      margin-bottom: var(--space-5);
+    }
     .channel-card {
       background: var(--surface-2);
       border: 2px solid var(--border);
-      border-radius: var(--radius);
-      padding: 18px 16px;
+      border-radius: var(--radius-lg);
+      padding: var(--space-4);
       cursor: pointer;
-      transition: border-color var(--transition), background var(--transition);
+      transition: all var(--transition);
+      text-align: center;
     }
     .channel-card.selected { border-color: var(--accent); background: var(--accent-dim); }
-    .channel-icon { font-size: 24px; margin-bottom: 8px; }
-    .channel-name { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
-    .channel-desc { font-size: 12px; color: var(--muted); }
-    .field-group { margin-bottom: 16px; }
-    .field-group label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 6px; font-weight: 500; }
-    .field-group input {
-      width: 100%;
+    .channel-card-icon { font-size: 24px; margin-bottom: var(--space-2); }
+    .channel-card-label { font-size: var(--text-xs); font-weight: 600; }
+
+    /* ===== NOTIFICATION HISTORY ===== */
+    .notif-list { display: grid; gap: var(--space-3); }
+    .notif-item {
+      display: flex; align-items: flex-start; gap: var(--space-3);
+      padding: var(--space-4);
       background: var(--surface-2);
       border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
-      padding: 10px 14px;
-      font-size: 14px;
-      transition: border-color var(--transition);
+      border-radius: var(--radius-md);
     }
-    .field-group input:focus { outline: none; border-color: var(--accent); }
-    .save-btn {
-      padding: 10px 22px;
-      border-radius: var(--radius-sm);
-      background: var(--accent);
-      color: #1a1200;
-      font-weight: 700;
-      font-size: 14px;
-      transition: background var(--transition);
-    }
-    .save-btn:hover { background: var(--accent-hover); }
-    .danger-btn {
-      padding: 10px 22px;
-      border-radius: var(--radius-sm);
-      background: transparent;
-      border: 1px solid rgba(201,79,79,.4);
-      color: #f87171;
-      font-weight: 600;
-      font-size: 14px;
-      transition: all var(--transition);
-    }
-    .danger-btn:hover { background: rgba(201,79,79,.1); border-color: var(--danger); }
-    .toast {
-      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px);
-      background: var(--surface-3); border: 1px solid var(--border);
-      border-radius: 999px; padding: 11px 22px;
-      font-size: 14px; font-weight: 600;
-      box-shadow: var(--shadow);
-      transition: transform .3s cubic-bezier(.16,1,.3,1);
-      z-index: 9999; white-space: nowrap;
-    }
-    .toast.show { transform: translateX(-50%) translateY(0); }
-    .toast.success { border-color: rgba(76,175,125,.4); color: var(--success); }
+    .notif-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); flex-shrink: 0; margin-top: 6px; }
+    .notif-dot.read { background: var(--text-faint); }
+    .notif-text { flex: 1; }
+    .notif-msg { font-size: var(--text-sm); }
+    .notif-meta { font-size: var(--text-xs); color: var(--text-muted); margin-top: 2px; }
 
-    /* ── COMMISSIONER ── */
-    .commissioner-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 24px;
-      margin-bottom: 20px;
-    }
-    .commissioner-card h2 { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
-    .commissioner-card > p { color: var(--muted); font-size: 13px; margin-bottom: 20px; }
-    .msg-textarea {
-      width: 100%;
-      background: var(--surface-2);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
-      padding: 12px 14px;
-      font-size: 14px;
-      color: var(--text);
-      resize: vertical;
-      min-height: 120px;
-      margin-bottom: 14px;
-      transition: border-color var(--transition);
-    }
-    .msg-textarea:focus { outline: none; border-color: var(--accent); }
-    .channel-pills { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
-    .pill {
-      padding: 5px 12px;
-      border-radius: 999px;
-      font-size: 12px;
-      font-weight: 700;
-      background: var(--surface-3);
-      border: 1px solid var(--border);
-      cursor: pointer;
-      transition: all var(--transition);
-      color: var(--muted);
-    }
-    .pill.active { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); }
-
-    /* ── LEAGUES ── */
-    .empty-state {
-      text-align: center;
-      padding: 60px 24px;
-      color: var(--muted);
-    }
-    .empty-state .empty-icon { font-size: 48px; margin-bottom: 16px; }
-    .empty-state h3 { font-size: 18px; font-weight: 700; color: var(--text); margin-bottom: 8px; }
-    .empty-state p { font-size: 14px; max-width: 36ch; margin: 0 auto 20px; }
-
-    /* ── UPDATES ── */
-    .update-item {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 18px 20px;
-      margin-bottom: 12px;
-      transition: border-color var(--transition);
-    }
-    .update-item:hover { border-color: var(--faint); }
-    .update-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 8px; flex-wrap: wrap; }
-    .update-title { font-size: 15px; font-weight: 700; }
-    .update-badge { padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; background: var(--accent-dim); color: var(--accent); flex-shrink: 0; }
-    .update-body { font-size: 13px; color: var(--muted); }
-    .update-time { font-size: 12px; color: var(--faint); margin-top: 8px; }
-
-    @media (max-width: 640px) {
-      .nav { padding: 0 14px; }
-      .nav-links { display: none; }
-      .page { padding: 16px 14px; }
-      .hero-card { padding: 22px; }
-    }
+    /* scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 3px; }
   </style>
 </head>
 <body>
-<button class="theme-toggle" id="theme-toggle" aria-label="Toggle color theme"><span class="theme-icon" id="theme-icon">🌙</span><span class="theme-label" id="theme-label">Dark</span></button>
 
-<!-- AUTH SCREEN -->
-<div id="auth-screen">
-  <div class="auth-card">
-    <div class="auth-logo">
-      <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-        <polygon points="14,2 26,8 26,20 14,26 2,20 2,8" fill="currentColor" opacity=".15"/>
-        <polygon points="14,2 26,8 26,20 14,26 2,20 2,8" stroke="currentColor" stroke-width="2" fill="none"/>
-        <polygon points="14,8 20,11 20,17 14,20 8,17 8,11" fill="currentColor"/>
-      </svg>
-      <span>DynastyHQ</span>
-    </div>
-    <p class="auth-tagline">Your dynasty. On your schedule.</p>
+<!-- Toast container -->
+<div class="toast-container" id="toastContainer"></div>
 
-    <div class="auth-tabs">
-      <button class="auth-tab active" id="tab-signin" onclick="switchTab('signin')">Sign In</button>
-      <button class="auth-tab" id="tab-signup" onclick="switchTab('signup')">Create Account</button>
+<!-- Commissioner Modal -->
+<div class="modal-overlay" id="commModal">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="commModalTitle">
+    <h2 class="modal-title" id="commModalTitle">📢 Send League Update</h2>
+    <div class="form-group">
+      <label class="form-label">Message</label>
+      <textarea class="form-textarea" id="modalMsgText" placeholder="Type your update to the league…" rows="4"></textarea>
     </div>
-
-    <div id="form-signin">
-      <div class="auth-field">
-        <label>Email</label>
-        <input id="signin-email" type="email" placeholder="you@email.com" />
-      </div>
-      <div class="auth-field">
-        <label>Password</label>
-        <input id="signin-password" type="password" placeholder="••••••••" />
-      </div>
-      <button class="btn-primary" id="btn-signin">Sign In</button>
-    </div>
-
-    <div id="form-signup" style="display:none;">
-      <div class="auth-field">
-        <label>Display Name</label>
-        <input id="signup-name" type="text" placeholder="Your name" />
-      </div>
-      <div class="auth-field">
-        <label>Email</label>
-        <input id="signup-email" type="email" placeholder="you@email.com" />
-      </div>
-      <div class="auth-field">
-        <label>Password</label>
-        <input id="signup-password" type="password" placeholder="Min. 6 characters" />
-      </div>
-      <button class="btn-primary" id="btn-signup">Create Account</button>
-    </div>
-
-    <div class="auth-divider">or</div>
-    <button class="btn-google" id="btn-google">
-      <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 0 1-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615Z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18Z"/><path fill="#FBBC05" d="M3.964 10.706A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.706V4.962H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.038l3.007-2.332Z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.962L3.964 6.294C4.672 4.169 6.656 3.58 9 3.58Z"/></svg>
-      Continue with Google
-    </button>
-    <div id="auth-error"></div>
-  </div>
-</div>
-
-<!-- APP SHELL -->
-<div id="app-shell">
-  <nav class="nav">
-    <div class="nav-logo">
-      <svg width="22" height="22" viewBox="0 0 28 28" fill="none">
-        <polygon points="14,2 26,8 26,20 14,26 2,20 2,8" fill="currentColor" opacity=".15"/>
-        <polygon points="14,2 26,8 26,20 14,26 2,20 2,8" stroke="currentColor" stroke-width="2" fill="none"/>
-        <polygon points="14,8 20,11 20,17 14,20 8,17 8,11" fill="currentColor"/>
-      </svg>
-      DynastyHQ
-    </div>
-    <div class="nav-links">
-      <button class="nav-link active" onclick="showPage('dashboard')">Dashboard</button>
-      <button class="nav-link" onclick="showPage('leagues')">Leagues</button>
-      <button class="nav-link" onclick="showPage('updates')">Updates</button>
-      <button class="nav-link" onclick="showPage('commissioner')">Commissioner</button>
-      <button class="nav-link" onclick="showPage('settings')">Settings</button>
-    </div>
-    <div class="nav-right">
-      <div class="user-badge">
-        <div class="user-avatar" id="nav-avatar">?</div>
-        <span id="nav-username">Loading…</span>
-      </div>
-      <button class="btn-signout" id="btn-signout">Sign out</button>
-    </div>
-  </nav>
-
-  <!-- DASHBOARD -->
-  <div class="page active" id="page-dashboard">
-    <div class="hero-card">
-      <h1>Welcome Back <span id="hero-name"></span></h1>
-      <p>Here's where your dynasty stands this week. Stay up-to-date without being chained to your console.</p>
-      <div class="hero-actions">
-        <button class="btn-accent" onclick="showPage('commissioner')">📢 Send Update</button>
-        <button class="btn-outline" onclick="showPage('updates')">📥 See Inbox</button>
-      </div>
-    </div>
-
-    <div class="stats-grid">
-      <div class="stat-card">
-        <div class="stat-label">Active Leagues</div>
-        <div class="stat-value">0</div>
-        <div class="stat-sub">Leagues you're in</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">Unread Updates</div>
-        <div class="stat-value" id="stat-unread">2</div>
-        <div class="stat-sub">Commissioner messages</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">Current Week</div>
-        <div class="stat-value">WK 1</div>
-        <div class="stat-sub">Dynasty season progress</div>
-      </div>
-    </div>
-
-    <div class="section-title">Recent Activity</div>
-    <div class="activity-list">
-      <div class="activity-item">
-        <div class="activity-icon">📢</div>
-        <div class="activity-body">
-          <div class="activity-title">Commissioner sent a league update</div>
-          <div class="activity-meta">FFL</div>
+    <div class="form-group">
+      <label class="form-label">Send via</label>
+      <div class="channel-grid">
+        <div class="channel-card selected" data-ch="push" onclick="toggleChannel(this)">
+          <div class="channel-card-icon">🔔</div>
+          <div class="channel-card-label">Push</div>
         </div>
-        <div class="activity-time">Just now</div>
-      </div>
-      <div class="activity-item">
-        <div class="activity-icon">✅</div>
-        <div class="activity-body">
-          <div class="activity-title">Week 5 advance confirmed</div>
-          <div class="activity-meta">Saturday Dynasty</div>
+        <div class="channel-card" data-ch="email" onclick="toggleChannel(this)">
+          <div class="channel-card-icon">✉️</div>
+          <div class="channel-card-label">Email</div>
         </div>
-        <div class="activity-time">2 hours ago</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- LEAGUES -->
-  <div class="page" id="page-leagues">
-    <div class="page-header">
-      <div>
-        <h2>Your Leagues</h2>
-        <p>Create leagues, join with a code, and keep your dynasty groups organized.</p>
-      </div>
-      <button class="btn-accent" onclick="focusCreateLeague()">+ Create League</button>
-    </div>
-
-    <div class="league-grid">
-      <div>
-        <div class="league-card" id="create-league-card">
-          <h3>Create a league</h3>
-          <p>Start a new dynasty, choose the platform, and generate an invite code for your members.</p>
-          <div class="league-form-grid">
-            <div class="field-group">
-              <label>League Name</label>
-              <input id="league-name" type="text" placeholder="Friday Night Dynasty" />
-            </div>
-            <div class="field-group">
-              <label>Game</label>
-              <input id="league-game" type="text" value="College Football 26" />
-            </div>
-            <div class="field-group">
-              <label>Platform</label>
-              <select id="league-platform">
-                <option>Xbox</option>
-                <option>PlayStation</option>
-                <option>PC</option>
-              </select>
-            </div>
-            <div class="field-group">
-              <label>Advance Schedule</label>
-              <input id="league-advance" type="text" placeholder="Every Sunday at 9PM CT" />
-            </div>
-            <div class="field-group">
-              <label>Commissioner Name</label>
-              <input id="league-commissioner" type="text" placeholder="Auto-filled from your profile" />
-            </div>
-            <div class="field-group">
-              <label>Team / School</label>
-              <input id="league-team" type="text" placeholder="Texas A&M" />
-            </div>
-          </div>
-          <button class="save-btn" onclick="createLeague()">Create League</button>
-        </div>
-
-        <div class="league-card">
-          <h3>Join with invite code</h3>
-          <p>Got a commissioner code? Join a league without needing the console in front of you.</p>
-          <div class="league-form-grid">
-            <div class="field-group">
-              <label>Invite Code</label>
-              <input id="invite-code" type="text" placeholder="DYNASTY-7F4K" />
-            </div>
-            <div class="field-group">
-              <label>Your Team / School</label>
-              <input id="join-team" type="text" placeholder="LSU" />
-            </div>
-          </div>
-          <button class="save-btn" onclick="joinLeague()">Join League</button>
-        </div>
-      </div>
-
-      <div>
-        <div class="league-card">
-          <h3>Quick actions</h3>
-          <p>Core dynasty workflows for commissioners and members.</p>
-          <div class="quick-actions">
-            <button class="quick-action-btn" onclick="showPage('commissioner')">
-              <strong>Send weekly update</strong>
-              <span>Broadcast advance reminders, scheduling notes, and commissioner messages.</span>
-            </button>
-            <button class="quick-action-btn" onclick="prefillAdvanceMessage()">
-              <strong>Pre-fill week advance</strong>
-              <span>Jump straight into a standard “advance tonight” message.</span>
-            </button>
-            <button class="quick-action-btn" onclick="showPage('settings')">
-              <strong>Notification setup</strong>
-              <span>Make sure your members can receive push, email, and SMS.</span>
-            </button>
-          </div>
-        </div>
-
-        <div class="league-card">
-          <h3>League list</h3>
-          <p>Your current dynasty groups and ownership status.</p>
-          <div class="league-list" id="league-list">
-            <div class="league-item">
-              <div class="league-item-top">
-                <div class="league-item-name">Saturday Dynasty</div>
-                <span class="league-tag">Commissioner</span>
-              </div>
-              <div class="league-meta">
-                <div><strong>Game:</strong> College Football 26</div>
-                <div><strong>Platform:</strong> Xbox</div>
-                <div><strong>Team:</strong> Texas A&amp;M</div>
-                <div><strong>Advance:</strong> Sunday 9PM CT</div>
-              </div>
-            </div>
-          </div>
+        <div class="channel-card" data-ch="sms" onclick="toggleChannel(this)">
+          <div class="channel-card-icon">💬</div>
+          <div class="channel-card-label">SMS</div>
         </div>
       </div>
     </div>
-  </div>
-
-  <!-- UPDATES -->
-  <div class="page" id="page-updates">
-    <div class="section-title">League Updates</div>
-    <div class="update-item">
-      <div class="update-header">
-        <div class="update-title">Week 5 Advance — Reminder</div>
-        <span class="update-badge">FFL</span>
-      </div>
-      <div class="update-body">Advance goes out Sunday at 9PM CT. Make sure your depth charts are locked in before then.</div>
-      <div class="update-time">Today at 3:42 PM</div>
-    </div>
-    <div class="update-item">
-      <div class="update-header">
-        <div class="update-title">Week 4 Results Posted</div>
-        <span class="update-badge">Saturday Dynasty</span>
-      </div>
-      <div class="update-body">Full week 4 results are now in the portal. Check your matchup history.</div>
-      <div class="update-time">Yesterday at 11:15 AM</div>
-    </div>
-  </div>
-
-  <!-- COMMISSIONER -->
-  <div class="page" id="page-commissioner">
-    <div class="commissioner-card">
-      <h2>📢 Send League Update</h2>
-      <p>Broadcast a message to your league members via their preferred notification channels.</p>
-      <textarea class="msg-textarea" id="broadcast-msg" placeholder="Type your league update here... (e.g. Week 6 advance is tonight at 9PM CT)"></textarea>
-      <div style="margin-bottom:14px;">
-        <div style="font-size:13px;color:var(--muted);margin-bottom:8px;font-weight:500;">Send via:</div>
-        <div class="channel-pills">
-          <button class="pill active" onclick="togglePill(this)">📲 Push</button>
-          <button class="pill active" onclick="togglePill(this)">📧 Email</button>
-          <button class="pill" onclick="togglePill(this)">💬 SMS</button>
-        </div>
-      </div>
-      <button class="btn-accent" onclick="sendBroadcast()">Send Update</button>
-    </div>
-    <div class="commissioner-card">
-      <h2>⏩ Week Advance</h2>
-      <p>Notify all members that the dynasty week is advancing.</p>
-      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:16px;">
-        <div class="field-group" style="margin:0;flex:1;min-width:160px;">
-          <label>Current Week</label>
-          <input type="number" id="current-week" value="1" min="1" max="20" style="width:100%;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;font-size:14px;" />
-        </div>
-        <div class="field-group" style="margin:0;flex:1;min-width:160px;">
-          <label>Advance Time</label>
-          <input type="datetime-local" id="advance-time" style="width:100%;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;font-size:14px;" />
-        </div>
-      </div>
-      <button class="btn-accent" onclick="sendAdvance()">📣 Notify Week Advance</button>
-    </div>
-  </div>
-
-  <!-- SETTINGS -->
-  <div class="page" id="page-settings">
-    <div class="settings-grid">
-      <div class="settings-card">
-        <h2>Notification Channels</h2>
-        <p>Choose how you want to receive league updates from commissioners.</p>
-        <div class="notif-channels">
-          <div class="channel-card selected" onclick="toggleChannel(this)">
-            <div class="channel-icon">📲</div>
-            <div class="channel-name">Push</div>
-            <div class="channel-desc">In-app &amp; browser push notifications</div>
-          </div>
-          <div class="channel-card selected" onclick="toggleChannel(this)">
-            <div class="channel-icon">📧</div>
-            <div class="channel-name">Email</div>
-            <div class="channel-desc">Sent to your registered email</div>
-          </div>
-          <div class="channel-card" onclick="toggleChannel(this)">
-            <div class="channel-icon">💬</div>
-            <div class="channel-name">SMS</div>
-            <div class="channel-desc">Text message to your phone number</div>
-          </div>
-        </div>
-        <button class="save-btn" onclick="savePrefs()">Save Preferences</button>
-      </div>
-
-      <div class="settings-card">
-        <h2>Phone Number (for SMS)</h2>
-        <p>Required if you want to receive text messages.</p>
-        <div class="field-group">
-          <label>Phone Number</label>
-          <input id="phone-input" type="tel" placeholder="+1 (555) 000-0000" />
-        </div>
-        <button class="save-btn" onclick="savePhone()">Save Phone Number</button>
-      </div>
-
-      <div class="settings-card">
-        <h2>Display Name</h2>
-        <p>Update how your name appears in the app.</p>
-        <div class="field-group">
-          <label>Your Name</label>
-          <input id="displayname-input" type="text" placeholder="Your name" />
-        </div>
-        <button class="save-btn" onclick="saveName()">Save Name</button>
-      </div>
-
-      <div class="settings-card">
-        <h2>Account</h2>
-        <p>Sign out of DynastyHQ on this device.</p>
-        <button class="danger-btn" id="settings-signout">Sign Out</button>
-      </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="sendUpdate()">Send Update</button>
     </div>
   </div>
 </div>
 
-<!-- TOAST -->
-<div class="toast" id="toast"></div>
+<!-- App Shell -->
+<div class="app-shell">
 
-<script type="module">
-  import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-  import {
-    getAuth,
-    onAuthStateChanged,
-    signInWithEmailAndPassword,
-    createUserWithEmailAndPassword,
-    signInWithPopup,
-    GoogleAuthProvider,
-    signOut,
-    updateProfile
-  } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
-  import {
-    getFirestore,
-    doc,
-    getDoc,
-    setDoc,
-    updateDoc
-  } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+  <!-- Sidebar -->
+  <aside class="sidebar" aria-label="Main navigation">
+    <div class="sidebar-brand">
+      <div class="brand-logo">
+        <div class="brand-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0d0e12" stroke-width="2.5" aria-hidden="true">
+            <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+            <path d="M2 17l10 5 10-5"/>
+            <path d="M2 12l10 5 10-5"/>
+          </svg>
+        </div>
+        <div>
+          <div class="brand-name">Dynasty Mode</div>
+          <div class="brand-sub">CFB 26 Companion</div>
+        </div>
+      </div>
+    </div>
 
-  // ── FIREBASE CONFIG ── Replace with your own config
-  const firebaseConfig = {
-    apiKey: "AIzaSyBxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-    authDomain: "your-project.firebaseapp.com",
-    projectId: "your-project",
-    storageBucket: "your-project.appspot.com",
-    messagingSenderId: "000000000000",
-    appId: "1:000000000000:web:xxxxxxxxxxxxxxxx"
-  };
+    <nav>
+      <div class="nav-section">
+        <div class="nav-label">League</div>
+        <button class="nav-item active" onclick="showScreen('dashboard', this)" aria-current="page">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          Dashboard
+        </button>
+        <button class="nav-item" onclick="showScreen('schedule', this)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          Schedule & Weeks
+        </button>
+        <button class="nav-item" onclick="showScreen('members', this)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          Members
+          <span class="nav-badge">8</span>
+        </button>
+        <button class="nav-item" onclick="showScreen('feed', this)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.9 14.1 19.79 19.79 0 0 1 1.82 5.57C1.81 4.49 2.66 3.12 3.72 3h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 10.91"/></svg>
+          Announcements
+          <span class="nav-badge">3</span>
+        </button>
+      </div>
 
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const db = getFirestore(app);
-  const provider = new GoogleAuthProvider();
+      <div class="nav-section">
+        <div class="nav-label">Commissioner</div>
+        <button class="nav-item" onclick="showScreen('commissioner', this)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          Send Update
+        </button>
+        <button class="nav-item" onclick="showScreen('leagues', this)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+          My Leagues
+        </button>
+      </div>
 
-  // ── AUTH STATE ──
-  onAuthStateChanged(auth, async (user) => {
-    if (user) {
-      // Resolve display name with fallbacks — NEVER stay stuck on "Loading…"
-      let name = user.displayName
-        || user.email?.split('@')[0]
-        || 'Player';
+      <div class="nav-section">
+        <div class="nav-label">Account</div>
+        <button class="nav-item" onclick="showScreen('notifications', this)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          Notifications
+        </button>
+        <button class="nav-item" onclick="showScreen('profile', this)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          Profile
+        </button>
+      </div>
+    </nav>
 
-      // Try to load Firestore profile; if it fails or doesn't exist, use fallback
-      try {
-        const snap = await getDoc(doc(db, 'users', user.uid));
-        if (snap.exists() && snap.data().displayName) {
-          name = snap.data().displayName;
-        } else {
-          // Create a basic profile doc so future saves work
-          await setDoc(doc(db, 'users', user.uid), {
-            displayName: name,
-            email: user.email,
-            notifPrefs: { push: true, email: true, sms: false },
-            createdAt: new Date().toISOString()
-          }, { merge: true });
-        }
-      } catch (e) {
-        // Firestore unavailable — use fallback name, still show app
-        console.warn('Firestore unavailable, using fallback:', e.message);
-      }
+    <div class="sidebar-footer">
+      <div class="user-mini">
+        <div class="user-avatar-sm">C</div>
+        <div>
+          <div class="user-mini-name">Commissioner</div>
+        </div>
+      </div>
+      <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme" data-theme-toggle>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+    </div>
+  </aside>
 
-      setUserUI(user, name);
-      showApp();
-    } else {
-      showAuth();
-    }
-  });
+  <!-- Mobile Header -->
+  <header class="mobile-header" aria-label="Dynasty Mode header">
+    <div class="brand-logo">
+      <div class="brand-icon" style="width:30px;height:30px;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0d0e12" stroke-width="2.5"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+      </div>
+      <span class="brand-name" style="font-size:1.2rem;">Dynasty Mode</span>
+    </div>
+    <div style="display:flex;gap:var(--space-2);">
+      <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+    </div>
+  </header>
 
-  function setUserUI(user, name) {
-    document.getElementById('nav-username').textContent = name;
-    document.getElementById('hero-name').textContent = name.split(' ')[0];
-    document.getElementById('displayname-input').value = name;
-    const commissionerField = document.getElementById('league-commissioner');
-    if (commissionerField && !commissionerField.value) commissionerField.value = name;
+  <!-- Main Content -->
+  <main class="main-content" id="mainContent">
 
-    const avatar = document.getElementById('nav-avatar');
-    if (user.photoURL) {
-      avatar.innerHTML = `<img src="${user.photoURL}" alt="${name}" />`;
-    } else {
-      avatar.textContent = name.charAt(0).toUpperCase();
-    }
-  }
+    <!-- DASHBOARD -->
+    <section class="screen active" id="screen-dashboard">
+      <div class="page-header">
+        <div class="page-eyebrow">Season 2026</div>
+        <h1 class="page-title">League Dashboard</h1>
+        <p class="page-desc">Stay on top of your dynasty — track weeks, see who's advanced, and catch up on announcements.</p>
+      </div>
 
-  function showApp() {
-    document.getElementById('auth-screen').style.display = 'none';
-    document.getElementById('app-shell').classList.add('visible');
-  }
+      <div class="stat-grid">
+        <div class="stat-card">
+          <div class="stat-label">Current Week</div>
+          <div class="stat-value stat-accent">7</div>
+          <div class="stat-sub">of 15 regular season</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Members Advanced</div>
+          <div class="stat-value">6<span style="font-size:var(--text-sm);color:var(--text-muted)">/8</span></div>
+          <div class="stat-sub stat-success">75% ready</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Unread Messages</div>
+          <div class="stat-value stat-accent">3</div>
+          <div class="stat-sub">since last visit</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Days Until Advance</div>
+          <div class="stat-value">2</div>
+          <div class="stat-sub">Tuesday deadline</div>
+        </div>
+      </div>
 
-  function showAuth() {
-    document.getElementById('auth-screen').style.display = 'flex';
-    document.getElementById('app-shell').classList.remove('visible');
-  }
+      <div class="card">
+        <div class="card-title">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.9 14.1"/></svg>
+          Recent Announcements
+        </div>
+        <div class="feed">
+          <div class="feed-item">
+            <div class="feed-item-top">
+              <div class="feed-avatar">C</div>
+              <div>
+                <div class="feed-sender">Commissioner</div>
+                <div class="feed-time">2 hours ago</div>
+              </div>
+              <span class="badge badge-gold" style="margin-left:auto;">Urgent</span>
+            </div>
+            <div class="feed-body">Week 7 advance is set for Tuesday at 9 PM. Make sure your games are played and lineups locked before then. No extensions this week.</div>
+            <div class="feed-channel-tags">
+              <span class="badge badge-blue">📱 Push</span>
+              <span class="badge badge-blue">✉️ Email</span>
+            </div>
+          </div>
+          <div class="feed-item">
+            <div class="feed-item-top">
+              <div class="feed-avatar">J</div>
+              <div>
+                <div class="feed-sender">Jake (Mod)</div>
+                <div class="feed-time">Yesterday</div>
+              </div>
+            </div>
+            <div class="feed-body">Reminder: recruiting board updates are due before we advance. Check your pipeline — Alabama has 4 open spots.</div>
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-secondary btn-sm" onclick="showScreen('feed', document.querySelector('[onclick*=feed]'))">View All</button>
+          <button class="btn btn-primary btn-sm" onclick="openModal()">📢 Send Update</button>
+        </div>
+      </div>
+    </section>
 
-  // ── SIGN IN ──
-  document.getElementById('btn-signin').addEventListener('click', async () => {
-    const email = document.getElementById('signin-email').value.trim();
-    const pass = document.getElementById('signin-password').value;
-    const errEl = document.getElementById('auth-error');
-    errEl.textContent = '';
-    if (!email || !pass) { errEl.textContent = 'Please enter your email and password.'; return; }
-    try {
-      await signInWithEmailAndPassword(auth, email, pass);
-    } catch (e) {
-      errEl.textContent = friendlyError(e.code);
-    }
-  });
+    <!-- SCHEDULE -->
+    <section class="screen" id="screen-schedule">
+      <div class="page-header">
+        <div class="page-eyebrow">CFB 26 Dynasty</div>
+        <h1 class="page-title">Schedule & Weeks</h1>
+        <p class="page-desc">Track the season week by week and see advance progress across the league.</p>
+      </div>
+      <div class="card">
+        <div class="card-title">Season Progress</div>
+        <div style="margin-bottom:var(--space-5);">
+          <div style="display:flex;justify-content:space-between;margin-bottom:var(--space-2);">
+            <span style="font-size:var(--text-sm);color:var(--text-muted);">Week 7 of 15</span>
+            <span style="font-size:var(--text-sm);font-weight:600;color:var(--accent);">47%</span>
+          </div>
+          <div class="week-progress" style="height:8px;">
+            <div class="week-bar" style="width:47%;"></div>
+          </div>
+        </div>
+        <div class="week-tracker">
+          <div class="week-row"><div class="week-num">WK1</div><div class="week-details"><div class="week-title">Week 1 — Conference Opener</div><div class="week-status">✅ All members advanced</div></div><span class="badge badge-green">Done</span></div>
+          <div class="week-row"><div class="week-num">WK2</div><div class="week-details"><div class="week-title">Week 2 — Non-Conference</div><div class="week-status">✅ All members advanced</div></div><span class="badge badge-green">Done</span></div>
+          <div class="week-row"><div class="week-num">WK3</div><div class="week-details"><div class="week-title">Week 3 — Rivalry Week Early</div><div class="week-status">✅ All members advanced</div></div><span class="badge badge-green">Done</span></div>
+          <div class="week-row"><div class="week-num">WK4</div><div class="week-details"><div class="week-title">Week 4 — Big Game Week</div><div class="week-status">✅ All members advanced</div></div><span class="badge badge-green">Done</span></div>
+          <div class="week-row"><div class="week-num">WK5</div><div class="week-details"><div class="week-title">Week 5 — Recruiting Push</div><div class="week-status">✅ All members advanced</div></div><span class="badge badge-green">Done</span></div>
+          <div class="week-row"><div class="week-num">WK6</div><div class="week-details"><div class="week-title">Week 6 — Midseason</div><div class="week-status">✅ All members advanced</div></div><span class="badge badge-green">Done</span></div>
+          <div class="week-row" style="border-color:var(--accent);background:var(--accent-dim);"><div class="week-num current">WK7</div><div class="week-details"><div class="week-title">Week 7 — Current Week</div><div class="week-status">⏳ 6 of 8 members ready — advance Tuesday</div><div class="week-progress"><div class="week-bar" style="width:75%;"></div></div></div><span class="badge badge-gold">Active</span></div>
+          <div class="week-row" style="opacity:0.5;"><div class="week-num">WK8</div><div class="week-details"><div class="week-title">Week 8 — Upcoming</div><div class="week-status">Not started</div></div><span class="badge" style="background:var(--surface-3);color:var(--text-faint);">Locked</span></div>
+        </div>
+      </div>
+    </section>
 
-  // ── SIGN UP ──
-  document.getElementById('btn-signup').addEventListener('click', async () => {
-    const name = document.getElementById('signup-name').value.trim();
-    const email = document.getElementById('signup-email').value.trim();
-    const pass = document.getElementById('signup-password').value;
-    const errEl = document.getElementById('auth-error');
-    errEl.textContent = '';
-    if (!email || !pass) { errEl.textContent = 'Please fill in all fields.'; return; }
-    try {
-      const cred = await createUserWithEmailAndPassword(auth, email, pass);
-      if (name) await updateProfile(cred.user, { displayName: name });
-    } catch (e) {
-      errEl.textContent = friendlyError(e.code);
-    }
-  });
+    <!-- MEMBERS -->
+    <section class="screen" id="screen-members">
+      <div class="page-header">
+        <div class="page-eyebrow">FFL Dynasty</div>
+        <h1 class="page-title">Members</h1>
+        <p class="page-desc">See who's in your league, their team, and current notification settings.</p>
+      </div>
+      <div class="card">
+        <div class="card-title">League Roster (8 Members)</div>
+        <div class="member-list">
+          <div class="member-row">
+            <div class="member-avatar">C</div>
+            <div class="member-info"><div class="member-name">Commissioner (You)</div><div class="member-school">Texas A&M · Xbox</div></div>
+            <span class="badge badge-gold">Commissioner</span>
+            <div class="member-actions"><button class="btn btn-ghost btn-sm">Notify</button></div>
+          </div>
+          <div class="member-row">
+            <div class="member-avatar">J</div>
+            <div class="member-info"><div class="member-name">Jake M.</div><div class="member-school">Alabama · Xbox</div></div>
+            <span class="badge badge-green">Ready ✓</span>
+            <div class="member-actions"><button class="btn btn-ghost btn-sm">Notify</button></div>
+          </div>
+          <div class="member-row">
+            <div class="member-avatar">D</div>
+            <div class="member-info"><div class="member-name">Darius W.</div><div class="member-school">LSU · PS5</div></div>
+            <span class="badge badge-green">Ready ✓</span>
+            <div class="member-actions"><button class="btn btn-ghost btn-sm">Notify</button></div>
+          </div>
+          <div class="member-row">
+            <div class="member-avatar">M</div>
+            <div class="member-info"><div class="member-name">Marcus T.</div><div class="member-school">Georgia · Xbox</div></div>
+            <span class="badge badge-green">Ready ✓</span>
+            <div class="member-actions"><button class="btn btn-ghost btn-sm">Notify</button></div>
+          </div>
+          <div class="member-row">
+            <div class="member-avatar">T</div>
+            <div class="member-info"><div class="member-name">Tyler B.</div><div class="member-school">Ohio State · PS5</div></div>
+            <span class="badge badge-green">Ready ✓</span>
+            <div class="member-actions"><button class="btn btn-ghost btn-sm">Notify</button></div>
+          </div>
+          <div class="member-row">
+            <div class="member-avatar">R</div>
+            <div class="member-info"><div class="member-name">Rico P.</div><div class="member-school">Miami · Xbox</div></div>
+            <span class="badge badge-green">Ready ✓</span>
+            <div class="member-actions"><button class="btn btn-ghost btn-sm">Notify</button></div>
+          </div>
+          <div class="member-row">
+            <div class="member-avatar">A</div>
+            <div class="member-info"><div class="member-name">Aaron L.</div><div class="member-school">Michigan · Xbox</div></div>
+            <span class="badge badge-red">⏳ Pending</span>
+            <div class="member-actions"><button class="btn btn-primary btn-sm" onclick="nudgeMember('Aaron L.')">Nudge</button></div>
+          </div>
+          <div class="member-row">
+            <div class="member-avatar">K</div>
+            <div class="member-info"><div class="member-name">Kevin R.</div><div class="member-school">Notre Dame · PS5</div></div>
+            <span class="badge badge-red">⏳ Pending</span>
+            <div class="member-actions"><button class="btn btn-primary btn-sm" onclick="nudgeMember('Kevin R.')">Nudge</button></div>
+          </div>
+        </div>
+      </div>
+    </section>
 
-  // ── GOOGLE ──
-  document.getElementById('btn-google').addEventListener('click', async () => {
-    const errEl = document.getElementById('auth-error');
-    errEl.textContent = '';
-    try {
-      await signInWithPopup(auth, provider);
-    } catch (e) {
-      if (e.code === 'auth/unauthorized-domain') {
-        errEl.textContent = '⚠️ Add this domain to Firebase Auth → Settings → Authorized Domains.';
-      } else if (e.code === 'auth/popup-closed-by-user') {
-        errEl.textContent = 'Popup closed. Please try again.';
-      } else {
-        errEl.textContent = friendlyError(e.code);
-      }
-    }
-  });
+    <!-- FEED -->
+    <section class="screen" id="screen-feed">
+      <div class="page-header">
+        <div class="page-eyebrow">League Comms</div>
+        <h1 class="page-title">Announcements</h1>
+        <p class="page-desc">All commissioner updates and league messages in one feed.</p>
+      </div>
+      <div class="btn-row" style="margin-bottom:var(--space-6);margin-top:0;">
+        <button class="btn btn-primary" onclick="openModal()">📢 New Announcement</button>
+      </div>
+      <div class="feed">
+        <div class="feed-item">
+          <div class="feed-item-top">
+            <div class="feed-avatar">C</div>
+            <div><div class="feed-sender">Commissioner</div><div class="feed-time">Today, 2:14 PM</div></div>
+            <span class="badge badge-gold" style="margin-left:auto;">Urgent</span>
+          </div>
+          <div class="feed-body">Week 7 advance is set for Tuesday at 9 PM. Make sure your games are played and lineups locked before then. No extensions this week.</div>
+          <div class="feed-channel-tags"><span class="badge badge-blue">📱 Push</span><span class="badge badge-blue">✉️ Email</span></div>
+        </div>
+        <div class="feed-item">
+          <div class="feed-item-top">
+            <div class="feed-avatar">J</div>
+            <div><div class="feed-sender">Jake (Mod)</div><div class="feed-time">Yesterday, 7:30 PM</div></div>
+          </div>
+          <div class="feed-body">Reminder: recruiting board updates are due before we advance. Check your pipeline — Alabama has 4 open spots.</div>
+          <div class="feed-channel-tags"><span class="badge badge-blue">📱 Push</span></div>
+        </div>
+        <div class="feed-item">
+          <div class="feed-item-top">
+            <div class="feed-avatar">C</div>
+            <div><div class="feed-sender">Commissioner</div><div class="feed-time">3 days ago</div></div>
+          </div>
+          <div class="feed-body">New house rules posted: if you simulate more than 3 games in a row without playing, you'll be flagged for review by the group. Keep it competitive.</div>
+          <div class="feed-channel-tags"><span class="badge badge-blue">✉️ Email</span><span class="badge badge-blue">💬 SMS</span></div>
+        </div>
+        <div class="feed-item">
+          <div class="feed-item-top">
+            <div class="feed-avatar">C</div>
+            <div><div class="feed-sender">Commissioner</div><div class="feed-time">Last week</div></div>
+          </div>
+          <div class="feed-body">Week 6 was advanced. Check standings — Georgia and Texas A&M are tied for #1 in the conference. Big games ahead.</div>
+          <div class="feed-channel-tags"><span class="badge badge-blue">📱 Push</span><span class="badge badge-blue">✉️ Email</span><span class="badge badge-blue">💬 SMS</span></div>
+        </div>
+      </div>
+    </section>
 
-  // ── SIGN OUT ──
-  function doSignOut() { signOut(auth); }
-  document.getElementById('btn-signout').addEventListener('click', doSignOut);
-  document.getElementById('settings-signout').addEventListener('click', doSignOut);
+    <!-- COMMISSIONER TOOLS -->
+    <section class="screen" id="screen-commissioner">
+      <div class="page-header">
+        <div class="page-eyebrow">Commissioner Tools</div>
+        <h1 class="page-title">Send Update</h1>
+        <p class="page-desc">Compose a league message and choose how each member gets notified — push, email, or SMS.</p>
+      </div>
+      <div class="card">
+        <div class="card-title">Compose Message</div>
+        <div class="form-group">
+          <label class="form-label" for="commMsgText">Message</label>
+          <textarea class="form-textarea" id="commMsgText" rows="5" placeholder="Write your league update…"></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Delivery Channels</label>
+          <div class="toggle-row">
+            <div class="toggle-info"><div class="toggle-name">🔔 Push Notification</div><div class="toggle-desc">Instant alert on phones (requires app install)</div></div>
+            <label class="toggle-switch"><input type="checkbox" id="ch-push" checked><span class="toggle-track"></span></label>
+          </div>
+          <div class="toggle-row">
+            <div class="toggle-info"><div class="toggle-name">✉️ Email</div><div class="toggle-desc">Sent to registered email via SendGrid</div></div>
+            <label class="toggle-switch"><input type="checkbox" id="ch-email" checked><span class="toggle-track"></span></label>
+          </div>
+          <div class="toggle-row">
+            <div class="toggle-info"><div class="toggle-name">💬 SMS / Text</div><div class="toggle-desc">Text message via Twilio (charges may apply)</div></div>
+            <label class="toggle-switch"><input type="checkbox" id="ch-sms"><span class="toggle-track"></span></label>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Priority</label>
+          <select class="form-select" id="commPriority">
+            <option>Normal</option>
+            <option>Urgent</option>
+            <option>FYI</option>
+          </select>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-primary" onclick="sendCommUpdate()">📨 Send to All Members</button>
+          <button class="btn btn-secondary" onclick="saveDraft()">Save Draft</button>
+        </div>
+      </div>
 
-  // ── SAVE NAME ──
-  window.saveName = async () => {
-    const name = document.getElementById('displayname-input').value.trim();
-    if (!name) return;
-    const user = auth.currentUser;
-    if (!user) return;
-    try {
-      await updateProfile(user, { displayName: name });
-      await setDoc(doc(db, 'users', user.uid), { displayName: name }, { merge: true });
-      document.getElementById('nav-username').textContent = name;
-      document.getElementById('hero-name').textContent = name.split(' ')[0];
-      showToast('Name saved!', 'success');
-    } catch (e) {
-      showToast('Could not save. Check console.', '');
-    }
-  };
+      <div class="card">
+        <div class="card-title">Quick Actions</div>
+        <div class="btn-row" style="margin-top:0;">
+          <button class="btn btn-secondary" onclick="quickNudge()">⏰ Nudge Pending Members</button>
+          <button class="btn btn-secondary" onclick="advanceWeek()">⏭ Advance Week</button>
+          <button class="btn btn-danger" onclick="showToast('🔴 This would remove a member from the league.', 'error')">🚫 Remove Member</button>
+        </div>
+      </div>
+    </section>
 
-  // ── SAVE PHONE ──
-  window.savePhone = async () => {
-    const phone = document.getElementById('phone-input').value.trim();
-    const user = auth.currentUser;
-    if (!user) return;
-    try {
-      await setDoc(doc(db, 'users', user.uid), { phone }, { merge: true });
-      showToast('Phone number saved!', 'success');
-    } catch (e) {
-      showToast('Could not save phone number.', '');
-    }
-  };
+    <!-- MY LEAGUES -->
+    <section class="screen" id="screen-leagues">
+      <div class="page-header">
+        <div class="page-eyebrow">Your Account</div>
+        <h1 class="page-title">My Leagues</h1>
+        <p class="page-desc">Manage the leagues you're a member of across different platforms and seasons.</p>
+      </div>
+      <div class="btn-row" style="margin-bottom:var(--space-5);margin-top:0;">
+        <button class="btn btn-primary" onclick="showToast('➕ League creation coming soon!', 'info')">+ Join / Create League</button>
+      </div>
+      <div class="league-list">
+        <article class="league-card">
+          <div class="league-card-top">
+            <div><div class="league-name">FFL Dynasty</div><p style="font-size:var(--text-xs);color:var(--text-muted);margin-top:2px;">mem-001</p></div>
+            <span class="badge badge-gold">Commissioner</span>
+          </div>
+          <div class="league-meta">
+            <div class="league-meta-item"><div class="league-meta-label">School</div><div class="league-meta-value">Texas A&M</div></div>
+            <div class="league-meta-item"><div class="league-meta-label">Platform</div><div class="league-meta-value">Xbox Series X</div></div>
+            <div class="league-meta-item"><div class="league-meta-label">Gamertag</div><div class="league-meta-value">SentXBL</div></div>
+            <div class="league-meta-item"><div class="league-meta-label">Members</div><div class="league-meta-value">8 / 12</div></div>
+            <div class="league-meta-item"><div class="league-meta-label">Season</div><div class="league-meta-value">2026 — Wk 7</div></div>
+          </div>
+          <div class="btn-row">
+            <button class="btn btn-secondary btn-sm" onclick="showScreen('dashboard', document.querySelector('[onclick*=dashboard]'))">Open League</button>
+            <button class="btn btn-secondary btn-sm" onclick="showScreen('commissioner', document.querySelector('[onclick*=commissioner]'))">Commissioner Panel</button>
+          </div>
+        </article>
+        <article class="league-card">
+          <div class="league-card-top">
+            <div><div class="league-name">Saturday Dynasty</div><p style="font-size:var(--text-xs);color:var(--text-muted);margin-top:2px;">mem-002</p></div>
+            <span class="badge badge-green">Member</span>
+          </div>
+          <div class="league-meta">
+            <div class="league-meta-item"><div class="league-meta-label">School</div><div class="league-meta-value">LSU</div></div>
+            <div class="league-meta-item"><div class="league-meta-label">Platform</div><div class="league-meta-value">Steam / EA App</div></div>
+            <div class="league-meta-item"><div class="league-meta-label">Members</div><div class="league-meta-value">6 / 8</div></div>
+            <div class="league-meta-item"><div class="league-meta-label">Season</div><div class="league-meta-value">2026 — Wk 3</div></div>
+          </div>
+          <div class="btn-row">
+            <button class="btn btn-secondary btn-sm" onclick="showToast('📋 Opening Saturday Dynasty…', 'info')">Open League</button>
+            <button class="btn btn-danger btn-sm" onclick="showToast('⚠️ Leave league confirmation coming.', 'error')">Leave</button>
+          </div>
+        </article>
+      </div>
+    </section>
 
-  // ── SAVE NOTIF PREFS ──
-  window.savePrefs = async () => {
-    const cards = document.querySelectorAll('.channel-card');
-    const prefs = {};
-    cards.forEach(c => {
-      const key = c.querySelector('.channel-name').textContent.toLowerCase();
-      prefs[key] = c.classList.contains('selected');
-    });
-    const user = auth.currentUser;
-    if (!user) return;
-    try {
-      await setDoc(doc(db, 'users', user.uid), { notifPrefs: prefs }, { merge: true });
-      showToast('Preferences saved!', 'success');
-    } catch (e) {
-      showToast('Could not save preferences.', '');
-    }
-  };
+    <!-- NOTIFICATIONS -->
+    <section class="screen" id="screen-notifications">
+      <div class="page-header">
+        <div class="page-eyebrow">Your Preferences</div>
+        <h1 class="page-title">Notifications</h1>
+        <p class="page-desc">Choose how and when you receive updates from your leagues.</p>
+      </div>
+      <div class="card">
+        <div class="card-title">Delivery Methods</div>
+        <div class="toggle-row">
+          <div class="toggle-info"><div class="toggle-name">🔔 Push Notifications</div><div class="toggle-desc">In-browser and mobile push alerts</div></div>
+          <label class="toggle-switch"><input type="checkbox" checked><span class="toggle-track"></span></label>
+        </div>
+        <div class="toggle-row">
+          <div class="toggle-info"><div class="toggle-name">✉️ Email Alerts</div><div class="toggle-desc">Sent to your registered email</div></div>
+          <label class="toggle-switch"><input type="checkbox" checked><span class="toggle-track"></span></label>
+        </div>
+        <div class="toggle-row">
+          <div class="toggle-info"><div class="toggle-name">💬 SMS / Text Message</div><div class="toggle-desc">Texts to your registered phone number</div></div>
+          <label class="toggle-switch"><input type="checkbox"><span class="toggle-track"></span></label>
+        </div>
+      </div>
 
-  function friendlyError(code) {
-    const map = {
-      'auth/invalid-email': 'Invalid email address.',
-      'auth/user-not-found': 'No account found with that email.',
-      'auth/wrong-password': 'Incorrect password.',
-      'auth/email-already-in-use': 'An account with that email already exists.',
-      'auth/weak-password': 'Password must be at least 6 characters.',
-      'auth/network-request-failed': 'Network error. Check your connection.',
-      'auth/too-many-requests': 'Too many attempts. Try again later.',
-      'auth/popup-blocked': 'Popup was blocked. Allow popups and try again.',
-    };
-    return map[code] || `Auth error: ${code}`;
-  }
-</script>
+      <div class="card">
+        <div class="card-title">Notify Me When…</div>
+        <div class="toggle-row">
+          <div class="toggle-info"><div class="toggle-name">League advances a week</div><div class="toggle-desc">Instantly when the commissioner advances</div></div>
+          <label class="toggle-switch"><input type="checkbox" checked><span class="toggle-track"></span></label>
+        </div>
+        <div class="toggle-row">
+          <div class="toggle-info"><div class="toggle-name">Commissioner sends a message</div><div class="toggle-desc">All league announcements</div></div>
+          <label class="toggle-switch"><input type="checkbox" checked><span class="toggle-track"></span></label>
+        </div>
+        <div class="toggle-row">
+          <div class="toggle-info"><div class="toggle-name">24 hours before deadline</div><div class="toggle-desc">Advance deadline reminder</div></div>
+          <label class="toggle-switch"><input type="checkbox" checked><span class="toggle-track"></span></label>
+        </div>
+        <div class="toggle-row">
+          <div class="toggle-info"><div class="toggle-name">Someone joins my league</div></div>
+          <label class="toggle-switch"><input type="checkbox"><span class="toggle-track"></span></label>
+        </div>
+        <div class="toggle-row">
+          <div class="toggle-info"><div class="toggle-name">A member hasn't advanced yet</div><div class="toggle-desc">Nudge if stalling</div></div>
+          <label class="toggle-switch"><input type="checkbox"><span class="toggle-track"></span></label>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-primary" onclick="saveNotifPrefs()">Save Preferences</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Notification History</div>
+        <div class="notif-list">
+          <div class="notif-item"><div class="notif-dot"></div><div class="notif-text"><div class="notif-msg">📢 Week 7 advance set for Tuesday 9 PM</div><div class="notif-meta">Today, 2:14 PM · Push + Email</div></div></div>
+          <div class="notif-item"><div class="notif-dot"></div><div class="notif-text"><div class="notif-msg">📢 Recruiting reminder from Jake</div><div class="notif-meta">Yesterday, 7:30 PM · Push</div></div></div>
+          <div class="notif-item"><div class="notif-dot read"></div><div class="notif-text"><div class="notif-msg">📋 New house rules posted</div><div class="notif-meta">3 days ago · Email + SMS</div></div></div>
+          <div class="notif-item"><div class="notif-dot read"></div><div class="notif-text"><div class="notif-msg">⏭ Week 6 advanced — check standings</div><div class="notif-meta">Last week · Push + Email + SMS</div></div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PROFILE -->
+    <section class="screen" id="screen-profile">
+      <div class="page-header">
+        <div class="page-eyebrow">Your Account</div>
+        <h1 class="page-title">Profile</h1>
+        <p class="page-desc">Your identity, platform accounts, and contact preferences across all leagues.</p>
+      </div>
+      <div class="card">
+        <div class="card-title">Account Identity</div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label" for="pName">Display Name</label>
+            <input class="form-input" type="text" id="pName" value="Commissioner" placeholder="Your name" />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="pEmail">Email Address</label>
+            <input class="form-input" type="email" id="pEmail" value="you@email.com" placeholder="you@email.com" />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="pPhone">Phone Number</label>
+            <input class="form-input" type="tel" id="pPhone" value="+1 555 000-0000" placeholder="+1 555 000-0000" />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="pTimezone">Time Zone</label>
+            <select class="form-select" id="pTimezone">
+              <option selected>Central Time (CT)</option>
+              <option>Eastern Time (ET)</option>
+              <option>Mountain Time (MT)</option>
+              <option>Pacific Time (PT)</option>
+            </select>
+          </div>
+        </div>
+        <hr class="divider" />
+        <div class="card-title" style="margin-bottom:var(--space-3);">Gaming Platforms</div>
+        <div style="display:grid;gap:var(--space-3);">
+          <div style="display:grid;grid-template-columns:140px 1fr;gap:var(--space-3);align-items:center;">
+            <select class="form-select"><option>Xbox</option><option>PlayStation</option><option>Steam</option><option>EA App</option></select>
+            <input class="form-input" type="text" value="SentXBL" placeholder="Gamertag / ID" />
+          </div>
+          <div style="display:grid;grid-template-columns:140px 1fr;gap:var(--space-3);align-items:center;">
+            <select class="form-select"><option>Steam</option><option>Xbox</option><option>PlayStation</option><option>EA App</option></select>
+            <input class="form-input" type="text" value="" placeholder="Gamertag / ID" />
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-primary" onclick="saveProfile()">Save Profile</button>
+          <button class="btn btn-secondary" onclick="showToast('➕ Platform row added.', 'info')">+ Add Platform</button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- Mobile Nav Bar -->
+<nav class="mobile-nav-bar" aria-label="Mobile navigation">
+  <button class="mobile-nav-item active" id="mobileNav-dashboard" onclick="showScreen('dashboard', this)">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+    Home
+  </button>
+  <button class="mobile-nav-item" id="mobileNav-feed" onclick="showScreen('feed', this)">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+    Feed
+  </button>
+  <button class="mobile-nav-item" id="mobileNav-commissioner" onclick="showScreen('commissioner', this)">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+    Comm
+  </button>
+  <button class="mobile-nav-item" id="mobileNav-notifications" onclick="showScreen('notifications', this)">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+    Alerts
+  </button>
+  <button class="mobile-nav-item" id="mobileNav-profile" onclick="showScreen('profile', this)">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    Profile
+  </button>
+</nav>
 
 <script>
+  // ===== NAVIGATION =====
+  function showScreen(id, clickedEl) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    const target = document.getElementById('screen-' + id);
+    if (target) target.classList.add('active');
 
-  // ── THEME ──
-  const root = document.documentElement;
-  const themeToggle = document.getElementById('theme-toggle');
-  const themeIcon = document.getElementById('theme-icon');
-  const themeLabel = document.getElementById('theme-label');
-  let manualTheme = null;
-
-  function resolvedTheme() {
-    if (manualTheme) return manualTheme;
-    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-  }
-
-  function applyTheme(theme) {
-    if (manualTheme) {
-      root.setAttribute('data-theme', theme);
-    } else {
-      root.removeAttribute('data-theme');
-      if (theme === 'dark') root.setAttribute('data-theme', 'dark');
+    document.querySelectorAll('.nav-item').forEach(el => { el.classList.remove('active'); el.removeAttribute('aria-current'); });
+    if (clickedEl && clickedEl.classList.contains('nav-item')) {
+      clickedEl.classList.add('active');
+      clickedEl.setAttribute('aria-current', 'page');
     }
-    const isDark = theme === 'dark';
-    themeIcon.textContent = isDark ? '🌙' : '☀️';
-    themeLabel.textContent = isDark ? 'Dark' : 'Light';
+
+    const mobileMap = { dashboard: 'mobileNav-dashboard', feed: 'mobileNav-feed', commissioner: 'mobileNav-commissioner', notifications: 'mobileNav-notifications', profile: 'mobileNav-profile' };
+    document.querySelectorAll('.mobile-nav-item').forEach(el => el.classList.remove('active'));
+    const mobileTarget = document.getElementById(mobileMap[id]);
+    if (mobileTarget) mobileTarget.classList.add('active');
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  applyTheme(resolvedTheme());
+  // ===== THEME =====
+  function toggleTheme() {
+    const html = document.documentElement;
+    const current = html.getAttribute('data-theme');
+    html.setAttribute('data-theme', current === 'dark' ? 'light' : 'dark');
+  }
 
-  themeToggle.addEventListener('click', () => {
-    const current = resolvedTheme();
-    manualTheme = current === 'dark' ? 'light' : 'dark';
-    applyTheme(manualTheme);
+  // ===== MODAL =====
+  function openModal() { document.getElementById('commModal').classList.add('open'); }
+  function closeModal() { document.getElementById('commModal').classList.remove('open'); }
+  document.getElementById('commModal').addEventListener('click', function(e) {
+    if (e.target === this) closeModal();
   });
+  function toggleChannel(el) { el.classList.toggle('selected'); }
 
-  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
-    if (!manualTheme) applyTheme(resolvedTheme());
-  });
-
-  // ── PAGE NAV ──
-  window.showPage = (name) => {
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-    document.getElementById('page-' + name)?.classList.add('active');
-    document.querySelectorAll('.nav-link').forEach(l => {
-      if (l.textContent.toLowerCase().includes(name.substring(0,4))) l.classList.add('active');
-    });
-  };
-
-  // ── TAB SWITCH ──
-  window.switchTab = (tab) => {
-    document.getElementById('form-signin').style.display = tab === 'signin' ? 'block' : 'none';
-    document.getElementById('form-signup').style.display = tab === 'signup' ? 'block' : 'none';
-    document.getElementById('tab-signin').classList.toggle('active', tab === 'signin');
-    document.getElementById('tab-signup').classList.toggle('active', tab === 'signup');
-    document.getElementById('auth-error').textContent = '';
-  };
-
-  // ── CHANNEL TOGGLE ──
-  window.toggleChannel = (el) => el.classList.toggle('selected');
-
-  // ── PILL TOGGLE ──
-  window.togglePill = (el) => el.classList.toggle('active');
-
-  // ── BROADCAST ──
-  window.sendBroadcast = () => {
-    const msg = document.getElementById('broadcast-msg').value.trim();
-    if (!msg) { showToast('Please type a message first.', ''); return; }
-    document.getElementById('broadcast-msg').value = '';
-    showToast('Update sent to league members!', 'success');
-  };
-
-  // ── ADVANCE ──
-  window.sendAdvance = () => {
-    const wk = document.getElementById('current-week').value;
-    showToast(`Week ${wk} advance notification sent!`, 'success');
-  };
-
-
-  window.focusCreateLeague = () => {
-    showPage('leagues');
-    setTimeout(() => document.getElementById('league-name')?.focus(), 50);
-  };
-
-  window.createLeague = () => {
-    const name = document.getElementById('league-name').value.trim();
-    const game = document.getElementById('league-game').value.trim() || 'College Football 26';
-    const platform = document.getElementById('league-platform').value;
-    const advance = document.getElementById('league-advance').value.trim() || 'TBD';
-    const commissioner = document.getElementById('league-commissioner').value.trim() || document.getElementById('nav-username').textContent || 'Commissioner';
-    const team = document.getElementById('league-team').value.trim() || 'Unassigned';
-
-    if (!name) {
-      showToast('Add a league name first.', '');
-      return;
-    }
-
-    const container = document.getElementById('league-list');
-    const item = document.createElement('div');
-    item.className = 'league-item';
-    item.innerHTML = `
-      <div class="league-item-top">
-        <div class="league-item-name">${escapeHtml(name)}</div>
-        <span class="league-tag">Commissioner</span>
-      </div>
-      <div class="league-meta">
-        <div><strong>Game:</strong> ${escapeHtml(game)}</div>
-        <div><strong>Platform:</strong> ${escapeHtml(platform)}</div>
-        <div><strong>Team:</strong> ${escapeHtml(team)}</div>
-        <div><strong>Advance:</strong> ${escapeHtml(advance)}</div>
-        <div><strong>Invite:</strong> ${generateInviteCode()}</div>
-        <div><strong>Owner:</strong> ${escapeHtml(commissioner)}</div>
-      </div>
-    `;
-    container.prepend(item);
-
-    document.getElementById('league-name').value = '';
-    document.getElementById('league-advance').value = '';
-    document.getElementById('league-team').value = '';
-    document.getElementById('league-commissioner').value = commissioner;
-
-    showToast('League created! Invite code generated.', 'success');
-  };
-
-  window.joinLeague = () => {
-    const code = document.getElementById('invite-code').value.trim();
-    const team = document.getElementById('join-team').value.trim() || 'Unassigned';
-    if (!code) {
-      showToast('Enter an invite code first.', '');
-      return;
-    }
-    const container = document.getElementById('league-list');
-    const item = document.createElement('div');
-    item.className = 'league-item';
-    item.innerHTML = `
-      <div class="league-item-top">
-        <div class="league-item-name">Joined League (${escapeHtml(code)})</div>
-        <span class="league-tag">Member</span>
-      </div>
-      <div class="league-meta">
-        <div><strong>Game:</strong> College Football 26</div>
-        <div><strong>Platform:</strong> Pending</div>
-        <div><strong>Team:</strong> ${escapeHtml(team)}</div>
-        <div><strong>Advance:</strong> See commissioner updates</div>
-      </div>
-    `;
-    container.prepend(item);
-    document.getElementById('invite-code').value = '';
-    document.getElementById('join-team').value = '';
-    showToast('League joined from invite code!', 'success');
-  };
-
-  window.prefillAdvanceMessage = () => {
-    showPage('commissioner');
-    const week = document.getElementById('current-week')?.value || '1';
-    const msg = document.getElementById('broadcast-msg');
-    if (msg) {
-      msg.value = `Week ${week} advance is tonight at 9PM CT. Please finish your games, recruiting, and depth chart updates before deadline.`;
-      msg.focus();
-    }
-    showToast('Advance message pre-filled.', 'success');
-  };
-
-  function generateInviteCode() {
-    return 'DYNASTY-' + Math.random().toString(36).slice(2,6).toUpperCase();
+  // ===== TOAST =====
+  function showToast(msg, type) {
+    const icons = { success: '✅', error: '⚠️', info: '📋' };
+    const container = document.getElementById('toastContainer');
+    const toast = document.createElement('div');
+    toast.className = 'toast';
+    toast.innerHTML = '<span class="toast-icon">' + (icons[type] || '📋') + '</span><span>' + msg + '</span>';
+    container.appendChild(toast);
+    setTimeout(() => { toast.style.opacity = '0'; toast.style.transition = 'opacity 0.3s'; setTimeout(() => toast.remove(), 300); }, 3000);
   }
 
-  function escapeHtml(str) {
-    return String(str).replace(/[&<>"']/g, (m) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  // ===== ACTIONS =====
+  function sendUpdate() {
+    const msg = document.getElementById('modalMsgText').value.trim();
+    const channels = [...document.querySelectorAll('.channel-card.selected')].map(c => c.dataset.ch).join(', ');
+    if (!msg) { showToast('⚠️ Please write a message first.', 'error'); return; }
+    closeModal();
+    showToast('📨 Sent to all members via ' + (channels || 'push') + '!', 'success');
+    document.getElementById('modalMsgText').value = '';
   }
 
-  // ── TOAST ──
-  window.showToast = (msg, type) => {
-    const t = document.getElementById('toast');
-    t.textContent = msg;
-    t.className = 'toast' + (type ? ' ' + type : '');
-    t.classList.add('show');
-    setTimeout(() => t.classList.remove('show'), 3000);
-  };
+  function sendCommUpdate() {
+    const msg = document.getElementById('commMsgText').value.trim();
+    if (!msg) { showToast('⚠️ Please write a message first.', 'error'); return; }
+    const push = document.getElementById('ch-push').checked;
+    const email = document.getElementById('ch-email').checked;
+    const sms = document.getElementById('ch-sms').checked;
+    const channels = [push && 'Push', email && 'Email', sms && 'SMS'].filter(Boolean).join(', ');
+    showToast('📨 League update sent via ' + (channels || 'Push') + '!', 'success');
+    document.getElementById('commMsgText').value = '';
+  }
+
+  function saveDraft() { showToast('📝 Draft saved.', 'info'); }
+
+  function saveNotifPrefs() { showToast('✅ Notification preferences saved!', 'success'); }
+
+  function saveProfile() { showToast('✅ Profile saved!', 'success'); }
+
+  function nudgeMember(name) { showToast('🏈 Nudge sent to ' + name + '!', 'success'); }
+
+  function quickNudge() { showToast('⏰ Nudge sent to Aaron L. and Kevin R.!', 'success'); }
+
+  function advanceWeek() {
+    showToast('⏭ Advancing to Week 8… (confirmation required in production)', 'info');
+  }
 </script>
 </body>
 </html>
