@@ -1,0 +1,56 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isSelf(userId) {
+      return signedIn() && request.auth.uid == userId;
+    }
+
+    function leagueDoc(leagueId) {
+      return get(/databases/$(database)/documents/leagues/$(leagueId));
+    }
+
+    function isLeagueCommissioner(leagueId) {
+      return signedIn() && (
+        leagueDoc(leagueId).data.commissionerUID == request.auth.uid ||
+        leagueDoc(leagueId).data.commissionerId == request.auth.uid
+      );
+    }
+
+    function membershipBelongsToCaller() {
+      return signedIn() && (
+        request.resource.data.userId == request.auth.uid ||
+        request.resource.data.userUID == request.auth.uid
+      );
+    }
+
+    match /users/{userId} {
+      allow create, read, update: if isSelf(userId);
+      allow delete: if false;
+    }
+
+    match /leagues/{leagueId} {
+      allow read: if signedIn();
+      allow create: if signedIn() && (
+        request.resource.data.commissionerUID == request.auth.uid ||
+        request.resource.data.commissionerId == request.auth.uid
+      );
+      allow update: if isLeagueCommissioner(leagueId);
+      allow delete: if false;
+    }
+
+    match /memberships/{membershipId} {
+      allow read: if signedIn();
+      allow create: if membershipBelongsToCaller();
+      allow update: if signedIn() && (
+        resource.data.userId == request.auth.uid ||
+        resource.data.userUID == request.auth.uid ||
+        isLeagueCommissioner(resource.data.leagueId != null ? resource.data.leagueId : resource.data.leagueID)
+      );
+      allow delete: if false;
+    }
+  }
+}
