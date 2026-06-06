@@ -1,0 +1,20 @@
+{
+  "name": "dynasty-mode-functions",
+  "private": true,
+  "main": "index.js",
+  "engines": {
+    "node": "20"
+  },
+  "scripts": {
+    "serve": "firebase emulators:start --only functions",
+    "deploy": "firebase deploy --only functions",
+    "lint": "node -e \"console.log('No lint configured')\""
+  },
+  "dependencies": {
+    "firebase-admin": "^12.7.0",
+    "firebase-functions": "^6.0.1",
+    "nodemailer": "^6.9.15",
+    "twilio": "^5.4.2",
+    "web-push": "^3.6.7"
+  }
+}

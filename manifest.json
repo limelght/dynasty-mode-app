@@ -1,0 +1,9 @@
+{
+  "name": "Dynasty Mode",
+  "short_name": "Dynasty",
+  "description": "Manage your college football dynasty league, commissioner updates, and notifications.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f5f4f0",
+  "theme_color": "#a07820"
+}

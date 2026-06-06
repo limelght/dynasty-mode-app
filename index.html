@@ -4,6 +4,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="Dynasty Mode App — manage your college football dynasty league, send commissioner updates, and control notifications." />
+  <meta name="theme-color" content="#a07820" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Dynasty Mode" />
+  <link rel="manifest" href="/manifest.json" />
   <title>Dynasty Mode</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -198,6 +203,42 @@
       </div>
 
       <div class="card">
+        <div style="font-size:var(--text-lg);font-weight:700;margin-bottom:var(--space-4);">Notification Settings</div>
+        <div class="league-list" style="grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));">
+          <div class="league-card">
+            <div class="form-group">
+              <label class="form-label" for="notifEmail">Email for Alerts</label>
+              <input class="form-input" id="notifEmail" placeholder="you@email.com" />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="notifPhone">Phone for SMS</label>
+              <input class="form-input" id="notifPhone" placeholder="+1 555 555 5555" />
+            </div>
+          </div>
+          <div class="league-card">
+            <div class="form-group">
+              <label class="form-label">Delivery Channels</label>
+              <div style="display:grid;gap:var(--space-3);">
+                <label style="display:flex;align-items:center;gap:10px;margin:0;">
+                  <input type="checkbox" id="prefPush" checked />
+                  <span>Browser push notifications</span>
+                </label>
+                <label style="display:flex;align-items:center;gap:10px;margin:0;">
+                  <input type="checkbox" id="prefEmail" checked />
+                  <span>Email updates</span>
+                </label>
+                <label style="display:flex;align-items:center;gap:10px;margin:0;">
+                  <input type="checkbox" id="prefSms" />
+                  <span>SMS alerts</span>
+                </label>
+              </div>
+            </div>
+            <button class="btn btn-secondary btn-full" onclick="saveNotificationSettings()">Save Notification Settings</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
         <div style="font-size:var(--text-lg);font-weight:700;margin-bottom:var(--space-4);">Create / Join result</div>
         <div class="muted" id="statusText">No action yet.</div>
       </div>
@@ -356,6 +397,14 @@
       }, 3200);
     }
 
+    async function registerServiceWorker() {
+      if (!('serviceWorker' in navigator)) return;
+      if (location.protocol !== 'https:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') return;
+      try {
+        await navigator.serviceWorker.register('/sw.js');
+      } catch (_) {}
+    }
+
     function switchLoginTab(tab, el) {
       document.querySelectorAll('.login-tab').forEach(t => t.classList.remove('active'));
       document.querySelectorAll('.login-form-pane').forEach(p => p.classList.remove('active'));
@@ -433,6 +482,106 @@
       return err?.message || 'Unknown authentication error.';
     }
 
+    function localKey(name) {
+      return 'dynasty-local-' + name;
+    }
+
+    function readLocalJson(name, fallback) {
+      try {
+        const raw = localStorage.getItem(localKey(name));
+        return raw ? JSON.parse(raw) : fallback;
+      } catch (_) {
+        return fallback;
+      }
+    }
+
+    function writeLocalJson(name, value) {
+      try {
+        localStorage.setItem(localKey(name), JSON.stringify(value));
+      } catch (_) {}
+    }
+
+    function upsertLocalProfile(profile) {
+      const profiles = readLocalJson('profiles', {});
+      profiles[profile.uid] = {
+        ...(profiles[profile.uid] || {}),
+        ...profile,
+        updatedAt: new Date().toISOString()
+      };
+      writeLocalJson('profiles', profiles);
+    }
+
+    function readLocalProfile(uid) {
+      const profiles = readLocalJson('profiles', {});
+      return profiles[uid] || {};
+    }
+
+    function upsertLocalLeague(league) {
+      const leagues = readLocalJson('leagues', []);
+      const nextLeagues = leagues.filter((item) => item.id !== league.id);
+      nextLeagues.push(league);
+      writeLocalJson('leagues', nextLeagues);
+      return league;
+    }
+
+    function upsertLocalMembership(membership) {
+      const memberships = readLocalJson('memberships', []);
+      const nextMemberships = memberships.filter((item) => item.id !== membership.id);
+      nextMemberships.push(membership);
+      writeLocalJson('memberships', nextMemberships);
+      return membership;
+    }
+
+    function getLocalMembershipsForUser(uid) {
+      return readLocalJson('memberships', []).filter((membership) =>
+        membership.userId === uid || membership.userUID === uid
+      );
+    }
+
+    function getLocalLeagueByInviteCode(inviteCode) {
+      return readLocalJson('leagues', []).find((league) => league.inviteCode === inviteCode) || null;
+    }
+
+    function getLocalLeagueById(leagueId) {
+      return readLocalJson('leagues', []).find((league) => league.id === leagueId) || null;
+    }
+
+    function buildLocalLeague({ leagueName, platform }) {
+      const inviteCode = randomInviteCode();
+      return {
+        id: 'local-league-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8),
+        commissionerUID: currentUser.uid,
+        commissionerId: currentUser.uid,
+        currentWeek: 1,
+        inviteCode,
+        name: leagueName || (currentUser.name + "'s Dynasty"),
+        platform,
+        status: 'active',
+        source: 'local',
+        createdAt: new Date().toISOString()
+      };
+    }
+
+    function buildLocalMembership({ leagueId, role, platform, gamertag }) {
+      return {
+        id: 'local-membership-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8),
+        leagueId,
+        leagueID: leagueId,
+        userId: currentUser.uid,
+        userUID: currentUser.uid,
+        role,
+        status: 'active',
+        platform,
+        gamertag,
+        eaUsername: gamertag || '',
+        notifPrefs: 'app',
+        teamAbbr: '',
+        source: 'local',
+        joinedAt: new Date().toISOString(),
+        createdAt: new Date().toISOString()
+      };
+    }
+
     async function handleForgotPassword() {
       const fb = window._dynastyFirebase;
       const email = document.getElementById('siEmail').value.trim() || document.getElementById('suEmail').value.trim();
@@ -458,6 +607,22 @@
         name: profile?.displayName || user.displayName || user.email.split('@')[0],
         email: user.email
       };
+      hydrateNotificationForm(profile);
+    }
+
+    function hydrateNotificationForm(profile = {}) {
+      const prefs = profile.notificationPrefs || {};
+      const emailField = document.getElementById('notifEmail');
+      const phoneField = document.getElementById('notifPhone');
+      const pushField = document.getElementById('prefPush');
+      const emailPrefField = document.getElementById('prefEmail');
+      const smsField = document.getElementById('prefSms');
+      if (!emailField || !phoneField || !pushField || !emailPrefField || !smsField) return;
+      emailField.value = profile.notificationEmail || profile.email || currentUser?.email || '';
+      phoneField.value = profile.phoneNumber || '';
+      pushField.checked = prefs.push !== false;
+      emailPrefField.checked = prefs.email !== false;
+      smsField.checked = !!prefs.sms;
     }
 
     async function upsertUserProfile({ uid, displayName, email, platform, gamertag }) {
@@ -474,9 +639,11 @@
 
       try {
         await fb.setDoc(fb.doc(fb.db, 'users', uid), payload, { merge: true });
+        upsertLocalProfile(payload);
         return true;
       } catch (err) {
         if (isPermissionDeniedError(err)) {
+          upsertLocalProfile(payload);
           showToast('Signed in, but profile sync to Firestore is blocked by current security rules.', 'info');
           return false;
         }
@@ -484,14 +651,62 @@
       }
     }
 
+    async function saveNotificationSettings() {
+      if (!currentUser?.uid) {
+        showToast('You must be signed in first.', 'error');
+        return;
+      }
+
+      const notificationEmail = document.getElementById('notifEmail').value.trim();
+      const phoneNumber = document.getElementById('notifPhone').value.trim();
+      const notificationPrefs = {
+        push: document.getElementById('prefPush').checked,
+        email: document.getElementById('prefEmail').checked,
+        sms: document.getElementById('prefSms').checked
+      };
+
+      const fb = window._dynastyFirebase;
+      const payload = {
+        uid: currentUser.uid,
+        displayName: currentUser.name,
+        email: currentUser.email,
+        notificationEmail,
+        phoneNumber,
+        notificationPrefs,
+        updatedAt: fb.serverTimestamp()
+      };
+
+      upsertLocalProfile({
+        uid: currentUser.uid,
+        displayName: currentUser.name,
+        email: currentUser.email,
+        notificationEmail,
+        phoneNumber,
+        notificationPrefs
+      });
+
+      try {
+        await fb.setDoc(fb.doc(fb.db, 'users', currentUser.uid), payload, { merge: true });
+        showToast('Notification settings saved.', 'success');
+      } catch (err) {
+        if (!isPermissionDeniedError(err)) {
+          showToast('Failed to save notification settings: ' + err.message, 'error');
+          return;
+        }
+        showToast('Notification settings saved locally because Firestore is still blocked.', 'info');
+      }
+    }
+
     async function readUserProfile(uid) {
       const fb = window._dynastyFirebase;
       try {
         const snap = await fb.getDoc(fb.doc(fb.db, 'users', uid));
-        return snap.exists() ? snap.data() : {};
+        const profile = snap.exists() ? snap.data() : readLocalProfile(uid);
+        if (profile?.uid) upsertLocalProfile(profile);
+        return profile;
       } catch (err) {
         if (isPermissionDeniedError(err)) {
-          return {};
+          return readLocalProfile(uid);
         }
         throw err;
       }
@@ -499,10 +714,21 @@
 
     async function fetchMembershipDocs() {
       const fb = window._dynastyFirebase;
-      const snapshots = await Promise.all([
-        fb.getDocs(fb.query(fb.collection(fb.db, 'memberships'), fb.where('userId', '==', currentUser.uid))),
-        fb.getDocs(fb.query(fb.collection(fb.db, 'memberships'), fb.where('userUID', '==', currentUser.uid)))
-      ]);
+      let snapshots;
+      try {
+        snapshots = await Promise.all([
+          fb.getDocs(fb.query(fb.collection(fb.db, 'memberships'), fb.where('userId', '==', currentUser.uid))),
+          fb.getDocs(fb.query(fb.collection(fb.db, 'memberships'), fb.where('userUID', '==', currentUser.uid)))
+        ]);
+      } catch (err) {
+        if (isPermissionDeniedError(err)) {
+          return getLocalMembershipsForUser(currentUser.uid).map((membership) => ({
+            id: membership.id,
+            data: () => membership
+          }));
+        }
+        throw err;
+      }
 
       const memberships = new Map();
       for (const snap of snapshots) {
@@ -513,27 +739,42 @@
 
     async function findLeagueByInviteCode(inviteCode) {
       const fb = window._dynastyFirebase;
-      const leagueSnap = await fb.getDocs(fb.query(fb.collection(fb.db, 'leagues'), fb.where('inviteCode', '==', inviteCode)));
-      return leagueSnap.empty ? null : leagueSnap.docs[0];
+      try {
+        const leagueSnap = await fb.getDocs(fb.query(fb.collection(fb.db, 'leagues'), fb.where('inviteCode', '==', inviteCode)));
+        if (!leagueSnap.empty) return leagueSnap.docs[0];
+      } catch (err) {
+        if (!isPermissionDeniedError(err)) throw err;
+      }
+
+      const localLeague = getLocalLeagueByInviteCode(inviteCode);
+      return localLeague ? { id: localLeague.id, data: () => localLeague } : null;
     }
 
     async function createMembership(leagueId, role, platform, gamertag) {
       const fb = window._dynastyFirebase;
-      await fb.addDoc(fb.collection(fb.db, 'memberships'), {
-        leagueId,
-        leagueID: leagueId,
-        userId: currentUser.uid,
-        userUID: currentUser.uid,
-        role,
-        status: 'active',
-        platform,
-        gamertag,
-        eaUsername: gamertag || '',
-        notifPrefs: 'app',
-        teamAbbr: '',
-        joinedAt: fb.serverTimestamp(),
-        createdAt: fb.serverTimestamp()
-      });
+      const membership = buildLocalMembership({ leagueId, role, platform, gamertag });
+      try {
+        await fb.addDoc(fb.collection(fb.db, 'memberships'), {
+          leagueId,
+          leagueID: leagueId,
+          userId: currentUser.uid,
+          userUID: currentUser.uid,
+          role,
+          status: 'active',
+          platform,
+          gamertag,
+          eaUsername: gamertag || '',
+          notifPrefs: 'app',
+          teamAbbr: '',
+          joinedAt: fb.serverTimestamp(),
+          createdAt: fb.serverTimestamp()
+        });
+        upsertLocalMembership(membership);
+      } catch (err) {
+        if (!isPermissionDeniedError(err)) throw err;
+        upsertLocalMembership(membership);
+        showToast('Membership saved locally because Firestore is still blocked.', 'info');
+      }
     }
 
     async function createLeagueFlow({ leagueName, platform, gamertag }) {
@@ -549,18 +790,30 @@
         gamertag
       });
 
-      const leagueDoc = await fb.addDoc(fb.collection(fb.db, 'leagues'), {
-        commissionerUID: currentUser.uid,
-        commissionerId: currentUser.uid,
-        currentWeek: 1,
-        inviteCode,
-        name: finalLeagueName,
-        platform,
-        status: 'active',
-        createdAt: fb.serverTimestamp()
-      });
+      const localLeague = buildLocalLeague({ leagueName: finalLeagueName, platform });
+      let leagueId = localLeague.id;
 
-      await createMembership(leagueDoc.id, 'commissioner', platform, gamertag);
+      try {
+        const leagueDoc = await fb.addDoc(fb.collection(fb.db, 'leagues'), {
+          commissionerUID: currentUser.uid,
+          commissionerId: currentUser.uid,
+          currentWeek: 1,
+          inviteCode,
+          name: finalLeagueName,
+          platform,
+          status: 'active',
+          createdAt: fb.serverTimestamp()
+        });
+        leagueId = leagueDoc.id;
+        upsertLocalLeague({ ...localLeague, id: leagueId, inviteCode });
+      } catch (err) {
+        if (!isPermissionDeniedError(err)) throw err;
+        localLeague.inviteCode = inviteCode;
+        upsertLocalLeague(localLeague);
+        showToast('League saved locally because Firestore is still blocked.', 'info');
+      }
+
+      await createMembership(leagueId, 'commissioner', platform, gamertag);
       setStatus('League created successfully. Invite code: ' + inviteCode);
       showToast('League created. Invite code: ' + inviteCode, 'success');
     }
@@ -619,11 +872,11 @@
         const cred = await fb.createUserWithEmailAndPassword(fb.auth, email, pass);
         await fb.updateProfile(cred.user, { displayName: name });
         try {
-          await fb.setDoc(fb.doc(fb.db, 'users', cred.user.uid), {
-            uid: cred.user.uid,
-            displayName: name,
-            email,
-            createdAt: fb.serverTimestamp(),
+        await fb.setDoc(fb.doc(fb.db, 'users', cred.user.uid), {
+          uid: cred.user.uid,
+          displayName: name,
+          email,
+          createdAt: fb.serverTimestamp(),
             updatedAt: fb.serverTimestamp(),
             notificationPrefs: { push: true, email: true, sms: false }
           }, { merge: true });
@@ -633,6 +886,7 @@
           showToast('Account created in Firebase Auth. Firestore profile write is blocked by security rules.', 'info');
         }
         currentUser = { uid: cred.user.uid, name, email };
+        hydrateNotificationForm({ email, notificationPrefs: { push: true, email: true, sms: false } });
         document.getElementById('loginScreen').style.display = 'none';
         document.getElementById('onboardScreen').classList.add('visible');
         showToast('Account created. Finish league setup next.', 'success');
@@ -659,6 +913,12 @@
         await loadLeaguesForUser();
         enterApp();
       } catch (err) {
+        if (isPermissionDeniedError(err) && currentUser?.uid) {
+          setStatus('Signed in successfully, but Firestore rules blocked app data.');
+          enterApp();
+          showToast('Signed in, but Firestore permissions are still blocking league data.', 'info');
+          return;
+        }
         showToast('Sign in failed: ' + describeAuthError(err, 'signin'), 'error');
       }
     }
@@ -704,7 +964,18 @@
         const membership = membershipDoc.data();
         const leagueId = membership.leagueId || membership.leagueID;
         if (!leagueId) continue;
-        const leagueSnap = await fb.getDoc(fb.doc(fb.db, 'leagues', leagueId));
+        let leagueSnap;
+        try {
+          leagueSnap = await fb.getDoc(fb.doc(fb.db, 'leagues', leagueId));
+        } catch (err) {
+          if (isPermissionDeniedError(err)) {
+            const localLeague = getLocalLeagueById(leagueId);
+            if (!localLeague) continue;
+            leagueSnap = { exists: () => true, data: () => localLeague };
+          } else {
+            throw err;
+          }
+        }
         if (!leagueSnap.exists()) continue;
         const league = leagueSnap.data();
         const card = document.createElement('div');
@@ -801,6 +1072,12 @@
             await loadLeaguesForUser();
             enterApp();
           } catch (err) {
+            if (isPermissionDeniedError(err)) {
+              setStatus('Session restored, but Firestore rules blocked app data.');
+              enterApp();
+              showToast('Session restored. Firestore permissions are still blocking league data.', 'info');
+              return;
+            }
             showToast('Auth restore failed: ' + err.message, 'error');
           }
         });
@@ -810,6 +1087,7 @@
     }
 
     initTheme();
+    registerServiceWorker();
     bootstrapAuthWatcher();
   </script>
 </body>
