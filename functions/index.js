@@ -1,4 +1,4 @@
-const {onDocumentCreated} = require("firebase-functions/v2/firestore");
+const {onDocumentCreated, onDocumentUpdated} = require("firebase-functions/v2/firestore");
 const {onRequest} = require("firebase-functions/v2/https");
 const logger = require("firebase-functions/logger");
 const admin = require("firebase-admin");
@@ -120,4 +120,44 @@ exports.processNotificationJob = onDocumentCreated("notificationJobs/{jobId}", a
       failedAt: admin.firestore.FieldValue.serverTimestamp()
     }, {merge: true});
   }
+});
+
+exports.trackLeagueStatusChange = onDocumentUpdated("leagues/{leagueId}", async (event) => {
+  const before = event.data?.before?.data();
+  const after = event.data?.after?.data();
+  if (!before || !after) return;
+
+  const beforeStatus = before.status || "active";
+  const afterStatus = after.status || "active";
+  if (beforeStatus === afterStatus) return;
+
+  const leagueId = event.params.leagueId;
+  const changedAt = admin.firestore.FieldValue.serverTimestamp();
+  const changedByUID = after.statusChangedByUID || after.commissionerUID || after.commissionerId || null;
+  const patch = {
+    lastRecordedStatus: afterStatus,
+    statusChangedAt: changedAt,
+  };
+
+  if (changedByUID) patch.statusChangedByUID = changedByUID;
+
+  if (afterStatus === "archived") {
+    patch.archivedAt = changedAt;
+    if (changedByUID) patch.archivedByUID = changedByUID;
+  } else if (afterStatus === "ended") {
+    patch.endedAt = changedAt;
+    if (changedByUID) patch.endedByUID = changedByUID;
+  } else if (afterStatus === "active" && (beforeStatus === "archived" || beforeStatus === "ended")) {
+    patch.reinstatedAt = changedAt;
+    patch.lastInactiveStatus = beforeStatus;
+    if (changedByUID) patch.reinstatedByUID = changedByUID;
+  }
+
+  await event.data.after.ref.set(patch, {merge: true});
+  await db.collection("leagues").doc(leagueId).collection("statusHistory").add({
+    fromStatus: beforeStatus,
+    toStatus: afterStatus,
+    changedByUID,
+    changedAt,
+  });
 });

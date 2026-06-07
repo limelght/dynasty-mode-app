@@ -445,7 +445,7 @@
   </script>
 
   <script>
-    const APP_VERSION = 'vs.0.2.4-dev-2026-06-07-05';
+    const APP_VERSION = 'vs.0.2.5-dev-2026-06-07-06';
     let themeMode = 'auto';
     let currentUser = null;
 
@@ -721,6 +721,58 @@
       return 'active';
     }
 
+    function isoNow() {
+      return new Date().toISOString();
+    }
+
+    function formatDateish(value) {
+      if (!value) return '';
+      if (typeof value?.toDate === 'function') return value.toDate().toLocaleString();
+      if (typeof value?.seconds === 'number') return new Date(value.seconds * 1000).toLocaleString();
+      const parsed = new Date(value);
+      return Number.isNaN(parsed.getTime()) ? '' : parsed.toLocaleString();
+    }
+
+    function buildLeagueStatusPatch(league, nextStatus) {
+      const previousStatus = league?.status || 'active';
+      const changedAt = isoNow();
+      const patch = {
+        status: nextStatus,
+        statusChangedAt: changedAt,
+        statusChangedByUID: currentUser?.uid || '',
+        lastRecordedStatus: nextStatus
+      };
+
+      if (nextStatus === 'archived') {
+        patch.archivedAt = changedAt;
+        patch.archivedByUID = currentUser?.uid || '';
+      } else if (nextStatus === 'ended') {
+        patch.endedAt = changedAt;
+        patch.endedByUID = currentUser?.uid || '';
+      } else if (nextStatus === 'active' && previousStatus !== 'active') {
+        patch.reinstatedAt = changedAt;
+        patch.reinstatedByUID = currentUser?.uid || '';
+        patch.lastInactiveStatus = previousStatus;
+      }
+
+      return patch;
+    }
+
+    function describeLeagueLifecycle(league) {
+      if (!league) return 'No league selected.';
+      const status = formatLeagueStatus(league.status);
+      if (status === 'archived') {
+        return `Archived${formatDateish(league.archivedAt) ? ' on ' + formatDateish(league.archivedAt) : ''}`;
+      }
+      if (status === 'ended') {
+        return `Ended${formatDateish(league.endedAt) ? ' on ' + formatDateish(league.endedAt) : ''}`;
+      }
+      if (league.reinstatedAt) {
+        return `Active · Reinstated${formatDateish(league.reinstatedAt) ? ' on ' + formatDateish(league.reinstatedAt) : ''}`;
+      }
+      return 'Active';
+    }
+
     function upsertLocalNotificationJob(job) {
       const jobs = readLocalJson('notificationJobs', []);
       const nextJobs = jobs.filter((item) => item.id !== job.id);
@@ -734,6 +786,7 @@
     }
 
     function buildLocalLeague({ leagueName, platform }) {
+      const createdAt = isoNow();
       const inviteCode = randomInviteCode();
       return {
         id: 'local-league-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8),
@@ -744,8 +797,11 @@
         name: leagueName || (currentUser.name + "'s Dynasty"),
         platform,
         status: 'active',
+        statusChangedAt: createdAt,
+        statusChangedByUID: currentUser.uid,
+        lastRecordedStatus: 'active',
         source: 'local',
-        createdAt: new Date().toISOString()
+        createdAt
       };
     }
 
@@ -993,7 +1049,7 @@
       }
       const league = getLocalLeagueById(leagueId);
       const role = getCurrentUserRoleForLeague(leagueId);
-      target.textContent = `${league?.name || 'League'} · Status: ${league?.status || 'active'} · Your role: ${role || 'none'}`;
+      target.textContent = `${league?.name || 'League'} · ${describeLeagueLifecycle(league)} · Your role: ${role || 'none'}`;
     }
 
     function renderMemberDirectory() {
@@ -1200,7 +1256,8 @@
         showToast('Only the commissioner can change league status.', 'error');
         return;
       }
-      const league = updateLocalLeague(leagueId, { status: nextStatus });
+      const existingLeague = getLocalLeagueById(leagueId);
+      const league = updateLocalLeague(leagueId, buildLeagueStatusPatch(existingLeague, nextStatus));
       if (!league) {
         showToast('League not found.', 'error');
         return;
@@ -1519,6 +1576,8 @@
           name: finalLeagueName,
           platform,
           status: 'active',
+          statusChangedByUID: currentUser.uid,
+          lastRecordedStatus: 'active',
           createdAt: fb.serverTimestamp()
         });
         leagueId = leagueDoc.id;
@@ -1713,6 +1772,7 @@
             <div class="badge ${viewerRole === 'commissioner' ? 'badge-gold' : 'badge-blue'}">${escapeHtml(viewerRole)}</div>
           </div>
           <div class="muted">Status: ${escapeHtml(leagueStatus)}${league.inviteCode ? ' · Invite Code: ' + escapeHtml(league.inviteCode) : ''}</div>
+          <div class="muted" style="margin-top:var(--space-2);">${escapeHtml(describeLeagueLifecycle(league))}</div>
           <div class="muted" style="margin-top:var(--space-2);">Commissioner: ${escapeHtml(commissionerName)}</div>
         `;
         list.appendChild(card);

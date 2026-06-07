@@ -2,7 +2,7 @@
 
 ## Current build
 
-- App version badge target: `vs.0.2.4-dev-2026-06-07-05`
+- App version badge target: `vs.0.2.5-dev-2026-06-07-06`
 
 ## Current architecture
 
@@ -56,3 +56,5 @@ Current product surface now includes league governance flows:
 - promote member to co-commissioner
 - commissioner handoff
 - co-commissioner self-drop
+
+League lifecycle transitions now also write backend-friendly metadata and a `statusHistory` audit trail so archived leagues can be reinstated cleanly by the commissioner and reflected consistently in Firestore.

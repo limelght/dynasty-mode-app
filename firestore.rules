@@ -42,6 +42,15 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    match /leagues/{leagueId}/statusHistory/{historyId} {
+      allow read: if signedIn();
+      allow create: if signedIn() && (
+        request.resource.data.changedByUID == request.auth.uid ||
+        isLeagueCommissioner(leagueId)
+      );
+      allow update, delete: if false;
+    }
+
     match /memberships/{membershipId} {
       allow read: if signedIn();
       allow create: if membershipBelongsToCaller();
