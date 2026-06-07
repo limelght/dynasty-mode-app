@@ -84,10 +84,26 @@
     .league-list{display:grid;gap:var(--space-4)} .league-card{background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:var(--space-5)} .league-card-top{display:flex;justify-content:space-between;gap:var(--space-3);flex-wrap:wrap;margin-bottom:var(--space-3)}
     .toast-container{position:fixed;bottom:var(--space-6);right:var(--space-6);z-index:1000;display:flex;flex-direction:column;gap:var(--space-3)} .toast{background:var(--surface-2);border:1px solid var(--border-strong);border-radius:var(--radius-lg);padding:var(--space-4) var(--space-5);box-shadow:var(--shadow-lg);display:flex;align-items:center;gap:var(--space-3);font-size:var(--text-sm);max-width:420px}
     .install-note{margin-top:var(--space-4);font-size:var(--text-xs);color:var(--text-muted)}
+    .app-version {
+      position: fixed;
+      left: 50%;
+      bottom: 14px;
+      transform: translateX(-50%);
+      z-index: 1001;
+      padding: 8px 14px;
+      border-radius: var(--radius-full);
+      border: 1px solid var(--border);
+      background: color-mix(in srgb, var(--surface) 92%, transparent);
+      box-shadow: var(--shadow-sm);
+      font-size: var(--text-xs);
+      color: var(--text-muted);
+      backdrop-filter: blur(10px);
+    }
   </style>
 </head>
 <body>
   <div class="toast-container" id="toastContainer"></div>
+  <div class="app-version" id="appVersionBadge">Version</div>
 
   <div id="loginScreen">
     <div class="card-shell">
@@ -379,6 +395,7 @@
   </script>
 
   <script>
+    const APP_VERSION = 'vs.0.2.0-dev-2026-06-07-01';
     let themeMode = 'auto';
     let currentUser = null;
 
@@ -434,6 +451,12 @@
         toast.style.transition = 'opacity .25s';
         setTimeout(() => toast.remove(), 250);
       }, 3200);
+    }
+
+    function renderVersionBadge() {
+      const badge = document.getElementById('appVersionBadge');
+      if (badge) badge.textContent = APP_VERSION;
+      document.title = 'Dynasty Mode ' + APP_VERSION;
     }
 
     async function registerServiceWorker() {
@@ -1278,6 +1301,7 @@
     }
 
     initTheme();
+    renderVersionBadge();
     registerServiceWorker();
     renderNotificationJobs();
     bootstrapAuthWatcher();

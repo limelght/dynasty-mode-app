@@ -52,5 +52,14 @@ service cloud.firestore {
       );
       allow delete: if false;
     }
+
+    match /notificationJobs/{jobId} {
+      allow read: if signedIn();
+      allow create: if signedIn() && (
+        request.resource.data.createdByUID == request.auth.uid
+      );
+      allow update: if false;
+      allow delete: if false;
+    }
   }
 }

@@ -1,5 +1,9 @@
 # Dynasty Mode Deploy Notes
 
+## Current build
+
+- App version badge target: `vs.0.2.0-dev-2026-06-07-01`
+
 ## Current architecture
 
 - Frontend: static app hosted on Firebase Hosting
