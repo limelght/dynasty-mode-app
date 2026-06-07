@@ -391,7 +391,7 @@
             <div style="display:grid;gap:var(--space-3);">
               <button class="btn btn-secondary btn-full" onclick="setLeagueStatus('archived')">Archive League</button>
               <button class="btn btn-secondary btn-full" onclick="setLeagueStatus('ended')">End League</button>
-              <button class="btn btn-secondary btn-full" onclick="setLeagueStatus('active')">Reopen League</button>
+              <button class="btn btn-secondary btn-full" onclick="reinstateLeague()">Reinstate Archived League</button>
             </div>
           </div>
         </div>
@@ -445,7 +445,7 @@
   </script>
 
   <script>
-    const APP_VERSION = 'vs.0.2.3-dev-2026-06-07-04';
+    const APP_VERSION = 'vs.0.2.4-dev-2026-06-07-05';
     let themeMode = 'auto';
     let currentUser = null;
 
@@ -704,6 +704,21 @@
       const nextMembership = { ...membership, role: nextRole, updatedAt: new Date().toISOString() };
       upsertLocalMembership(nextMembership);
       return nextMembership;
+    }
+
+    function getDisplayNameForUid(uid) {
+      if (!uid) return 'Unknown';
+      const profile = getAllLocalProfiles()[uid];
+      if (profile?.displayName) return profile.displayName;
+      const membership = getAllLocalMemberships().find((item) => (item.userId || item.userUID) === uid);
+      return membership?.gamertag || 'Unknown';
+    }
+
+    function formatLeagueStatus(status) {
+      if (!status) return 'active';
+      if (status === 'ended') return 'ended';
+      if (status === 'archived') return 'archived';
+      return 'active';
     }
 
     function upsertLocalNotificationJob(job) {
@@ -1196,6 +1211,29 @@
       showToast(`League marked ${nextStatus}.`, 'success');
     }
 
+    async function reinstateLeague() {
+      const leagueId = document.getElementById('governanceLeagueId').value;
+      if (!leagueId) {
+        showToast('Choose a league first.', 'error');
+        return;
+      }
+      const league = getLocalLeagueById(leagueId);
+      if (!league) {
+        showToast('League not found.', 'error');
+        return;
+      }
+      if (!isCurrentUserCommissionerForLeague(leagueId)) {
+        showToast('Only the commissioner can reinstate an archived or ended league.', 'error');
+        return;
+      }
+      if (league.status === 'active') {
+        showToast('League is already active.', 'info');
+        return;
+      }
+      await setLeagueStatus('active');
+      showToast('League reinstated and returned to active status.', 'success');
+    }
+
     async function promoteToCoCommissioner(membershipId) {
       const membership = getMembershipById(membershipId);
       if (!membership) return showToast('Member not found.', 'error');
@@ -1661,6 +1699,9 @@
         }
         if (!leagueSnap.exists()) continue;
         const league = leagueSnap.data();
+        const leagueStatus = formatLeagueStatus(league.status);
+        const commissionerName = getDisplayNameForUid(league.commissionerUID || league.commissionerId);
+        const viewerRole = membership.role || 'member';
         const card = document.createElement('div');
         card.className = 'league-card';
         card.innerHTML = `
@@ -1669,9 +1710,10 @@
               <div style="font-size:var(--text-lg);font-weight:700;">${escapeHtml(league.name || 'Unnamed League')}</div>
               <div class="muted">Platform: ${escapeHtml(league.platform || membership.platform || 'Unknown')} · Week ${escapeHtml(league.currentWeek || 1)}</div>
             </div>
-            <div class="badge ${membership.role === 'commissioner' ? 'badge-gold' : 'badge-blue'}">${escapeHtml(membership.role || 'member')}</div>
+            <div class="badge ${viewerRole === 'commissioner' ? 'badge-gold' : 'badge-blue'}">${escapeHtml(viewerRole)}</div>
           </div>
-          <div class="muted">Status: ${escapeHtml(league.status || 'active')}${league.inviteCode ? ' · Invite Code: ' + escapeHtml(league.inviteCode) : ''}</div>
+          <div class="muted">Status: ${escapeHtml(leagueStatus)}${league.inviteCode ? ' · Invite Code: ' + escapeHtml(league.inviteCode) : ''}</div>
+          <div class="muted" style="margin-top:var(--space-2);">Commissioner: ${escapeHtml(commissionerName)}</div>
         `;
         list.appendChild(card);
       }

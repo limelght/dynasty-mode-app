@@ -2,7 +2,7 @@
 
 ## Current build
 
-- App version badge target: `vs.0.2.3-dev-2026-06-07-04`
+- App version badge target: `vs.0.2.4-dev-2026-06-07-05`
 
 ## Current architecture
 
@@ -52,7 +52,7 @@
 The app currently contains a local fallback path so core league flows can keep moving when Firestore is blocked. The production target is to make Firestore the source of truth, then keep the local path only as graceful offline support if it still earns its keep.
 
 Current product surface now includes league governance flows:
-- archive / end / reopen league
+- archive / end / reinstate league
 - promote member to co-commissioner
 - commissioner handoff
 - co-commissioner self-drop
