@@ -293,6 +293,45 @@
       </div>
 
       <div class="card">
+        <div style="font-size:var(--text-lg);font-weight:700;margin-bottom:var(--space-4);">Commissioner Updates</div>
+        <div class="league-list" style="grid-template-columns:repeat(auto-fit, minmax(320px, 1fr));">
+          <div class="league-card">
+            <div class="form-group">
+              <label class="form-label" for="jobLeagueId">League</label>
+              <select class="form-select" id="jobLeagueId"></select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="jobMessage">Update Message</label>
+              <textarea class="form-textarea" id="jobMessage" placeholder="Advance deadline tonight at 9 PM CT. Please finish user games and confirm ready status."></textarea>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Send Via</label>
+              <div style="display:grid;gap:var(--space-3);">
+                <label style="display:flex;align-items:center;gap:10px;margin:0;">
+                  <input type="checkbox" id="jobPush" checked />
+                  <span>Browser push</span>
+                </label>
+                <label style="display:flex;align-items:center;gap:10px;margin:0;">
+                  <input type="checkbox" id="jobEmail" checked />
+                  <span>Email</span>
+                </label>
+                <label style="display:flex;align-items:center;gap:10px;margin:0;">
+                  <input type="checkbox" id="jobSms" />
+                  <span>SMS</span>
+                </label>
+              </div>
+            </div>
+            <button class="btn btn-primary btn-full" onclick="queueCommissionerUpdate()">Queue Update</button>
+          </div>
+          <div class="league-card">
+            <div style="font-size:var(--text-base);font-weight:700;margin-bottom:var(--space-2);">Notification Job Queue</div>
+            <div class="muted" style="margin-bottom:var(--space-4);">Backend-ready notification jobs. Local fallback is used when Firestore is blocked.</div>
+            <div class="league-list" id="notificationJobList"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
         <div style="font-size:var(--text-lg);font-weight:700;margin-bottom:var(--space-4);">My Leagues</div>
         <div class="league-list" id="leagueList"></div>
       </div>
@@ -546,6 +585,18 @@
       return readLocalJson('leagues', []).find((league) => league.id === leagueId) || null;
     }
 
+    function upsertLocalNotificationJob(job) {
+      const jobs = readLocalJson('notificationJobs', []);
+      const nextJobs = jobs.filter((item) => item.id !== job.id);
+      nextJobs.unshift(job);
+      writeLocalJson('notificationJobs', nextJobs.slice(0, 25));
+      return job;
+    }
+
+    function getLocalNotificationJobs() {
+      return readLocalJson('notificationJobs', []);
+    }
+
     function buildLocalLeague({ leagueName, platform }) {
       const inviteCode = randomInviteCode();
       return {
@@ -578,6 +629,36 @@
         teamAbbr: '',
         source: 'local',
         joinedAt: new Date().toISOString(),
+        createdAt: new Date().toISOString()
+      };
+    }
+
+    function buildNotificationJob({ leagueId, leagueName, message, channels }) {
+      const notificationEmail = document.getElementById('notifEmail').value.trim() || currentUser.email;
+      const phoneNumber = document.getElementById('notifPhone').value.trim();
+      return {
+        id: 'local-job-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8),
+        leagueId,
+        leagueName,
+        message,
+        createdByUID: currentUser.uid,
+        createdByName: currentUser.name,
+        channels,
+        email: {
+          to: notificationEmail,
+          subject: leagueName + ' Update',
+          text: message
+        },
+        sms: {
+          to: phoneNumber,
+          body: message
+        },
+        push: {
+          title: leagueName + ' Update',
+          body: message
+        },
+        status: 'queued',
+        source: 'local',
         createdAt: new Date().toISOString()
       };
     }
@@ -623,6 +704,51 @@
       pushField.checked = prefs.push !== false;
       emailPrefField.checked = prefs.email !== false;
       smsField.checked = !!prefs.sms;
+    }
+
+    function renderNotificationJobs() {
+      const list = document.getElementById('notificationJobList');
+      if (!list) return;
+      const jobs = getLocalNotificationJobs();
+      if (!jobs.length) {
+        list.innerHTML = '<div class="muted">No queued update jobs yet.</div>';
+        return;
+      }
+
+      list.innerHTML = jobs.map((job) => `
+        <div class="league-card">
+          <div style="display:flex;justify-content:space-between;gap:var(--space-3);align-items:flex-start;flex-wrap:wrap;">
+            <div>
+              <div style="font-weight:700;">${escapeHtml(job.leagueName || 'League Update')}</div>
+              <div class="muted">${escapeHtml(job.message)}</div>
+            </div>
+            <div class="badge ${job.status === 'complete' ? 'badge-gold' : 'badge-blue'}">${escapeHtml(job.status)}</div>
+          </div>
+          <div class="muted" style="margin-top:var(--space-3);">Channels: ${Object.entries(job.channels || {}).filter(([, enabled]) => enabled).map(([channel]) => channel).join(', ') || 'none'}</div>
+        </div>
+      `).join('');
+    }
+
+    function renderCommissionerLeagueOptions(membershipDocs) {
+      const select = document.getElementById('jobLeagueId');
+      if (!select) return;
+      const options = [];
+      for (const membershipDoc of membershipDocs || []) {
+        const membership = membershipDoc.data();
+        const role = membership.role || 'member';
+        if (role !== 'commissioner') continue;
+        const leagueId = membership.leagueId || membership.leagueID;
+        const localLeague = getLocalLeagueById(leagueId);
+        const leagueName = localLeague?.name || 'Commissioner League';
+        options.push({ leagueId, leagueName });
+      }
+
+      if (!options.length) {
+        select.innerHTML = '<option value="">No commissioner leagues yet</option>';
+        return;
+      }
+
+      select.innerHTML = options.map((option) => `<option value="${escapeHtml(option.leagueId)}">${escapeHtml(option.leagueName)}</option>`).join('');
     }
 
     async function upsertUserProfile({ uid, displayName, email, platform, gamertag }) {
@@ -694,6 +820,68 @@
           return;
         }
         showToast('Notification settings saved locally because Firestore is still blocked.', 'info');
+      }
+    }
+
+    async function requestPushPermissionIfNeeded(enabled) {
+      if (!enabled || !('Notification' in window)) return;
+      if (Notification.permission === 'granted') return;
+      try {
+        await Notification.requestPermission();
+      } catch (_) {}
+    }
+
+    async function queueCommissionerUpdate() {
+      if (!currentUser?.uid) {
+        showToast('You must be signed in first.', 'error');
+        return;
+      }
+
+      const leagueId = document.getElementById('jobLeagueId').value;
+      const message = document.getElementById('jobMessage').value.trim();
+      const channels = {
+        push: document.getElementById('jobPush').checked,
+        email: document.getElementById('jobEmail').checked,
+        sms: document.getElementById('jobSms').checked
+      };
+
+      if (!leagueId) {
+        showToast('Choose a commissioner league first.', 'error');
+        return;
+      }
+      if (!message) {
+        showToast('Write an update message first.', 'error');
+        return;
+      }
+
+      await requestPushPermissionIfNeeded(channels.push);
+
+      const league = getLocalLeagueById(leagueId) || { id: leagueId, name: 'League Update' };
+      const job = buildNotificationJob({ leagueId, leagueName: league.name, message, channels });
+      upsertLocalNotificationJob(job);
+      renderNotificationJobs();
+
+      const fb = window._dynastyFirebase;
+      try {
+        await fb.addDoc(fb.collection(fb.db, 'notificationJobs'), {
+          leagueId,
+          message,
+          createdByUID: currentUser.uid,
+          createdByName: currentUser.name,
+          channels,
+          email: job.email,
+          sms: job.sms,
+          push: job.push,
+          status: 'queued',
+          createdAt: fb.serverTimestamp()
+        });
+        showToast('Notification job queued for backend processing.', 'success');
+      } catch (err) {
+        if (!isPermissionDeniedError(err)) {
+          showToast('Failed to queue update: ' + err.message, 'error');
+          return;
+        }
+        showToast('Notification job saved locally because Firestore is still blocked.', 'info');
       }
     }
 
@@ -955,6 +1143,8 @@
       list.innerHTML = '';
 
       const membershipDocs = await fetchMembershipDocs();
+      renderCommissionerLeagueOptions(membershipDocs);
+      renderNotificationJobs();
       if (!membershipDocs.length) {
         list.innerHTML = '<div class="muted">No leagues found yet. Create one from onboarding.</div>';
         return;
@@ -1036,6 +1226,7 @@
       document.getElementById('appPage').classList.add('active');
       document.getElementById('userNameLabel').textContent = currentUser?.name || 'User';
       document.getElementById('userEmailLabel').textContent = currentUser?.email || '';
+      renderNotificationJobs();
     }
 
     async function signOutNow() {
@@ -1088,6 +1279,7 @@
 
     initTheme();
     registerServiceWorker();
+    renderNotificationJobs();
     bootstrapAuthWatcher();
   </script>
 </body>
