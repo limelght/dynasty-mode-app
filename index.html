@@ -352,6 +352,32 @@
       </div>
 
       <div class="card">
+        <div style="font-size:var(--text-lg);font-weight:700;margin-bottom:var(--space-4);">League Member Directory</div>
+        <div class="league-list" style="grid-template-columns:repeat(auto-fit, minmax(320px, 1fr));">
+          <div class="league-card">
+            <div class="form-group">
+              <label class="form-label" for="memberLeagueId">League</label>
+              <select class="form-select" id="memberLeagueId"></select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="manualMemberName">Add Manual Member</label>
+              <input class="form-input" id="manualMemberName" placeholder="Coach Nova" />
+            </div>
+            <div class="form-group">
+              <input class="form-input" id="manualMemberEmail" placeholder="coach@example.com" style="margin-bottom:var(--space-3);" />
+              <input class="form-input" id="manualMemberPhone" placeholder="+1 555 555 5555" />
+            </div>
+            <button class="btn btn-secondary btn-full" onclick="addManualLeagueMember()">Add Member Contact</button>
+          </div>
+          <div class="league-card">
+            <div style="font-size:var(--text-base);font-weight:700;margin-bottom:var(--space-2);">Member Contacts</div>
+            <div class="muted" style="margin-bottom:var(--space-4);">Commissioners can curate delivery details per league while the backend catches up.</div>
+            <div class="league-list" id="memberDirectoryList"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
         <div style="font-size:var(--text-lg);font-weight:700;margin-bottom:var(--space-4);">My Leagues</div>
         <div class="league-list" id="leagueList"></div>
       </div>
@@ -399,7 +425,7 @@
   </script>
 
   <script>
-    const APP_VERSION = 'vs.0.2.1-dev-2026-06-07-02';
+    const APP_VERSION = 'vs.0.2.2-dev-2026-06-07-03';
     let themeMode = 'auto';
     let currentUser = null;
 
@@ -620,6 +646,10 @@
       return readLocalJson('profiles', {});
     }
 
+    function getLeagueMemberships(leagueId) {
+      return getAllLocalMemberships().filter((membership) => (membership.leagueId || membership.leagueID) === leagueId);
+    }
+
     function upsertLocalNotificationJob(job) {
       const jobs = readLocalJson('notificationJobs', []);
       const nextJobs = jobs.filter((item) => item.id !== job.id);
@@ -661,6 +691,9 @@
         gamertag,
         eaUsername: gamertag || '',
         notifPrefs: 'app',
+        notificationPrefs: { push: true, email: true, sms: false },
+        notificationEmail: '',
+        phoneNumber: '',
         teamAbbr: '',
         source: 'local',
         joinedAt: new Date().toISOString(),
@@ -679,9 +712,9 @@
           uid,
           role: membership.role || 'member',
           displayName: profile.displayName || membership.gamertag || 'League Member',
-          notificationEmail: profile.notificationEmail || profile.email || '',
-          phoneNumber: profile.phoneNumber || '',
-          channels: profile.notificationPrefs || { push: true, email: true, sms: false }
+          notificationEmail: membership.notificationEmail || profile.notificationEmail || profile.email || '',
+          phoneNumber: membership.phoneNumber || profile.phoneNumber || '',
+          channels: membership.notificationPrefs || profile.notificationPrefs || { push: true, email: true, sms: false }
         };
       });
     }
@@ -832,6 +865,87 @@
       }).join(' • ');
     }
 
+    function renderMemberLeagueOptions(membershipDocs) {
+      const select = document.getElementById('memberLeagueId');
+      if (!select) return;
+      const options = [];
+      for (const membershipDoc of membershipDocs || []) {
+        const membership = membershipDoc.data();
+        const role = membership.role || 'member';
+        if (role !== 'commissioner') continue;
+        const leagueId = membership.leagueId || membership.leagueID;
+        const localLeague = getLocalLeagueById(leagueId);
+        const leagueName = localLeague?.name || 'Commissioner League';
+        options.push({ leagueId, leagueName });
+      }
+
+      if (!options.length) {
+        select.innerHTML = '<option value="">No commissioner leagues yet</option>';
+        renderMemberDirectory();
+        return;
+      }
+
+      select.innerHTML = options.map((option) => `<option value="${escapeHtml(option.leagueId)}">${escapeHtml(option.leagueName)}</option>`).join('');
+      renderMemberDirectory();
+    }
+
+    function renderMemberDirectory() {
+      const list = document.getElementById('memberDirectoryList');
+      const select = document.getElementById('memberLeagueId');
+      if (!list || !select) return;
+
+      const leagueId = select.value;
+      if (!leagueId) {
+        list.innerHTML = '<div class="muted">Choose a league to manage member contacts.</div>';
+        return;
+      }
+
+      const memberships = getLeagueMemberships(leagueId);
+      if (!memberships.length) {
+        list.innerHTML = '<div class="muted">No member contacts yet for this league.</div>';
+        return;
+      }
+
+      list.innerHTML = memberships.map((membership) => {
+        const recipient = resolveLeagueRecipients(leagueId).find((item) => item.uid === (membership.userId || membership.userUID)) || {
+          displayName: membership.gamertag || 'League Member',
+          notificationEmail: '',
+          phoneNumber: '',
+          channels: { push: true, email: true, sms: false }
+        };
+
+        return `
+          <div class="league-card">
+            <div style="display:flex;justify-content:space-between;gap:var(--space-3);align-items:flex-start;flex-wrap:wrap;margin-bottom:var(--space-3);">
+              <div>
+                <div style="font-weight:700;">${escapeHtml(recipient.displayName)}</div>
+                <div class="muted">${escapeHtml(membership.role || 'member')} · ${escapeHtml(membership.gamertag || 'No gamertag')}</div>
+              </div>
+            </div>
+            <div class="form-group">
+              <input class="form-input" id="member-email-${escapeHtml(membership.id)}" value="${escapeHtml(recipient.notificationEmail || '')}" placeholder="Email for alerts" style="margin-bottom:var(--space-3);" />
+              <input class="form-input" id="member-phone-${escapeHtml(membership.id)}" value="${escapeHtml(recipient.phoneNumber || '')}" placeholder="Phone for SMS" />
+            </div>
+            <div style="display:grid;gap:var(--space-2);margin-bottom:var(--space-4);">
+              <label style="display:flex;align-items:center;gap:10px;">
+                <input type="checkbox" id="member-push-${escapeHtml(membership.id)}" ${recipient.channels?.push ? 'checked' : ''} />
+                <span>Push</span>
+              </label>
+              <label style="display:flex;align-items:center;gap:10px;">
+                <input type="checkbox" id="member-emailpref-${escapeHtml(membership.id)}" ${recipient.channels?.email ? 'checked' : ''} />
+                <span>Email</span>
+              </label>
+              <label style="display:flex;align-items:center;gap:10px;">
+                <input type="checkbox" id="member-smspref-${escapeHtml(membership.id)}" ${recipient.channels?.sms ? 'checked' : ''} />
+                <span>SMS</span>
+              </label>
+            </div>
+            <button class="btn btn-secondary btn-full" onclick="saveMemberContact('${escapeHtml(membership.id)}')">Save Member Contact</button>
+          </div>
+        `;
+      }).join('');
+    }
+
     async function upsertUserProfile({ uid, displayName, email, platform, gamertag }) {
       const fb = window._dynastyFirebase;
       const payload = {
@@ -902,6 +1016,85 @@
         }
         showToast('Notification settings saved locally because Firestore is still blocked.', 'info');
       }
+    }
+
+    async function saveMemberContact(membershipId) {
+      const memberships = getAllLocalMemberships();
+      const membership = memberships.find((item) => item.id === membershipId);
+      if (!membership) {
+        showToast('Member record not found.', 'error');
+        return;
+      }
+
+      const notificationEmail = document.getElementById(`member-email-${membershipId}`).value.trim();
+      const phoneNumber = document.getElementById(`member-phone-${membershipId}`).value.trim();
+      const notificationPrefs = {
+        push: document.getElementById(`member-push-${membershipId}`).checked,
+        email: document.getElementById(`member-emailpref-${membershipId}`).checked,
+        sms: document.getElementById(`member-smspref-${membershipId}`).checked
+      };
+
+      upsertLocalMembership({
+        ...membership,
+        notificationEmail,
+        phoneNumber,
+        notificationPrefs
+      });
+
+      renderMemberDirectory();
+      renderRecipientSummary();
+      showToast('Member contact saved for this league.', 'success');
+    }
+
+    async function addManualLeagueMember() {
+      const leagueId = document.getElementById('memberLeagueId').value;
+      const displayName = document.getElementById('manualMemberName').value.trim();
+      const notificationEmail = document.getElementById('manualMemberEmail').value.trim();
+      const phoneNumber = document.getElementById('manualMemberPhone').value.trim();
+
+      if (!leagueId) {
+        showToast('Choose a league first.', 'error');
+        return;
+      }
+      if (!displayName) {
+        showToast('Enter a member name first.', 'error');
+        return;
+      }
+
+      const uid = 'manual-member-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8);
+      upsertLocalProfile({
+        uid,
+        displayName,
+        notificationEmail,
+        phoneNumber,
+        notificationPrefs: {
+          push: true,
+          email: !!notificationEmail,
+          sms: !!phoneNumber
+        }
+      });
+
+      upsertLocalMembership({
+        ...buildLocalMembership({ leagueId, role: 'member', platform: 'Unknown', gamertag: displayName }),
+        id: 'manual-membership-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8),
+        userId: uid,
+        userUID: uid,
+        gamertag: displayName,
+        notificationEmail,
+        phoneNumber,
+        notificationPrefs: {
+          push: true,
+          email: !!notificationEmail,
+          sms: !!phoneNumber
+        }
+      });
+
+      document.getElementById('manualMemberName').value = '';
+      document.getElementById('manualMemberEmail').value = '';
+      document.getElementById('manualMemberPhone').value = '';
+      renderMemberDirectory();
+      renderRecipientSummary();
+      showToast('Manual member contact added to league.', 'success');
     }
 
     async function requestPushPermissionIfNeeded(enabled) {
@@ -1230,6 +1423,7 @@
 
       const membershipDocs = await fetchMembershipDocs();
       renderCommissionerLeagueOptions(membershipDocs);
+      renderMemberLeagueOptions(membershipDocs);
       renderNotificationJobs();
       if (!membershipDocs.length) {
         list.innerHTML = '<div class="muted">No leagues found yet. Create one from onboarding.</div>';
@@ -1314,6 +1508,7 @@
       document.getElementById('userEmailLabel').textContent = currentUser?.email || '';
       renderNotificationJobs();
       renderRecipientSummary();
+      renderMemberDirectory();
     }
 
     async function signOutNow() {
@@ -1370,6 +1565,7 @@
     renderNotificationJobs();
     document.addEventListener('change', (event) => {
       if (event.target && event.target.id === 'jobLeagueId') renderRecipientSummary();
+      if (event.target && event.target.id === 'memberLeagueId') renderMemberDirectory();
     });
     bootstrapAuthWatcher();
   </script>
