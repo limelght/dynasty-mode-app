@@ -378,6 +378,26 @@
       </div>
 
       <div class="card">
+        <div style="font-size:var(--text-lg);font-weight:700;margin-bottom:var(--space-4);">League Governance</div>
+        <div class="league-list" style="grid-template-columns:repeat(auto-fit, minmax(320px, 1fr));">
+          <div class="league-card">
+            <div class="form-group">
+              <label class="form-label" for="governanceLeagueId">League</label>
+              <select class="form-select" id="governanceLeagueId"></select>
+            </div>
+            <div class="muted" id="governanceSummary">Commissioner-only actions appear here.</div>
+          </div>
+          <div class="league-card">
+            <div style="display:grid;gap:var(--space-3);">
+              <button class="btn btn-secondary btn-full" onclick="setLeagueStatus('archived')">Archive League</button>
+              <button class="btn btn-secondary btn-full" onclick="setLeagueStatus('ended')">End League</button>
+              <button class="btn btn-secondary btn-full" onclick="setLeagueStatus('active')">Reopen League</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
         <div style="font-size:var(--text-lg);font-weight:700;margin-bottom:var(--space-4);">My Leagues</div>
         <div class="league-list" id="leagueList"></div>
       </div>
@@ -425,7 +445,7 @@
   </script>
 
   <script>
-    const APP_VERSION = 'vs.0.2.2-dev-2026-06-07-03';
+    const APP_VERSION = 'vs.0.2.3-dev-2026-06-07-04';
     let themeMode = 'auto';
     let currentUser = null;
 
@@ -648,6 +668,42 @@
 
     function getLeagueMemberships(leagueId) {
       return getAllLocalMemberships().filter((membership) => (membership.leagueId || membership.leagueID) === leagueId);
+    }
+
+    function updateLocalLeague(leagueId, updates) {
+      const league = getLocalLeagueById(leagueId);
+      if (!league) return null;
+      const nextLeague = { ...league, ...updates, updatedAt: new Date().toISOString() };
+      upsertLocalLeague(nextLeague);
+      return nextLeague;
+    }
+
+    function getMembershipById(membershipId) {
+      return getAllLocalMemberships().find((membership) => membership.id === membershipId) || null;
+    }
+
+    function getCurrentUserMembershipForLeague(leagueId) {
+      return getLeagueMemberships(leagueId).find((membership) => (membership.userId || membership.userUID) === currentUser?.uid) || null;
+    }
+
+    function getCurrentUserRoleForLeague(leagueId) {
+      return getCurrentUserMembershipForLeague(leagueId)?.role || null;
+    }
+
+    function isCurrentUserCommissionerForLeague(leagueId) {
+      return getCurrentUserRoleForLeague(leagueId) === 'commissioner';
+    }
+
+    function isCurrentUserCoCommissionerForLeague(leagueId) {
+      return getCurrentUserRoleForLeague(leagueId) === 'co-commissioner';
+    }
+
+    function updateMembershipRole(membershipId, nextRole) {
+      const membership = getMembershipById(membershipId);
+      if (!membership) return null;
+      const nextMembership = { ...membership, role: nextRole, updatedAt: new Date().toISOString() };
+      upsertLocalMembership(nextMembership);
+      return nextMembership;
     }
 
     function upsertLocalNotificationJob(job) {
@@ -889,6 +945,42 @@
       renderMemberDirectory();
     }
 
+    function renderGovernanceLeagueOptions(membershipDocs) {
+      const select = document.getElementById('governanceLeagueId');
+      if (!select) return;
+      const options = [];
+      for (const membershipDoc of membershipDocs || []) {
+        const membership = membershipDoc.data();
+        if ((membership.role || 'member') !== 'commissioner') continue;
+        const leagueId = membership.leagueId || membership.leagueID;
+        const localLeague = getLocalLeagueById(leagueId);
+        options.push({ leagueId, leagueName: localLeague?.name || 'Commissioner League' });
+      }
+
+      if (!options.length) {
+        select.innerHTML = '<option value="">No commissioner leagues yet</option>';
+        renderGovernanceSummary();
+        return;
+      }
+
+      select.innerHTML = options.map((option) => `<option value="${escapeHtml(option.leagueId)}">${escapeHtml(option.leagueName)}</option>`).join('');
+      renderGovernanceSummary();
+    }
+
+    function renderGovernanceSummary() {
+      const target = document.getElementById('governanceSummary');
+      const select = document.getElementById('governanceLeagueId');
+      if (!target || !select) return;
+      const leagueId = select.value;
+      if (!leagueId) {
+        target.textContent = 'Commissioner-only actions appear here.';
+        return;
+      }
+      const league = getLocalLeagueById(leagueId);
+      const role = getCurrentUserRoleForLeague(leagueId);
+      target.textContent = `${league?.name || 'League'} · Status: ${league?.status || 'active'} · Your role: ${role || 'none'}`;
+    }
+
     function renderMemberDirectory() {
       const list = document.getElementById('memberDirectoryList');
       const select = document.getElementById('memberLeagueId');
@@ -907,12 +999,28 @@
       }
 
       list.innerHTML = memberships.map((membership) => {
+        const leagueIdForRow = membership.leagueId || membership.leagueID;
         const recipient = resolveLeagueRecipients(leagueId).find((item) => item.uid === (membership.userId || membership.userUID)) || {
           displayName: membership.gamertag || 'League Member',
           notificationEmail: '',
           phoneNumber: '',
           channels: { push: true, email: true, sms: false }
         };
+        const canManageRoles = isCurrentUserCommissionerForLeague(leagueIdForRow);
+        const isSelf = (membership.userId || membership.userUID) === currentUser?.uid;
+        const roleActions = [];
+        if (canManageRoles && membership.role !== 'co-commissioner' && membership.role !== 'commissioner') {
+          roleActions.push(`<button class="btn btn-secondary btn-full" onclick="promoteToCoCommissioner('${escapeHtml(membership.id)}')">Grant Co-Commissioner</button>`);
+        }
+        if (canManageRoles && membership.role === 'co-commissioner') {
+          roleActions.push(`<button class="btn btn-secondary btn-full" onclick="dropCoCommissioner('${escapeHtml(membership.id)}')">Remove Co-Commissioner</button>`);
+        }
+        if (canManageRoles && membership.role !== 'commissioner') {
+          roleActions.push(`<button class="btn btn-primary btn-full" onclick="transferCommissionerTitle('${escapeHtml(membership.id)}')">Make Commissioner</button>`);
+        }
+        if (isSelf && membership.role === 'co-commissioner') {
+          roleActions.push(`<button class="btn btn-secondary btn-full" onclick="dropCoCommissioner('${escapeHtml(membership.id)}')">Drop Co-Commissioner Title</button>`);
+        }
 
         return `
           <div class="league-card">
@@ -940,7 +1048,10 @@
                 <span>SMS</span>
               </label>
             </div>
-            <button class="btn btn-secondary btn-full" onclick="saveMemberContact('${escapeHtml(membership.id)}')">Save Member Contact</button>
+            <div style="display:grid;gap:var(--space-3);">
+              <button class="btn btn-secondary btn-full" onclick="saveMemberContact('${escapeHtml(membership.id)}')">Save Member Contact</button>
+              ${roleActions.join('')}
+            </div>
           </div>
         `;
       }).join('');
@@ -1044,6 +1155,107 @@
       renderMemberDirectory();
       renderRecipientSummary();
       showToast('Member contact saved for this league.', 'success');
+    }
+
+    async function syncMembershipToFirestore(membership) {
+      const fb = window._dynastyFirebase;
+      try {
+        await fb.setDoc(fb.doc(fb.db, 'memberships', membership.id), membership, { merge: true });
+      } catch (err) {
+        if (!isPermissionDeniedError(err)) throw err;
+      }
+    }
+
+    async function syncLeagueToFirestore(league) {
+      const fb = window._dynastyFirebase;
+      try {
+        await fb.setDoc(fb.doc(fb.db, 'leagues', league.id), league, { merge: true });
+      } catch (err) {
+        if (!isPermissionDeniedError(err)) throw err;
+      }
+    }
+
+    async function setLeagueStatus(nextStatus) {
+      const leagueId = document.getElementById('governanceLeagueId').value;
+      if (!leagueId) {
+        showToast('Choose a league first.', 'error');
+        return;
+      }
+      if (!isCurrentUserCommissionerForLeague(leagueId)) {
+        showToast('Only the commissioner can change league status.', 'error');
+        return;
+      }
+      const league = updateLocalLeague(leagueId, { status: nextStatus });
+      if (!league) {
+        showToast('League not found.', 'error');
+        return;
+      }
+      await syncLeagueToFirestore(league);
+      renderGovernanceSummary();
+      await loadLeaguesForUser();
+      showToast(`League marked ${nextStatus}.`, 'success');
+    }
+
+    async function promoteToCoCommissioner(membershipId) {
+      const membership = getMembershipById(membershipId);
+      if (!membership) return showToast('Member not found.', 'error');
+      const leagueId = membership.leagueId || membership.leagueID;
+      if (!isCurrentUserCommissionerForLeague(leagueId)) {
+        return showToast('Only the commissioner can grant co-commissioner.', 'error');
+      }
+      const nextMembership = updateMembershipRole(membershipId, 'co-commissioner');
+      await syncMembershipToFirestore(nextMembership);
+      renderMemberDirectory();
+      renderRecipientSummary();
+      await loadLeaguesForUser();
+      showToast('Co-commissioner title granted.', 'success');
+    }
+
+    async function dropCoCommissioner(membershipId) {
+      const membership = getMembershipById(membershipId);
+      if (!membership) return showToast('Member not found.', 'error');
+      const leagueId = membership.leagueId || membership.leagueID;
+      const isSelf = (membership.userId || membership.userUID) === currentUser?.uid;
+      if (!isSelf && !isCurrentUserCommissionerForLeague(leagueId)) {
+        return showToast('Only the commissioner or the co-commissioner themselves can drop that title.', 'error');
+      }
+      if ((membership.role || 'member') !== 'co-commissioner') {
+        return showToast('That member is not a co-commissioner.', 'error');
+      }
+      const nextMembership = updateMembershipRole(membershipId, 'member');
+      await syncMembershipToFirestore(nextMembership);
+      renderMemberDirectory();
+      renderRecipientSummary();
+      await loadLeaguesForUser();
+      showToast('Co-commissioner title removed.', 'success');
+    }
+
+    async function transferCommissionerTitle(targetMembershipId) {
+      const targetMembership = getMembershipById(targetMembershipId);
+      if (!targetMembership) return showToast('Target member not found.', 'error');
+      const leagueId = targetMembership.leagueId || targetMembership.leagueID;
+      if (!isCurrentUserCommissionerForLeague(leagueId)) {
+        return showToast('Only the commissioner can hand off the commissioner title.', 'error');
+      }
+
+      const currentCommissioner = getCurrentUserMembershipForLeague(leagueId);
+      if (!currentCommissioner) return showToast('Current commissioner membership not found.', 'error');
+
+      const demotedCommissioner = updateMembershipRole(currentCommissioner.id, 'co-commissioner');
+      const promotedMembership = updateMembershipRole(targetMembershipId, 'commissioner');
+      const league = updateLocalLeague(leagueId, {
+        commissionerUID: promotedMembership.userId || promotedMembership.userUID,
+        commissionerId: promotedMembership.userId || promotedMembership.userUID
+      });
+
+      await syncMembershipToFirestore(demotedCommissioner);
+      await syncMembershipToFirestore(promotedMembership);
+      await syncLeagueToFirestore(league);
+      renderMemberDirectory();
+      renderRecipientSummary();
+      renderGovernanceSummary();
+      await loadLeaguesForUser();
+      showToast('Commissioner title handed off successfully.', 'success');
     }
 
     async function addManualLeagueMember() {
@@ -1424,6 +1636,7 @@
       const membershipDocs = await fetchMembershipDocs();
       renderCommissionerLeagueOptions(membershipDocs);
       renderMemberLeagueOptions(membershipDocs);
+      renderGovernanceLeagueOptions(membershipDocs);
       renderNotificationJobs();
       if (!membershipDocs.length) {
         list.innerHTML = '<div class="muted">No leagues found yet. Create one from onboarding.</div>';
@@ -1509,6 +1722,7 @@
       renderNotificationJobs();
       renderRecipientSummary();
       renderMemberDirectory();
+      renderGovernanceSummary();
     }
 
     async function signOutNow() {
@@ -1566,6 +1780,7 @@
     document.addEventListener('change', (event) => {
       if (event.target && event.target.id === 'jobLeagueId') renderRecipientSummary();
       if (event.target && event.target.id === 'memberLeagueId') renderMemberDirectory();
+      if (event.target && event.target.id === 'governanceLeagueId') renderGovernanceSummary();
     });
     bootstrapAuthWatcher();
   </script>
