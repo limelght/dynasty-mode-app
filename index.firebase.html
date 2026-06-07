@@ -317,6 +317,10 @@
               <select class="form-select" id="jobLeagueId"></select>
             </div>
             <div class="form-group">
+              <label class="form-label">Recipients</label>
+              <div class="muted" id="jobRecipientSummary">Choose a league to preview recipients.</div>
+            </div>
+            <div class="form-group">
               <label class="form-label" for="jobMessage">Update Message</label>
               <textarea class="form-textarea" id="jobMessage" placeholder="Advance deadline tonight at 9 PM CT. Please finish user games and confirm ready status."></textarea>
             </div>
@@ -395,7 +399,7 @@
   </script>
 
   <script>
-    const APP_VERSION = 'vs.0.2.0-dev-2026-06-07-01';
+    const APP_VERSION = 'vs.0.2.1-dev-2026-06-07-02';
     let themeMode = 'auto';
     let currentUser = null;
 
@@ -608,6 +612,14 @@
       return readLocalJson('leagues', []).find((league) => league.id === leagueId) || null;
     }
 
+    function getAllLocalMemberships() {
+      return readLocalJson('memberships', []);
+    }
+
+    function getAllLocalProfiles() {
+      return readLocalJson('profiles', {});
+    }
+
     function upsertLocalNotificationJob(job) {
       const jobs = readLocalJson('notificationJobs', []);
       const nextJobs = jobs.filter((item) => item.id !== job.id);
@@ -656,9 +668,26 @@
       };
     }
 
+    function resolveLeagueRecipients(leagueId) {
+      const memberships = getAllLocalMemberships().filter((membership) => (membership.leagueId || membership.leagueID) === leagueId);
+      const profiles = getAllLocalProfiles();
+
+      return memberships.map((membership) => {
+        const uid = membership.userId || membership.userUID;
+        const profile = profiles[uid] || {};
+        return {
+          uid,
+          role: membership.role || 'member',
+          displayName: profile.displayName || membership.gamertag || 'League Member',
+          notificationEmail: profile.notificationEmail || profile.email || '',
+          phoneNumber: profile.phoneNumber || '',
+          channels: profile.notificationPrefs || { push: true, email: true, sms: false }
+        };
+      });
+    }
+
     function buildNotificationJob({ leagueId, leagueName, message, channels }) {
-      const notificationEmail = document.getElementById('notifEmail').value.trim() || currentUser.email;
-      const phoneNumber = document.getElementById('notifPhone').value.trim();
+      const recipients = resolveLeagueRecipients(leagueId);
       return {
         id: 'local-job-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8),
         leagueId,
@@ -668,18 +697,19 @@
         createdByName: currentUser.name,
         channels,
         email: {
-          to: notificationEmail,
+          to: recipients.map((recipient) => recipient.notificationEmail).filter(Boolean),
           subject: leagueName + ' Update',
           text: message
         },
         sms: {
-          to: phoneNumber,
+          to: recipients.map((recipient) => recipient.phoneNumber).filter(Boolean),
           body: message
         },
         push: {
           title: leagueName + ' Update',
           body: message
         },
+        recipients,
         status: 'queued',
         source: 'local',
         createdAt: new Date().toISOString()
@@ -748,6 +778,7 @@
             <div class="badge ${job.status === 'complete' ? 'badge-gold' : 'badge-blue'}">${escapeHtml(job.status)}</div>
           </div>
           <div class="muted" style="margin-top:var(--space-3);">Channels: ${Object.entries(job.channels || {}).filter(([, enabled]) => enabled).map(([channel]) => channel).join(', ') || 'none'}</div>
+          <div class="muted" style="margin-top:var(--space-2);">Recipients: ${escapeHtml(String(job.recipients?.length || 0))}</div>
         </div>
       `).join('');
     }
@@ -768,10 +799,37 @@
 
       if (!options.length) {
         select.innerHTML = '<option value="">No commissioner leagues yet</option>';
+        renderRecipientSummary();
         return;
       }
 
       select.innerHTML = options.map((option) => `<option value="${escapeHtml(option.leagueId)}">${escapeHtml(option.leagueName)}</option>`).join('');
+      renderRecipientSummary();
+    }
+
+    function renderRecipientSummary() {
+      const target = document.getElementById('jobRecipientSummary');
+      const select = document.getElementById('jobLeagueId');
+      if (!target || !select) return;
+      const leagueId = select.value;
+      if (!leagueId) {
+        target.textContent = 'Choose a league to preview recipients.';
+        return;
+      }
+
+      const recipients = resolveLeagueRecipients(leagueId);
+      if (!recipients.length) {
+        target.textContent = 'No recipient profiles resolved yet. Members need saved profiles before updates can target them.';
+        return;
+      }
+
+      target.textContent = recipients.map((recipient) => {
+        const channels = [];
+        if (recipient.channels?.push) channels.push('push');
+        if (recipient.channels?.email && recipient.notificationEmail) channels.push('email');
+        if (recipient.channels?.sms && recipient.phoneNumber) channels.push('sms');
+        return `${recipient.displayName} (${channels.join(', ') || 'no channels'})`;
+      }).join(' • ');
     }
 
     async function upsertUserProfile({ uid, displayName, email, platform, gamertag }) {
@@ -881,6 +939,10 @@
 
       const league = getLocalLeagueById(leagueId) || { id: leagueId, name: 'League Update' };
       const job = buildNotificationJob({ leagueId, leagueName: league.name, message, channels });
+      if (!job.recipients.length) {
+        showToast('No member recipients resolved for that league yet.', 'error');
+        return;
+      }
       upsertLocalNotificationJob(job);
       renderNotificationJobs();
 
@@ -895,6 +957,7 @@
           email: job.email,
           sms: job.sms,
           push: job.push,
+          recipients: job.recipients,
           status: 'queued',
           createdAt: fb.serverTimestamp()
         });
@@ -1250,6 +1313,7 @@
       document.getElementById('userNameLabel').textContent = currentUser?.name || 'User';
       document.getElementById('userEmailLabel').textContent = currentUser?.email || '';
       renderNotificationJobs();
+      renderRecipientSummary();
     }
 
     async function signOutNow() {
@@ -1304,6 +1368,9 @@
     renderVersionBadge();
     registerServiceWorker();
     renderNotificationJobs();
+    document.addEventListener('change', (event) => {
+      if (event.target && event.target.id === 'jobLeagueId') renderRecipientSummary();
+    });
     bootstrapAuthWatcher();
   </script>
 </body>
