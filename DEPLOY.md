@@ -2,7 +2,7 @@
 
 ## Current build
 
-- App version badge target: `vs.0.2.5-dev-2026-06-07-06`
+- App version badge target: `vs.0.2.6-dev-2026-06-08-01`
 
 ## Current architecture
 
@@ -14,9 +14,10 @@
 ## Local prerequisites
 
 1. Install Firebase CLI
-2. Run `firebase login`
-3. Run `firebase use dynastyhq-app`
-4. In `functions/`, run `npm install`
+2. Use Node `20` locally for Functions work (`nvm use` if you have `nvm`)
+3. Run `firebase login`
+4. Run `firebase use dynastyhq-app`
+5. In `functions/`, run `npm install`
 
 ## Deploy sequence
 
@@ -26,6 +27,8 @@
 4. `firebase deploy --only hosting`
 
 ## Required environment for notifications
+
+Create `functions/.env` from `functions/.env.example` before deploying live notification channels.
 
 ### Email
 
@@ -58,3 +61,9 @@ Current product surface now includes league governance flows:
 - co-commissioner self-drop
 
 League lifecycle transitions now also write backend-friendly metadata and a `statusHistory` audit trail so archived leagues can be reinstated cleanly by the commissioner and reflected consistently in Firestore.
+
+## Deployment status
+
+- Firestore rules have been deployed successfully to `dynastyhq-app`.
+- Hosting has been deployed successfully to `https://dynastyhq-app.web.app`.
+- Functions deployment is currently blocked because the Firebase project must be upgraded to the Blaze plan before Google can enable `artifactregistry.googleapis.com`, `cloudbuild.googleapis.com`, and `cloudfunctions.googleapis.com`.

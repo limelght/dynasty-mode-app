@@ -1,0 +1,14 @@
+{
+  "name": "dynasty-mode-app",
+  "private": true,
+  "scripts": {
+    "serve:web": "python3 -m http.server 4173",
+    "deploy:rules": "firebase deploy --only firestore:rules",
+    "deploy:functions": "firebase deploy --only functions",
+    "deploy:hosting": "firebase deploy --only hosting",
+    "deploy": "firebase deploy --only firestore:rules,functions,hosting"
+  },
+  "devDependencies": {
+    "firebase-tools": "^14.3.1"
+  }
+}

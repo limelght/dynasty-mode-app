@@ -9,9 +9,22 @@
     "public": ".",
     "ignore": [
       "firebase.json",
+      ".firebaserc",
+      ".git/**",
+      ".gitignore",
+      ".nvmrc",
+      "DEPLOY.md",
+      "gitignore",
+      "functions/.env",
+      "functions/.env.*",
       "**/.*",
       "**/node_modules/**",
-      "functions/**"
+      "functions/**",
+      "package.json",
+      "package-lock.json",
+      "index.firebase.html",
+      "index.firebase.fixed.html",
+      "index.pre-blank-fix.html"
     ],
     "rewrites": [
       {
