@@ -2,7 +2,7 @@
 
 ## Current build
 
-- App version badge target: `vs.0.2.6-dev-2026-06-08-01`
+- App version badge target: `vs.0.2.8-dev-2026-06-08-03`
 
 ## Current architecture
 
@@ -14,7 +14,7 @@
 ## Local prerequisites
 
 1. Install Firebase CLI
-2. Use Node `20` locally for Functions work (`nvm use` if you have `nvm`)
+2. Use Node `22` locally for Functions work (`nvm use` if you have `nvm`)
 3. Run `firebase login`
 4. Run `firebase use dynastyhq-app`
 5. In `functions/`, run `npm install`
@@ -66,4 +66,7 @@ League lifecycle transitions now also write backend-friendly metadata and a `sta
 
 - Firestore rules have been deployed successfully to `dynastyhq-app`.
 - Hosting has been deployed successfully to `https://dynastyhq-app.web.app`.
-- Functions deployment is currently blocked because the Firebase project must be upgraded to the Blaze plan before Google can enable `artifactregistry.googleapis.com`, `cloudbuild.googleapis.com`, and `cloudfunctions.googleapis.com`.
+- Functions have now been deployed successfully on Node `22`.
+- Live health endpoint: `https://us-central1-dynastyhq-app.cloudfunctions.net/health`
+- Current live backend status shows notification providers are not configured yet, so `email`, `sms`, and `push` channels report `false` until `functions/.env` is populated and Functions are redeployed.
+- Frontend now surfaces backend notification readiness and stores browser push subscriptions in user profiles when Web Push is configured.

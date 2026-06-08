@@ -47,7 +47,8 @@ exports.health = onRequest((req, res) => {
       email: !!smtpTransport(),
       sms: !!twilioClient(),
       push: configureWebPush()
-    }
+    },
+    webPushPublicKey: process.env.WEB_PUSH_PUBLIC_KEY || null
   });
 });
 

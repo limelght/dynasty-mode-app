@@ -312,6 +312,11 @@
         <div style="font-size:var(--text-lg);font-weight:700;margin-bottom:var(--space-4);">Commissioner Updates</div>
         <div class="league-list" style="grid-template-columns:repeat(auto-fit, minmax(320px, 1fr));">
           <div class="league-card">
+            <div style="font-size:var(--text-base);font-weight:700;margin-bottom:var(--space-2);">Backend Status</div>
+            <div class="muted" id="backendStatusSummary">Checking deployed notification services...</div>
+            <button class="btn btn-secondary btn-full" style="margin-top:var(--space-4);" onclick="refreshBackendStatus()">Refresh Backend Status</button>
+          </div>
+          <div class="league-card">
             <div class="form-group">
               <label class="form-label" for="jobLeagueId">League</label>
               <select class="form-select" id="jobLeagueId"></select>
@@ -445,9 +450,11 @@
   </script>
 
   <script>
-    const APP_VERSION = 'vs.0.2.6-dev-2026-06-08-01';
+    const APP_VERSION = 'vs.0.2.8-dev-2026-06-08-03';
+    const HEALTH_ENDPOINT = 'https://us-central1-dynastyhq-app.cloudfunctions.net/health';
     let themeMode = 'auto';
     let currentUser = null;
+    let backendStatus = null;
 
     function initTheme() {
       try {
@@ -509,12 +516,49 @@
       document.title = 'Dynasty Mode ' + APP_VERSION;
     }
 
+    function renderBackendStatus() {
+      const target = document.getElementById('backendStatusSummary');
+      if (!target) return;
+      if (!backendStatus) {
+        target.textContent = 'Checking deployed notification services...';
+        return;
+      }
+      if (!backendStatus.ok) {
+        target.textContent = 'Backend status check failed. The hosted app is up, but notification services are not reporting healthy yet.';
+        return;
+      }
+      const channels = [];
+      channels.push(`email ${backendStatus.channels?.email ? 'ready' : 'not configured'}`);
+      channels.push(`sms ${backendStatus.channels?.sms ? 'ready' : 'not configured'}`);
+      channels.push(`push ${backendStatus.channels?.push ? 'ready' : 'not configured'}`);
+      target.textContent = `Project ${backendStatus.project || 'unknown'} · ${channels.join(' · ')}`;
+    }
+
+    async function refreshBackendStatus() {
+      try {
+        const response = await fetch(HEALTH_ENDPOINT, { cache: 'no-store' });
+        if (!response.ok) throw new Error('Health endpoint returned ' + response.status);
+        backendStatus = await response.json();
+      } catch (err) {
+        backendStatus = { ok: false, error: err.message };
+      }
+      renderBackendStatus();
+      return backendStatus;
+    }
+
     async function registerServiceWorker() {
       if (!('serviceWorker' in navigator)) return;
       if (location.protocol !== 'https:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') return;
       try {
         await navigator.serviceWorker.register('/sw.js');
       } catch (_) {}
+    }
+
+    function base64UrlToUint8Array(base64String) {
+      const padding = '='.repeat((4 - base64String.length % 4) % 4);
+      const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+      const rawData = atob(base64);
+      return Uint8Array.from([...rawData].map((char) => char.charCodeAt(0)));
     }
 
     function switchLoginTab(tab, el) {
@@ -841,13 +885,15 @@
           displayName: profile.displayName || membership.gamertag || 'League Member',
           notificationEmail: membership.notificationEmail || profile.notificationEmail || profile.email || '',
           phoneNumber: membership.phoneNumber || profile.phoneNumber || '',
-          channels: membership.notificationPrefs || profile.notificationPrefs || { push: true, email: true, sms: false }
+          channels: membership.notificationPrefs || profile.notificationPrefs || { push: true, email: true, sms: false },
+          pushSubscriptions: profile.pushSubscriptions || []
         };
       });
     }
 
     function buildNotificationJob({ leagueId, leagueName, message, channels }) {
       const recipients = resolveLeagueRecipients(leagueId);
+      const pushSubscriptions = recipients.flatMap((recipient) => Array.isArray(recipient.pushSubscriptions) ? recipient.pushSubscriptions : []);
       return {
         id: 'local-job-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8),
         leagueId,
@@ -869,6 +915,7 @@
           title: leagueName + ' Update',
           body: message
         },
+        pushSubscriptions,
         recipients,
         status: 'queued',
         source: 'local',
@@ -917,6 +964,41 @@
       pushField.checked = prefs.push !== false;
       emailPrefField.checked = prefs.email !== false;
       smsField.checked = !!prefs.sms;
+    }
+
+    async function registerPushSubscriptionIfNeeded(enabled) {
+      if (!enabled || !currentUser?.uid) return [];
+      if (!('serviceWorker' in navigator) || !('PushManager' in window)) return [];
+      if (Notification.permission !== 'granted') return [];
+
+      const status = backendStatus?.ok ? backendStatus : await refreshBackendStatus();
+      if (!status?.channels?.push || !status?.webPushPublicKey) return [];
+
+      const registration = await navigator.serviceWorker.ready;
+      let subscription = await registration.pushManager.getSubscription();
+      if (!subscription) {
+        subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: base64UrlToUint8Array(status.webPushPublicKey)
+        });
+      }
+
+      const serializedSubscription = subscription ? subscription.toJSON() : null;
+      if (!serializedSubscription) return [];
+
+      const profile = readLocalProfile(currentUser.uid) || {};
+      const existing = Array.isArray(profile.pushSubscriptions) ? profile.pushSubscriptions : [];
+      const deduped = [...existing.filter((item) => item?.endpoint !== serializedSubscription.endpoint), serializedSubscription];
+
+      upsertLocalProfile({
+        ...profile,
+        uid: currentUser.uid,
+        displayName: currentUser.name,
+        email: currentUser.email,
+        pushSubscriptions: deduped
+      });
+
+      return deduped;
     }
 
     function renderNotificationJobs() {
@@ -1176,8 +1258,12 @@
         notificationEmail,
         phoneNumber,
         notificationPrefs,
+        pushSubscriptions: [],
         updatedAt: fb.serverTimestamp()
       };
+
+      const pushSubscriptions = await registerPushSubscriptionIfNeeded(notificationPrefs.push);
+      payload.pushSubscriptions = pushSubscriptions;
 
       upsertLocalProfile({
         uid: currentUser.uid,
@@ -1185,7 +1271,8 @@
         email: currentUser.email,
         notificationEmail,
         phoneNumber,
-        notificationPrefs
+        notificationPrefs,
+        pushSubscriptions
       });
 
       try {
@@ -1457,6 +1544,7 @@
           email: job.email,
           sms: job.sms,
           push: job.push,
+          pushSubscriptions: job.pushSubscriptions,
           recipients: job.recipients,
           status: 'queued',
           createdAt: fb.serverTimestamp()
@@ -1879,6 +1967,7 @@
     renderVersionBadge();
     registerServiceWorker();
     renderNotificationJobs();
+    refreshBackendStatus();
     document.addEventListener('change', (event) => {
       if (event.target && event.target.id === 'jobLeagueId') renderRecipientSummary();
       if (event.target && event.target.id === 'memberLeagueId') renderMemberDirectory();

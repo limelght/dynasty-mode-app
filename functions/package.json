@@ -3,7 +3,7 @@
   "private": true,
   "main": "index.js",
   "engines": {
-    "node": "20"
+    "node": "22"
   },
   "scripts": {
     "serve": "firebase emulators:start --only functions",
@@ -11,8 +11,8 @@
     "lint": "node -e \"console.log('No lint configured')\""
   },
   "dependencies": {
-    "firebase-admin": "^12.7.0",
-    "firebase-functions": "^6.0.1",
+    "firebase-admin": "^13.10.0",
+    "firebase-functions": "^7.2.5",
     "nodemailer": "^6.9.15",
     "twilio": "^5.4.2",
     "web-push": "^3.6.7"
