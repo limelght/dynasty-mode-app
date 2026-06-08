@@ -90,20 +90,30 @@
       bottom: 14px;
       transform: translateX(-50%);
       z-index: 1001;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 36px;
       padding: 8px 14px;
       border-radius: var(--radius-full);
-      border: 1px solid var(--border);
-      background: color-mix(in srgb, var(--surface) 92%, transparent);
-      box-shadow: var(--shadow-sm);
+      border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(15,14,13,0.94);
+      box-shadow: 0 10px 24px rgba(0,0,0,0.28);
       font-size: var(--text-xs);
-      color: var(--text-muted);
+      font-weight: 700;
+      color: #f5efe5;
       backdrop-filter: blur(10px);
+    }
+    .app-version-label {
+      color: rgba(245,239,229,0.72);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
     }
   </style>
 </head>
 <body>
   <div class="toast-container" id="toastContainer"></div>
-  <div class="app-version" id="appVersionBadge">Version</div>
+  <div class="app-version" id="appVersionBadge"><span class="app-version-label">Live</span><span id="appVersionText">Version</span></div>
 
   <div id="loginScreen">
     <div class="card-shell">
@@ -203,7 +213,7 @@
       <div class="topbar">
         <div>
           <div class="muted">Dynasty HQ</div>
-          <div class="page-title">Dynasty Home</div>
+          <div class="page-title" id="pageHeading">Dynasty Home</div>
         </div>
         <div style="display:flex;gap:var(--space-3);align-items:center;">
           <button class="btn btn-secondary" id="adminAccessButton" onclick="toggleBackofficePanel()" style="display:none;">Backoffice</button>
@@ -298,7 +308,7 @@
               <div style="display:grid;gap:var(--space-3);">
                 <label style="display:flex;align-items:center;gap:10px;margin:0;">
                   <input type="checkbox" id="prefPush" checked />
-                  <span>Browser push notifications</span>
+                  <span>🏆 Browser push notifications</span>
                 </label>
                 <label style="display:flex;align-items:center;gap:10px;margin:0;">
                   <input type="checkbox" id="prefEmail" checked />
@@ -408,7 +418,7 @@
               <div style="display:grid;gap:var(--space-3);">
                 <label style="display:flex;align-items:center;gap:10px;margin:0;">
                   <input type="checkbox" id="jobPush" checked />
-                  <span>Browser push</span>
+                  <span>🏆 Browser push</span>
                 </label>
                 <label style="display:flex;align-items:center;gap:10px;margin:0;">
                   <input type="checkbox" id="jobEmail" checked />
@@ -532,7 +542,7 @@
   </script>
 
   <script>
-    const APP_VERSION = 'vs.0.4.0-dev-2026-06-08-08';
+    const APP_VERSION = 'vs.0.4.1-dev-2026-06-08-09';
     const HEALTH_ENDPOINT = 'https://us-central1-dynastyhq-app.cloudfunctions.net/health';
     const ADMIN_START_ENDPOINT = 'https://us-central1-dynastyhq-app.cloudfunctions.net/startAdminAccessChallenge';
     const ADMIN_VERIFY_ENDPOINT = 'https://us-central1-dynastyhq-app.cloudfunctions.net/verifyAdminAccessChallenge';
@@ -596,10 +606,16 @@
       }, 3200);
     }
 
+    function setPageTitle(label) {
+      const safeLabel = label || 'Dynasty Mode';
+      document.title = `DynastyHQ - ${safeLabel}`;
+      const heading = document.getElementById('pageHeading');
+      if (heading && label) heading.textContent = label;
+    }
+
     function renderVersionBadge() {
-      const badge = document.getElementById('appVersionBadge');
-      if (badge) badge.textContent = APP_VERSION;
-      document.title = 'Dynasty Mode ' + APP_VERSION;
+      const badgeText = document.getElementById('appVersionText');
+      if (badgeText) badgeText.textContent = APP_VERSION;
     }
 
     function renderBackendStatus() {
@@ -662,7 +678,9 @@
     function toggleBackofficePanel() {
       const panel = document.getElementById('backofficePanel');
       if (!panel) return;
-      panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+      const nextVisible = panel.style.display === 'none';
+      panel.style.display = nextVisible ? 'block' : 'none';
+      setPageTitle(nextVisible ? 'Backoffice' : 'Dynasty Home');
     }
 
     function lockBackoffice() {
@@ -670,6 +688,7 @@
       try { sessionStorage.removeItem('dynasty-admin-session'); } catch (_) {}
       const summary = document.getElementById('backofficeSummary');
       if (summary) summary.textContent = 'Admin verification required.';
+      setPageTitle('Dynasty Home');
     }
 
     async function startAdminVerification() {
@@ -791,6 +810,7 @@
       document.querySelectorAll('.login-form-pane').forEach(p => p.classList.remove('active'));
       el.classList.add('active');
       document.getElementById('pane-' + tab).classList.add('active');
+      setPageTitle(tab === 'signup' ? 'Create Account' : 'Sign In');
     }
 
     function activateLoginTab(tab) {
@@ -1485,7 +1505,7 @@
             <div style="display:grid;gap:var(--space-2);margin-bottom:var(--space-4);">
               <label style="display:flex;align-items:center;gap:10px;">
                 <input type="checkbox" id="member-push-${escapeHtml(membership.id)}" ${recipient.channels?.push ? 'checked' : ''} />
-                <span>Push</span>
+                <span>🏆 Browser push</span>
               </label>
               <label style="display:flex;align-items:center;gap:10px;">
                 <input type="checkbox" id="member-emailpref-${escapeHtml(membership.id)}" ${recipient.channels?.email ? 'checked' : ''} />
@@ -2080,6 +2100,7 @@
         hydrateNotificationForm({ email, notificationPrefs: { push: true, email: true, discord: false, telegram: false, whatsapp: false } });
         document.getElementById('loginScreen').style.display = 'none';
         document.getElementById('onboardScreen').classList.add('visible');
+        setPageTitle('League Setup');
         showToast('Account created. Finish league setup next.', 'success');
       } catch (err) {
         if (String(err?.code || '').includes('email-already-in-use')) {
@@ -2235,9 +2256,11 @@
       document.getElementById('loginScreen').style.display = 'none';
       document.getElementById('onboardScreen').classList.remove('visible');
       document.getElementById('appPage').classList.add('active');
+      document.getElementById('backofficePanel').style.display = 'none';
       document.getElementById('userNameLabel').textContent = currentUser?.name || 'User';
       document.getElementById('userEmailLabel').textContent = currentUser?.email || '';
       try { adminSessionToken = sessionStorage.getItem('dynasty-admin-session'); } catch (_) {}
+      setPageTitle('Dynasty Home');
       renderNotificationJobs();
       renderRecipientSummary();
       renderMemberDirectory();
@@ -2255,6 +2278,7 @@
         document.getElementById('appPage').classList.remove('active');
         document.getElementById('onboardScreen').classList.remove('visible');
         document.getElementById('loginScreen').style.display = 'flex';
+        setPageTitle('Sign In');
         showToast('Signed out.', 'info');
       } catch (err) {
         showToast('Sign out failed: ' + err.message, 'error');
@@ -2271,6 +2295,7 @@
             document.getElementById('appPage').classList.remove('active');
             document.getElementById('onboardScreen').classList.remove('visible');
             document.getElementById('loginScreen').style.display = 'flex';
+            setPageTitle('Sign In');
             setStatus('No action yet.');
             document.getElementById('leagueList').innerHTML = '';
             return;
@@ -2297,6 +2322,7 @@
 
     initTheme();
     renderVersionBadge();
+    setPageTitle('Sign In');
     registerServiceWorker();
     renderNotificationJobs();
     refreshBackendStatus();
