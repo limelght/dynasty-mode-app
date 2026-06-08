@@ -203,9 +203,12 @@
       <div class="topbar">
         <div>
           <div class="muted">Dynasty HQ</div>
-          <div class="page-title">My Leagues</div>
+          <div class="page-title">Dynasty Home</div>
         </div>
-        <button class="theme-toggle" data-theme-toggle onclick="toggleTheme()" aria-label="Theme toggle"></button>
+        <div style="display:flex;gap:var(--space-3);align-items:center;">
+          <button class="btn btn-secondary" id="adminAccessButton" onclick="toggleBackofficePanel()" style="display:none;">Backoffice</button>
+          <button class="theme-toggle" data-theme-toggle onclick="toggleTheme()" aria-label="Theme toggle"></button>
+        </div>
       </div>
 
       <div class="card">
@@ -215,6 +218,62 @@
             <div class="muted" id="userEmailLabel">user@email.com</div>
           </div>
           <button class="btn btn-ghost" onclick="signOutNow()">Sign Out</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div style="font-size:var(--text-lg);font-weight:700;margin-bottom:var(--space-2);" id="welcomeHeading">Welcome back</div>
+        <div class="muted" id="welcomeSummary">Loading your dynasty snapshot...</div>
+        <div class="league-list" style="grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));margin-top:var(--space-4);">
+          <div class="league-card">
+            <div class="muted">Leagues</div>
+            <div style="font-size:var(--text-xl);font-weight:700;" id="welcomeLeagueCount">0</div>
+          </div>
+          <div class="league-card">
+            <div class="muted">Commissioner Roles</div>
+            <div style="font-size:var(--text-xl);font-weight:700;" id="welcomeCommissionerCount">0</div>
+          </div>
+          <div class="league-card">
+            <div class="muted">Preferred Channels</div>
+            <div style="font-size:var(--text-sm);font-weight:700;" id="welcomeChannelSummary">Push</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" id="backofficePanel" style="display:none;">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:var(--space-3);flex-wrap:wrap;margin-bottom:var(--space-4);">
+          <div>
+            <div style="font-size:var(--text-lg);font-weight:700;">Backoffice Panel</div>
+            <div class="muted" id="backofficeSummary">Admin verification required.</div>
+          </div>
+          <button class="btn btn-ghost" onclick="lockBackoffice()">Lock</button>
+        </div>
+        <div class="league-list" style="grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));">
+          <div class="league-card">
+            <div style="font-size:var(--text-base);font-weight:700;margin-bottom:var(--space-3);">Two-Step Verification</div>
+            <div class="muted" style="margin-bottom:var(--space-4);">Use your admin email and a one-time code to unlock backoffice actions.</div>
+            <button class="btn btn-secondary btn-full" onclick="startAdminVerification()">Send Verification Code</button>
+            <div class="form-group" style="margin-top:var(--space-4);margin-bottom:0;">
+              <label class="form-label" for="adminOtpCode">Verification Code</label>
+              <input class="form-input" id="adminOtpCode" placeholder="6-digit code" />
+            </div>
+            <button class="btn btn-primary btn-full" style="margin-top:var(--space-3);" onclick="verifyAdminVerification()">Unlock Backoffice</button>
+          </div>
+          <div class="league-card">
+            <div style="font-size:var(--text-base);font-weight:700;margin-bottom:var(--space-3);">Notification Test Center</div>
+            <div class="muted" style="margin-bottom:var(--space-4);">Send a real test notification to your own connected channels.</div>
+            <div class="form-group">
+              <label class="form-label" for="adminTestMessage">Test Message</label>
+              <textarea class="form-textarea" id="adminTestMessage">Dynasty Mode backoffice test notification.</textarea>
+            </div>
+            <div style="display:grid;gap:var(--space-3);">
+              <button class="btn btn-secondary btn-full" onclick="sendAdminTest('email')">Test Email</button>
+              <button class="btn btn-secondary btn-full" onclick="sendAdminTest('push')">Test Push</button>
+              <button class="btn btn-secondary btn-full" onclick="sendAdminTest('discord')">Test Discord</button>
+              <button class="btn btn-secondary btn-full" onclick="sendAdminTest('telegram')">Test Telegram</button>
+              <button class="btn btn-secondary btn-full" onclick="sendAdminTest('whatsapp')">Test WhatsApp</button>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -473,11 +532,15 @@
   </script>
 
   <script>
-    const APP_VERSION = 'vs.0.3.2-dev-2026-06-08-07';
+    const APP_VERSION = 'vs.0.4.0-dev-2026-06-08-08';
     const HEALTH_ENDPOINT = 'https://us-central1-dynastyhq-app.cloudfunctions.net/health';
+    const ADMIN_START_ENDPOINT = 'https://us-central1-dynastyhq-app.cloudfunctions.net/startAdminAccessChallenge';
+    const ADMIN_VERIFY_ENDPOINT = 'https://us-central1-dynastyhq-app.cloudfunctions.net/verifyAdminAccessChallenge';
+    const ADMIN_TEST_ENDPOINT = 'https://us-central1-dynastyhq-app.cloudfunctions.net/sendAdminTestNotification';
     let themeMode = 'auto';
     let currentUser = null;
     let backendStatus = null;
+    let adminSessionToken = null;
 
     function initTheme() {
       try {
@@ -557,6 +620,7 @@
       channels.push(`whatsapp ${backendStatus.channels?.whatsapp ? 'ready' : 'not configured'}`);
       channels.push(`push ${backendStatus.channels?.push ? 'ready' : 'not configured'}`);
       target.textContent = `Project ${backendStatus.project || 'unknown'} · ${channels.join(' · ')}`;
+      renderAdminAccessButton();
       renderTelegramLinkSummary();
     }
 
@@ -570,6 +634,122 @@
       }
       renderBackendStatus();
       return backendStatus;
+    }
+
+    async function authenticatedFetch(url, options = {}) {
+      const fbUser = window._dynastyFirebase?.auth?.currentUser;
+      if (!fbUser) throw new Error('auth_user_missing');
+      const idToken = await fbUser.getIdToken();
+      const headers = {
+        ...(options.headers || {}),
+        Authorization: `Bearer ${idToken}`,
+      };
+      if (adminSessionToken) headers['X-Admin-Session'] = adminSessionToken;
+      if (options.body && !headers['Content-Type']) headers['Content-Type'] = 'application/json';
+      return fetch(url, {
+        ...options,
+        headers,
+      });
+    }
+
+    function renderAdminAccessButton() {
+      const btn = document.getElementById('adminAccessButton');
+      if (!btn) return;
+      const isAdmin = !!(backendStatus?.adminConfigured && currentUser?.email && backendStatus?.diagnostics && currentUser.email);
+      btn.style.display = isAdmin ? 'inline-flex' : 'none';
+    }
+
+    function toggleBackofficePanel() {
+      const panel = document.getElementById('backofficePanel');
+      if (!panel) return;
+      panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+    }
+
+    function lockBackoffice() {
+      adminSessionToken = null;
+      try { sessionStorage.removeItem('dynasty-admin-session'); } catch (_) {}
+      const summary = document.getElementById('backofficeSummary');
+      if (summary) summary.textContent = 'Admin verification required.';
+    }
+
+    async function startAdminVerification() {
+      try {
+        const response = await authenticatedFetch(ADMIN_START_ENDPOINT, { method: 'POST' });
+        const payload = await response.json();
+        if (!response.ok || !payload.ok) throw new Error(payload.reason || payload.error || 'admin_challenge_failed');
+        const summary = document.getElementById('backofficeSummary');
+        if (summary) summary.textContent = `Verification code sent to ${currentUser.email}.`;
+        showToast('Backoffice code sent to your email.', 'success');
+      } catch (err) {
+        showToast('Backoffice code failed: ' + err.message, 'error');
+      }
+    }
+
+    async function verifyAdminVerification() {
+      const code = document.getElementById('adminOtpCode').value.trim();
+      if (!code) {
+        showToast('Enter the verification code first.', 'error');
+        return;
+      }
+      try {
+        const response = await authenticatedFetch(ADMIN_VERIFY_ENDPOINT, {
+          method: 'POST',
+          body: JSON.stringify({ code }),
+        });
+        const payload = await response.json();
+        if (!response.ok || !payload.ok) throw new Error(payload.reason || payload.error || 'admin_verify_failed');
+        adminSessionToken = payload.sessionToken;
+        try { sessionStorage.setItem('dynasty-admin-session', adminSessionToken); } catch (_) {}
+        const summary = document.getElementById('backofficeSummary');
+        if (summary) summary.textContent = `Backoffice unlocked for ${payload.expiresInMinutes} minutes.`;
+        showToast('Backoffice unlocked.', 'success');
+      } catch (err) {
+        showToast('Backoffice verification failed: ' + err.message, 'error');
+      }
+    }
+
+    async function sendAdminTest(channel) {
+      if (!adminSessionToken) {
+        showToast('Unlock backoffice first.', 'error');
+        return;
+      }
+      const message = document.getElementById('adminTestMessage').value.trim();
+      try {
+        const response = await authenticatedFetch(ADMIN_TEST_ENDPOINT, {
+          method: 'POST',
+          body: JSON.stringify({ channel, message }),
+        });
+        const payload = await response.json();
+        if (!response.ok || !payload.ok) throw new Error(payload.reason || payload.error || 'admin_test_failed');
+        showToast(`Backoffice ${channel} test sent.`, 'success');
+      } catch (err) {
+        showToast(`Backoffice ${channel} test failed: ${err.message}`, 'error');
+      }
+    }
+
+    function renderWelcomePanel(membershipDocs = []) {
+      const hour = new Date().getHours();
+      const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
+      const heading = document.getElementById('welcomeHeading');
+      const summary = document.getElementById('welcomeSummary');
+      const leagueCount = document.getElementById('welcomeLeagueCount');
+      const commissionerCount = document.getElementById('welcomeCommissionerCount');
+      const channelSummary = document.getElementById('welcomeChannelSummary');
+      if (!heading || !summary || !leagueCount || !commissionerCount || !channelSummary) return;
+
+      const profile = currentUser?.uid ? readLocalProfile(currentUser.uid) || {} : {};
+      const prefs = profile.notificationPrefs || {};
+      const preferredChannels = ['push', 'email', 'discord', 'telegram', 'whatsapp'].filter((channel) => prefs[channel]);
+      const commissionerRoles = membershipDocs.filter((doc) => (doc.data().role || 'member') === 'commissioner').length;
+      const latestJobs = getLocalNotificationJobs().slice(0, 3).length;
+
+      heading.textContent = `${greeting}, ${currentUser?.name || 'Coach'}`;
+      summary.textContent = membershipDocs.length
+        ? `You are in ${membershipDocs.length} league${membershipDocs.length === 1 ? '' : 's'}, with ${commissionerRoles} commissioner role${commissionerRoles === 1 ? '' : 's'} and ${latestJobs} queued update${latestJobs === 1 ? '' : 's'}.`
+        : 'You have not joined a league yet. Create one or join with an invite code to get started.';
+      leagueCount.textContent = String(membershipDocs.length);
+      commissionerCount.textContent = String(commissionerRoles);
+      channelSummary.textContent = preferredChannels.length ? preferredChannels.join(', ') : 'No channels configured yet';
     }
 
     function renderTelegramLinkSummary(profile = null) {
@@ -1966,6 +2146,7 @@
       list.innerHTML = '';
 
       const membershipDocs = await fetchMembershipDocs();
+      renderWelcomePanel(membershipDocs);
       renderCommissionerLeagueOptions(membershipDocs);
       renderMemberLeagueOptions(membershipDocs);
       renderGovernanceLeagueOptions(membershipDocs);
@@ -2056,16 +2237,20 @@
       document.getElementById('appPage').classList.add('active');
       document.getElementById('userNameLabel').textContent = currentUser?.name || 'User';
       document.getElementById('userEmailLabel').textContent = currentUser?.email || '';
+      try { adminSessionToken = sessionStorage.getItem('dynasty-admin-session'); } catch (_) {}
       renderNotificationJobs();
       renderRecipientSummary();
       renderMemberDirectory();
       renderGovernanceSummary();
+      renderAdminAccessButton();
+      renderWelcomePanel([]);
     }
 
     async function signOutNow() {
       try {
         const fb = window._dynastyFirebase;
         await fb.signOut(fb.auth);
+        lockBackoffice();
         currentUser = null;
         document.getElementById('appPage').classList.remove('active');
         document.getElementById('onboardScreen').classList.remove('visible');
@@ -2115,6 +2300,7 @@
     registerServiceWorker();
     renderNotificationJobs();
     refreshBackendStatus();
+    try { adminSessionToken = sessionStorage.getItem('dynasty-admin-session'); } catch (_) {}
     document.addEventListener('change', (event) => {
       if (event.target && event.target.id === 'jobLeagueId') renderRecipientSummary();
       if (event.target && event.target.id === 'memberLeagueId') renderMemberDirectory();

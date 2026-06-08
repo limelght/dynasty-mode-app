@@ -2,7 +2,7 @@
 
 ## Current build
 
-- App version badge target: `vs.0.3.2-dev-2026-06-08-07`
+- App version badge target: `vs.0.4.0-dev-2026-06-08-08`
 
 ## Current architecture
 
@@ -79,3 +79,8 @@ League lifecycle transitions now also write backend-friendly metadata and a `sta
   - `health` returns per-channel readiness plus missing env keys
   - `verifyEmailTransport` verifies SMTP connectivity when configured
   - `setupTelegramWebhook` calls Telegram `setWebhook` when bot credentials are present
+- Backoffice access now supports admin-only email OTP with:
+  - `startAdminAccessChallenge`
+  - `verifyAdminAccessChallenge`
+  - `sendAdminTestNotification`
+- Set `ADMIN_EMAILS` in `functions/.env` to the comma-separated admin account list that should be allowed to unlock the backoffice panel.
