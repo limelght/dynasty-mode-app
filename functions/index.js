@@ -23,6 +23,10 @@ function smtpTransport() {
   });
 }
 
+function smtpReady() {
+  return !!smtpTransport();
+}
+
 function configureWebPush() {
   if (!process.env.WEB_PUSH_PUBLIC_KEY || !process.env.WEB_PUSH_PRIVATE_KEY || !process.env.WEB_PUSH_SUBJECT) return false;
   webpush.setVapidDetails(
@@ -39,6 +43,34 @@ function telegramReady() {
 
 function whatsappReady() {
   return !!process.env.WHATSAPP_ACCESS_TOKEN && !!process.env.WHATSAPP_PHONE_NUMBER_ID;
+}
+
+function providerDiagnostics() {
+  return {
+    email: {
+      ready: smtpReady(),
+      missing: ["SMTP_HOST", "SMTP_USER", "SMTP_PASS", "SMTP_FROM"].filter((key) => !process.env[key]),
+    },
+    push: {
+      ready: configureWebPush(),
+      missing: ["WEB_PUSH_SUBJECT", "WEB_PUSH_PUBLIC_KEY", "WEB_PUSH_PRIVATE_KEY"].filter((key) => !process.env[key]),
+    },
+    discord: {
+      ready: true,
+      missing: [],
+      note: "User-provided webhooks are used per profile.",
+    },
+    telegram: {
+      ready: telegramReady(),
+      missing: ["TELEGRAM_BOT_TOKEN", "TELEGRAM_BOT_USERNAME", "TELEGRAM_WEBHOOK_SECRET"].filter((key) => !process.env[key]),
+      botUsername: process.env.TELEGRAM_BOT_USERNAME || null,
+    },
+    whatsapp: {
+      ready: whatsappReady(),
+      missing: ["WHATSAPP_ACCESS_TOKEN", "WHATSAPP_PHONE_NUMBER_ID"].filter((key) => !process.env[key]),
+      note: "Meta business credentials are required for production sending.",
+    },
+  };
 }
 
 async function postJson(url, payload, options = {}) {
@@ -58,18 +90,68 @@ async function postJson(url, payload, options = {}) {
 }
 
 exports.health = onRequest((req, res) => {
+  const diagnostics = providerDiagnostics();
   res.json({
     ok: true,
     project: process.env.GCLOUD_PROJECT || null,
     channels: {
-      email: !!smtpTransport(),
-      push: configureWebPush(),
+      email: diagnostics.email.ready,
+      push: diagnostics.push.ready,
       discord: true,
-      telegram: telegramReady(),
-      whatsapp: whatsappReady()
+      telegram: diagnostics.telegram.ready,
+      whatsapp: diagnostics.whatsapp.ready
     },
     webPushPublicKey: process.env.WEB_PUSH_PUBLIC_KEY || null,
-    telegramBotUsername: process.env.TELEGRAM_BOT_USERNAME || null
+    telegramBotUsername: process.env.TELEGRAM_BOT_USERNAME || null,
+    diagnostics,
+  });
+});
+
+exports.verifyEmailTransport = onRequest(async (req, res) => {
+  const transporter = smtpTransport();
+  if (!transporter) {
+    res.status(400).json({
+      ok: false,
+      reason: "smtp_not_configured",
+      diagnostics: providerDiagnostics().email,
+    });
+    return;
+  }
+
+  try {
+    await transporter.verify();
+    res.json({ok: true, verified: true});
+  } catch (error) {
+    res.status(500).json({
+      ok: false,
+      verified: false,
+      error: error.message || "verify_failed",
+    });
+  }
+});
+
+exports.setupTelegramWebhook = onRequest(async (req, res) => {
+  if (!telegramReady() || !process.env.TELEGRAM_BOT_USERNAME || !process.env.TELEGRAM_WEBHOOK_SECRET) {
+    res.status(400).json({
+      ok: false,
+      reason: "telegram_not_fully_configured",
+      diagnostics: providerDiagnostics().telegram,
+    });
+    return;
+  }
+
+  const webhookUrl = `https://us-central1-${process.env.GCLOUD_PROJECT}.cloudfunctions.net/telegramWebhook?secret=${encodeURIComponent(process.env.TELEGRAM_WEBHOOK_SECRET)}`;
+  const response = await postJson(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/setWebhook`, {
+    url: webhookUrl,
+    allowed_updates: ["message"],
+    secret_token: process.env.TELEGRAM_WEBHOOK_SECRET,
+  });
+
+  const payload = await response.json();
+  res.json({
+    ok: true,
+    webhookUrl,
+    telegramResponse: payload,
   });
 });
 
