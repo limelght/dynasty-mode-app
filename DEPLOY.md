@@ -2,7 +2,7 @@
 
 ## Current build
 
-- App version badge target: `vs.0.3.0-dev-2026-06-08-05`
+- App version badge target: `vs.0.3.1-dev-2026-06-08-06`
 
 ## Current architecture
 
@@ -74,3 +74,4 @@ League lifecycle transitions now also write backend-friendly metadata and a `sta
 - Current live backend status reports readiness for `email`, `push`, `discord`, `telegram`, and `whatsapp`.
 - Frontend now surfaces backend notification readiness and stores browser push subscriptions in user profiles when Web Push is configured.
 - Web Push VAPID keys have been established locally in `functions/.env`. SMTP still needs real credentials for email readiness. Telegram requires a bot token. WhatsApp requires Meta business credentials and is not a no-cost channel in production.
+- Telegram now includes an account-linking flow: the app can generate a one-time link code and the `telegramWebhook` function can attach a Telegram chat to a user profile when the bot receives `/start dynasty_<code>`.

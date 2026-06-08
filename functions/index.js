@@ -68,8 +68,57 @@ exports.health = onRequest((req, res) => {
       telegram: telegramReady(),
       whatsapp: whatsappReady()
     },
-    webPushPublicKey: process.env.WEB_PUSH_PUBLIC_KEY || null
+    webPushPublicKey: process.env.WEB_PUSH_PUBLIC_KEY || null,
+    telegramBotUsername: process.env.TELEGRAM_BOT_USERNAME || null
   });
+});
+
+exports.telegramWebhook = onRequest(async (req, res) => {
+  const secret = process.env.TELEGRAM_WEBHOOK_SECRET || null;
+  if (secret && req.query.secret !== secret) {
+    res.status(403).json({ok: false, error: "forbidden"});
+    return;
+  }
+
+  const message = req.body?.message;
+  const text = message?.text || "";
+  const chatId = message?.chat?.id ? String(message.chat.id) : null;
+  const match = text.match(/^\/start(?:@\w+)?\s+dynasty_([A-Za-z0-9_-]+)$/);
+
+  if (!chatId || !match) {
+    res.json({ok: true, ignored: true});
+    return;
+  }
+
+  const linkCode = match[1];
+  const userSnap = await db.collection("users").where("telegramLinkCode", "==", linkCode).limit(1).get();
+  if (userSnap.empty) {
+    res.json({ok: true, linked: false, reason: "code_not_found"});
+    return;
+  }
+
+  const userDoc = userSnap.docs[0];
+  const userData = userDoc.data() || {};
+  const currentPrefs = userData.notificationPrefs || {};
+  await userDoc.ref.set({
+    telegramChatId: chatId,
+    telegramLinkedAt: admin.firestore.FieldValue.serverTimestamp(),
+    telegramLinkCode: admin.firestore.FieldValue.delete(),
+    notificationPrefs: {
+      ...currentPrefs,
+      telegram: true
+    },
+    updatedAt: admin.firestore.FieldValue.serverTimestamp()
+  }, {merge: true});
+
+  if (telegramReady()) {
+    await postJson(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
+      chat_id: chatId,
+      text: "Dynasty Mode connected. You can now receive league updates in Telegram."
+    });
+  }
+
+  res.json({ok: true, linked: true});
 });
 
 exports.processNotificationJob = onDocumentCreated("notificationJobs/{jobId}", async (event) => {

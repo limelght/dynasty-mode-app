@@ -261,6 +261,11 @@
             </div>
             <button class="btn btn-secondary btn-full" onclick="saveNotificationSettings()">Save Notification Settings</button>
           </div>
+          <div class="league-card">
+            <div style="font-size:var(--text-base);font-weight:700;margin-bottom:var(--space-2);">Connect Telegram</div>
+            <div class="muted" id="telegramLinkSummary" style="margin-bottom:var(--space-4);">Telegram bot not configured yet.</div>
+            <button class="btn btn-secondary btn-full" onclick="generateTelegramLink()">Generate Telegram Link</button>
+          </div>
         </div>
       </div>
 
@@ -468,7 +473,7 @@
   </script>
 
   <script>
-    const APP_VERSION = 'vs.0.3.0-dev-2026-06-08-05';
+    const APP_VERSION = 'vs.0.3.1-dev-2026-06-08-06';
     const HEALTH_ENDPOINT = 'https://us-central1-dynastyhq-app.cloudfunctions.net/health';
     let themeMode = 'auto';
     let currentUser = null;
@@ -552,6 +557,7 @@
       channels.push(`whatsapp ${backendStatus.channels?.whatsapp ? 'ready' : 'not configured'}`);
       channels.push(`push ${backendStatus.channels?.push ? 'ready' : 'not configured'}`);
       target.textContent = `Project ${backendStatus.project || 'unknown'} · ${channels.join(' · ')}`;
+      renderTelegramLinkSummary();
     }
 
     async function refreshBackendStatus() {
@@ -564,6 +570,25 @@
       }
       renderBackendStatus();
       return backendStatus;
+    }
+
+    function renderTelegramLinkSummary(profile = null) {
+      const target = document.getElementById('telegramLinkSummary');
+      if (!target) return;
+      const currentProfile = profile || (currentUser?.uid ? readLocalProfile(currentUser.uid) : null) || {};
+      if (!backendStatus?.telegramBotUsername) {
+        target.textContent = 'Telegram bot not configured yet.';
+        return;
+      }
+      if (currentProfile.telegramChatId) {
+        target.textContent = `Telegram linked to chat ${currentProfile.telegramChatId}.`;
+        return;
+      }
+      if (currentProfile.telegramLinkCode) {
+        target.innerHTML = `Open <a href="https://t.me/${encodeURIComponent(backendStatus.telegramBotUsername)}?start=dynasty_${encodeURIComponent(currentProfile.telegramLinkCode)}" target="_blank" rel="noreferrer">the Telegram bot</a> to finish linking your account.`;
+        return;
+      }
+      target.textContent = 'Generate a Telegram link, then open the bot to connect your account.';
     }
 
     async function registerServiceWorker() {
@@ -1007,6 +1032,47 @@
       discordPrefField.checked = !!prefs.discord;
       telegramPrefField.checked = !!prefs.telegram;
       whatsappPrefField.checked = !!prefs.whatsapp;
+      renderTelegramLinkSummary(profile);
+    }
+
+    async function generateTelegramLink() {
+      if (!currentUser?.uid) {
+        showToast('You must be signed in first.', 'error');
+        return;
+      }
+      const status = backendStatus?.ok ? backendStatus : await refreshBackendStatus();
+      if (!status?.telegramBotUsername) {
+        showToast('Telegram bot is not configured yet.', 'info');
+        return;
+      }
+
+      const linkCode = 'tg-' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
+      const profile = readLocalProfile(currentUser.uid) || {};
+      const nextProfile = {
+        ...profile,
+        uid: currentUser.uid,
+        displayName: currentUser.name,
+        email: currentUser.email,
+        telegramLinkCode: linkCode
+      };
+      upsertLocalProfile(nextProfile);
+      renderTelegramLinkSummary(nextProfile);
+
+      const fb = window._dynastyFirebase;
+      try {
+        await fb.setDoc(fb.doc(fb.db, 'users', currentUser.uid), {
+          uid: currentUser.uid,
+          telegramLinkCode: linkCode,
+          updatedAt: fb.serverTimestamp()
+        }, { merge: true });
+        showToast('Telegram link generated.', 'success');
+      } catch (err) {
+        if (!isPermissionDeniedError(err)) {
+          showToast('Failed to save Telegram link: ' + err.message, 'error');
+          return;
+        }
+        showToast('Telegram link saved locally because Firestore is still blocked.', 'info');
+      }
     }
 
     async function registerPushSubscriptionIfNeeded(enabled) {
@@ -1321,6 +1387,7 @@
         telegramChatId,
         whatsappNumber,
         notificationPrefs,
+        telegramLinkCode: null,
         pushSubscriptions: [],
         updatedAt: fb.serverTimestamp()
       };
@@ -1337,6 +1404,7 @@
         telegramChatId,
         whatsappNumber,
         notificationPrefs,
+        telegramLinkCode: null,
         pushSubscriptions
       });
 
