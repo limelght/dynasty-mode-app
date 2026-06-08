@@ -227,8 +227,10 @@
               <input class="form-input" id="notifEmail" placeholder="you@email.com" />
             </div>
             <div class="form-group">
-              <label class="form-label" for="notifPhone">Phone for SMS</label>
-              <input class="form-input" id="notifPhone" placeholder="+1 555 555 5555" />
+              <label class="form-label" for="notifDiscordWebhook">Discord Webhook URL</label>
+              <input class="form-input" id="notifDiscordWebhook" placeholder="https://discord.com/api/webhooks/..." style="margin-bottom:var(--space-3);" />
+              <input class="form-input" id="notifTelegramChatId" placeholder="Telegram chat ID" style="margin-bottom:var(--space-3);" />
+              <input class="form-input" id="notifWhatsappNumber" placeholder="WhatsApp number (+15555555555)" />
             </div>
           </div>
           <div class="league-card">
@@ -244,8 +246,16 @@
                   <span>Email updates</span>
                 </label>
                 <label style="display:flex;align-items:center;gap:10px;margin:0;">
-                  <input type="checkbox" id="prefSms" />
-                  <span>SMS alerts</span>
+                  <input type="checkbox" id="prefDiscord" />
+                  <span>Discord</span>
+                </label>
+                <label style="display:flex;align-items:center;gap:10px;margin:0;">
+                  <input type="checkbox" id="prefTelegram" />
+                  <span>Telegram</span>
+                </label>
+                <label style="display:flex;align-items:center;gap:10px;margin:0;">
+                  <input type="checkbox" id="prefWhatsapp" />
+                  <span>WhatsApp Business</span>
                 </label>
               </div>
             </div>
@@ -341,8 +351,16 @@
                   <span>Email</span>
                 </label>
                 <label style="display:flex;align-items:center;gap:10px;margin:0;">
-                  <input type="checkbox" id="jobSms" />
-                  <span>SMS</span>
+                  <input type="checkbox" id="jobDiscord" />
+                  <span>Discord</span>
+                </label>
+                <label style="display:flex;align-items:center;gap:10px;margin:0;">
+                  <input type="checkbox" id="jobTelegram" />
+                  <span>Telegram</span>
+                </label>
+                <label style="display:flex;align-items:center;gap:10px;margin:0;">
+                  <input type="checkbox" id="jobWhatsapp" />
+                  <span>WhatsApp</span>
                 </label>
               </div>
             </div>
@@ -370,7 +388,7 @@
             </div>
             <div class="form-group">
               <input class="form-input" id="manualMemberEmail" placeholder="coach@example.com" style="margin-bottom:var(--space-3);" />
-              <input class="form-input" id="manualMemberPhone" placeholder="+1 555 555 5555" />
+              <input class="form-input" id="manualMemberPhone" placeholder="WhatsApp number (+15555555555)" />
             </div>
             <button class="btn btn-secondary btn-full" onclick="addManualLeagueMember()">Add Member Contact</button>
           </div>
@@ -450,7 +468,7 @@
   </script>
 
   <script>
-    const APP_VERSION = 'vs.0.2.8-dev-2026-06-08-03';
+    const APP_VERSION = 'vs.0.3.0-dev-2026-06-08-05';
     const HEALTH_ENDPOINT = 'https://us-central1-dynastyhq-app.cloudfunctions.net/health';
     let themeMode = 'auto';
     let currentUser = null;
@@ -529,7 +547,9 @@
       }
       const channels = [];
       channels.push(`email ${backendStatus.channels?.email ? 'ready' : 'not configured'}`);
-      channels.push(`sms ${backendStatus.channels?.sms ? 'ready' : 'not configured'}`);
+      channels.push(`discord ${backendStatus.channels?.discord ? 'ready' : 'not configured'}`);
+      channels.push(`telegram ${backendStatus.channels?.telegram ? 'ready' : 'not configured'}`);
+      channels.push(`whatsapp ${backendStatus.channels?.whatsapp ? 'ready' : 'not configured'}`);
       channels.push(`push ${backendStatus.channels?.push ? 'ready' : 'not configured'}`);
       target.textContent = `Project ${backendStatus.project || 'unknown'} · ${channels.join(' · ')}`;
     }
@@ -862,9 +882,11 @@
         gamertag,
         eaUsername: gamertag || '',
         notifPrefs: 'app',
-        notificationPrefs: { push: true, email: true, sms: false },
+        notificationPrefs: { push: true, email: true, discord: false, telegram: false, whatsapp: false },
         notificationEmail: '',
-        phoneNumber: '',
+        discordWebhookUrl: '',
+        telegramChatId: '',
+        whatsappNumber: '',
         teamAbbr: '',
         source: 'local',
         joinedAt: new Date().toISOString(),
@@ -884,8 +906,10 @@
           role: membership.role || 'member',
           displayName: profile.displayName || membership.gamertag || 'League Member',
           notificationEmail: membership.notificationEmail || profile.notificationEmail || profile.email || '',
-          phoneNumber: membership.phoneNumber || profile.phoneNumber || '',
-          channels: membership.notificationPrefs || profile.notificationPrefs || { push: true, email: true, sms: false },
+          discordWebhookUrl: membership.discordWebhookUrl || profile.discordWebhookUrl || '',
+          telegramChatId: membership.telegramChatId || profile.telegramChatId || '',
+          whatsappNumber: membership.whatsappNumber || profile.whatsappNumber || '',
+          channels: membership.notificationPrefs || profile.notificationPrefs || { push: true, email: true, discord: false, telegram: false, whatsapp: false },
           pushSubscriptions: profile.pushSubscriptions || []
         };
       });
@@ -894,6 +918,9 @@
     function buildNotificationJob({ leagueId, leagueName, message, channels }) {
       const recipients = resolveLeagueRecipients(leagueId);
       const pushSubscriptions = recipients.flatMap((recipient) => Array.isArray(recipient.pushSubscriptions) ? recipient.pushSubscriptions : []);
+      const discordWebhooks = recipients.map((recipient) => recipient.discordWebhookUrl).filter(Boolean);
+      const telegramChatIds = recipients.map((recipient) => recipient.telegramChatId).filter(Boolean);
+      const whatsappNumbers = recipients.map((recipient) => recipient.whatsappNumber).filter(Boolean);
       return {
         id: 'local-job-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8),
         leagueId,
@@ -907,9 +934,17 @@
           subject: leagueName + ' Update',
           text: message
         },
-        sms: {
-          to: recipients.map((recipient) => recipient.phoneNumber).filter(Boolean),
-          body: message
+        discord: {
+          webhooks: discordWebhooks,
+          content: `**${leagueName} Update**\n${message}`
+        },
+        telegram: {
+          chatIds: telegramChatIds,
+          text: `${leagueName} Update\n${message}`
+        },
+        whatsapp: {
+          to: whatsappNumbers,
+          body: `${leagueName} Update\n${message}`
         },
         push: {
           title: leagueName + ' Update',
@@ -954,16 +989,24 @@
     function hydrateNotificationForm(profile = {}) {
       const prefs = profile.notificationPrefs || {};
       const emailField = document.getElementById('notifEmail');
-      const phoneField = document.getElementById('notifPhone');
+      const discordField = document.getElementById('notifDiscordWebhook');
+      const telegramField = document.getElementById('notifTelegramChatId');
+      const whatsappField = document.getElementById('notifWhatsappNumber');
       const pushField = document.getElementById('prefPush');
       const emailPrefField = document.getElementById('prefEmail');
-      const smsField = document.getElementById('prefSms');
-      if (!emailField || !phoneField || !pushField || !emailPrefField || !smsField) return;
+      const discordPrefField = document.getElementById('prefDiscord');
+      const telegramPrefField = document.getElementById('prefTelegram');
+      const whatsappPrefField = document.getElementById('prefWhatsapp');
+      if (!emailField || !discordField || !telegramField || !whatsappField || !pushField || !emailPrefField || !discordPrefField || !telegramPrefField || !whatsappPrefField) return;
       emailField.value = profile.notificationEmail || profile.email || currentUser?.email || '';
-      phoneField.value = profile.phoneNumber || '';
+      discordField.value = profile.discordWebhookUrl || '';
+      telegramField.value = profile.telegramChatId || '';
+      whatsappField.value = profile.whatsappNumber || '';
       pushField.checked = prefs.push !== false;
       emailPrefField.checked = prefs.email !== false;
-      smsField.checked = !!prefs.sms;
+      discordPrefField.checked = !!prefs.discord;
+      telegramPrefField.checked = !!prefs.telegram;
+      whatsappPrefField.checked = !!prefs.whatsapp;
     }
 
     async function registerPushSubscriptionIfNeeded(enabled) {
@@ -1069,7 +1112,9 @@
         const channels = [];
         if (recipient.channels?.push) channels.push('push');
         if (recipient.channels?.email && recipient.notificationEmail) channels.push('email');
-        if (recipient.channels?.sms && recipient.phoneNumber) channels.push('sms');
+        if (recipient.channels?.discord && recipient.discordWebhookUrl) channels.push('discord');
+        if (recipient.channels?.telegram && recipient.telegramChatId) channels.push('telegram');
+        if (recipient.channels?.whatsapp && recipient.whatsappNumber) channels.push('whatsapp');
         return `${recipient.displayName} (${channels.join(', ') || 'no channels'})`;
       }).join(' • ');
     }
@@ -1156,8 +1201,10 @@
         const recipient = resolveLeagueRecipients(leagueId).find((item) => item.uid === (membership.userId || membership.userUID)) || {
           displayName: membership.gamertag || 'League Member',
           notificationEmail: '',
-          phoneNumber: '',
-          channels: { push: true, email: true, sms: false }
+          discordWebhookUrl: '',
+          telegramChatId: '',
+          whatsappNumber: '',
+          channels: { push: true, email: true, discord: false, telegram: false, whatsapp: false }
         };
         const canManageRoles = isCurrentUserCommissionerForLeague(leagueIdForRow);
         const isSelf = (membership.userId || membership.userUID) === currentUser?.uid;
@@ -1185,7 +1232,9 @@
             </div>
             <div class="form-group">
               <input class="form-input" id="member-email-${escapeHtml(membership.id)}" value="${escapeHtml(recipient.notificationEmail || '')}" placeholder="Email for alerts" style="margin-bottom:var(--space-3);" />
-              <input class="form-input" id="member-phone-${escapeHtml(membership.id)}" value="${escapeHtml(recipient.phoneNumber || '')}" placeholder="Phone for SMS" />
+              <input class="form-input" id="member-discord-${escapeHtml(membership.id)}" value="${escapeHtml(recipient.discordWebhookUrl || '')}" placeholder="Discord webhook URL" style="margin-bottom:var(--space-3);" />
+              <input class="form-input" id="member-telegram-${escapeHtml(membership.id)}" value="${escapeHtml(recipient.telegramChatId || '')}" placeholder="Telegram chat ID" style="margin-bottom:var(--space-3);" />
+              <input class="form-input" id="member-whatsapp-${escapeHtml(membership.id)}" value="${escapeHtml(recipient.whatsappNumber || '')}" placeholder="WhatsApp number (+15555555555)" />
             </div>
             <div style="display:grid;gap:var(--space-2);margin-bottom:var(--space-4);">
               <label style="display:flex;align-items:center;gap:10px;">
@@ -1197,8 +1246,16 @@
                 <span>Email</span>
               </label>
               <label style="display:flex;align-items:center;gap:10px;">
-                <input type="checkbox" id="member-smspref-${escapeHtml(membership.id)}" ${recipient.channels?.sms ? 'checked' : ''} />
-                <span>SMS</span>
+                <input type="checkbox" id="member-discordpref-${escapeHtml(membership.id)}" ${recipient.channels?.discord ? 'checked' : ''} />
+                <span>Discord</span>
+              </label>
+              <label style="display:flex;align-items:center;gap:10px;">
+                <input type="checkbox" id="member-telegrampref-${escapeHtml(membership.id)}" ${recipient.channels?.telegram ? 'checked' : ''} />
+                <span>Telegram</span>
+              </label>
+              <label style="display:flex;align-items:center;gap:10px;">
+                <input type="checkbox" id="member-whatsapppref-${escapeHtml(membership.id)}" ${recipient.channels?.whatsapp ? 'checked' : ''} />
+                <span>WhatsApp</span>
               </label>
             </div>
             <div style="display:grid;gap:var(--space-3);">
@@ -1243,11 +1300,15 @@
       }
 
       const notificationEmail = document.getElementById('notifEmail').value.trim();
-      const phoneNumber = document.getElementById('notifPhone').value.trim();
+      const discordWebhookUrl = document.getElementById('notifDiscordWebhook').value.trim();
+      const telegramChatId = document.getElementById('notifTelegramChatId').value.trim();
+      const whatsappNumber = document.getElementById('notifWhatsappNumber').value.trim();
       const notificationPrefs = {
         push: document.getElementById('prefPush').checked,
         email: document.getElementById('prefEmail').checked,
-        sms: document.getElementById('prefSms').checked
+        discord: document.getElementById('prefDiscord').checked,
+        telegram: document.getElementById('prefTelegram').checked,
+        whatsapp: document.getElementById('prefWhatsapp').checked
       };
 
       const fb = window._dynastyFirebase;
@@ -1256,7 +1317,9 @@
         displayName: currentUser.name,
         email: currentUser.email,
         notificationEmail,
-        phoneNumber,
+        discordWebhookUrl,
+        telegramChatId,
+        whatsappNumber,
         notificationPrefs,
         pushSubscriptions: [],
         updatedAt: fb.serverTimestamp()
@@ -1270,7 +1333,9 @@
         displayName: currentUser.name,
         email: currentUser.email,
         notificationEmail,
-        phoneNumber,
+        discordWebhookUrl,
+        telegramChatId,
+        whatsappNumber,
         notificationPrefs,
         pushSubscriptions
       });
@@ -1296,17 +1361,23 @@
       }
 
       const notificationEmail = document.getElementById(`member-email-${membershipId}`).value.trim();
-      const phoneNumber = document.getElementById(`member-phone-${membershipId}`).value.trim();
+      const discordWebhookUrl = document.getElementById(`member-discord-${membershipId}`).value.trim();
+      const telegramChatId = document.getElementById(`member-telegram-${membershipId}`).value.trim();
+      const whatsappNumber = document.getElementById(`member-whatsapp-${membershipId}`).value.trim();
       const notificationPrefs = {
         push: document.getElementById(`member-push-${membershipId}`).checked,
         email: document.getElementById(`member-emailpref-${membershipId}`).checked,
-        sms: document.getElementById(`member-smspref-${membershipId}`).checked
+        discord: document.getElementById(`member-discordpref-${membershipId}`).checked,
+        telegram: document.getElementById(`member-telegrampref-${membershipId}`).checked,
+        whatsapp: document.getElementById(`member-whatsapppref-${membershipId}`).checked
       };
 
       upsertLocalMembership({
         ...membership,
         notificationEmail,
-        phoneNumber,
+        discordWebhookUrl,
+        telegramChatId,
+        whatsappNumber,
         notificationPrefs
       });
 
@@ -1444,7 +1515,7 @@
       const leagueId = document.getElementById('memberLeagueId').value;
       const displayName = document.getElementById('manualMemberName').value.trim();
       const notificationEmail = document.getElementById('manualMemberEmail').value.trim();
-      const phoneNumber = document.getElementById('manualMemberPhone').value.trim();
+      const whatsappNumber = document.getElementById('manualMemberPhone').value.trim();
 
       if (!leagueId) {
         showToast('Choose a league first.', 'error');
@@ -1460,11 +1531,13 @@
         uid,
         displayName,
         notificationEmail,
-        phoneNumber,
+        whatsappNumber,
         notificationPrefs: {
           push: true,
           email: !!notificationEmail,
-          sms: !!phoneNumber
+          discord: false,
+          telegram: false,
+          whatsapp: false
         }
       });
 
@@ -1475,11 +1548,13 @@
         userUID: uid,
         gamertag: displayName,
         notificationEmail,
-        phoneNumber,
+        whatsappNumber,
         notificationPrefs: {
           push: true,
           email: !!notificationEmail,
-          sms: !!phoneNumber
+          discord: false,
+          telegram: false,
+          whatsapp: false
         }
       });
 
@@ -1510,7 +1585,9 @@
       const channels = {
         push: document.getElementById('jobPush').checked,
         email: document.getElementById('jobEmail').checked,
-        sms: document.getElementById('jobSms').checked
+        discord: document.getElementById('jobDiscord').checked,
+        telegram: document.getElementById('jobTelegram').checked,
+        whatsapp: document.getElementById('jobWhatsapp').checked
       };
 
       if (!leagueId) {
@@ -1542,7 +1619,9 @@
           createdByName: currentUser.name,
           channels,
           email: job.email,
-          sms: job.sms,
+          discord: job.discord,
+          telegram: job.telegram,
+          whatsapp: job.whatsapp,
           push: job.push,
           pushSubscriptions: job.pushSubscriptions,
           recipients: job.recipients,
@@ -1742,7 +1821,7 @@
           email,
           createdAt: fb.serverTimestamp(),
             updatedAt: fb.serverTimestamp(),
-            notificationPrefs: { push: true, email: true, sms: false }
+            notificationPrefs: { push: true, email: true, discord: false, telegram: false, whatsapp: false }
           }, { merge: true });
         } catch (err) {
           if (!isPermissionDeniedError(err)) throw err;
@@ -1750,7 +1829,7 @@
           showToast('Account created in Firebase Auth. Firestore profile write is blocked by security rules.', 'info');
         }
         currentUser = { uid: cred.user.uid, name, email };
-        hydrateNotificationForm({ email, notificationPrefs: { push: true, email: true, sms: false } });
+        hydrateNotificationForm({ email, notificationPrefs: { push: true, email: true, discord: false, telegram: false, whatsapp: false } });
         document.getElementById('loginScreen').style.display = 'none';
         document.getElementById('onboardScreen').classList.add('visible');
         showToast('Account created. Finish league setup next.', 'success');

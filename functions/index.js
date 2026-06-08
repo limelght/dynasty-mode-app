@@ -3,7 +3,6 @@ const {onRequest} = require("firebase-functions/v2/https");
 const logger = require("firebase-functions/logger");
 const admin = require("firebase-admin");
 const nodemailer = require("nodemailer");
-const twilio = require("twilio");
 const webpush = require("web-push");
 
 admin.initializeApp();
@@ -24,11 +23,6 @@ function smtpTransport() {
   });
 }
 
-function twilioClient() {
-  if (!process.env.TWILIO_ACCOUNT_SID || !process.env.TWILIO_AUTH_TOKEN) return null;
-  return twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
-}
-
 function configureWebPush() {
   if (!process.env.WEB_PUSH_PUBLIC_KEY || !process.env.WEB_PUSH_PRIVATE_KEY || !process.env.WEB_PUSH_SUBJECT) return false;
   webpush.setVapidDetails(
@@ -39,14 +33,40 @@ function configureWebPush() {
   return true;
 }
 
+function telegramReady() {
+  return !!process.env.TELEGRAM_BOT_TOKEN;
+}
+
+function whatsappReady() {
+  return !!process.env.WHATSAPP_ACCESS_TOKEN && !!process.env.WHATSAPP_PHONE_NUMBER_ID;
+}
+
+async function postJson(url, payload, options = {}) {
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(options.headers || {}),
+    },
+    body: JSON.stringify(payload),
+  });
+  if (!response.ok) {
+    const body = await response.text();
+    throw new Error(`HTTP ${response.status}: ${body}`);
+  }
+  return response;
+}
+
 exports.health = onRequest((req, res) => {
   res.json({
     ok: true,
     project: process.env.GCLOUD_PROJECT || null,
     channels: {
       email: !!smtpTransport(),
-      sms: !!twilioClient(),
-      push: configureWebPush()
+      push: configureWebPush(),
+      discord: true,
+      telegram: telegramReady(),
+      whatsapp: whatsappReady()
     },
     webPushPublicKey: process.env.WEB_PUSH_PUBLIC_KEY || null
   });
@@ -80,17 +100,25 @@ exports.processNotificationJob = onDocumentCreated("notificationJobs/{jobId}", a
       }
     }
 
-    if (job.channels?.sms && job.sms?.to) {
-      const client = twilioClient();
-      if (client && process.env.TWILIO_FROM_NUMBER) {
-        await client.messages.create({
-          to: job.sms.to,
-          from: process.env.TWILIO_FROM_NUMBER,
-          body: job.sms.body || job.message || ""
-        });
-        results.push({channel: "sms", status: "sent"});
+    if (job.channels?.discord && Array.isArray(job.discord?.webhooks) && job.discord.webhooks.length) {
+      await Promise.all(job.discord.webhooks.map((webhookUrl) => postJson(webhookUrl, {
+        content: job.discord?.content || job.message || "",
+      })));
+      results.push({channel: "discord", status: "sent"});
+    }
+
+    if (job.channels?.telegram && Array.isArray(job.telegram?.chatIds) && job.telegram.chatIds.length) {
+      if (telegramReady()) {
+        await Promise.all(job.telegram.chatIds.map((chatId) => postJson(
+            `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`,
+            {
+              chat_id: chatId,
+              text: job.telegram?.text || job.message || "",
+            },
+        )));
+        results.push({channel: "telegram", status: "sent"});
       } else {
-        results.push({channel: "sms", status: "skipped", reason: "twilio_not_configured"});
+        results.push({channel: "telegram", status: "skipped", reason: "telegram_not_configured"});
       }
     }
 
@@ -104,6 +132,30 @@ exports.processNotificationJob = onDocumentCreated("notificationJobs/{jobId}", a
         results.push({channel: "push", status: "sent"});
       } else {
         results.push({channel: "push", status: "skipped", reason: "web_push_not_configured"});
+      }
+    }
+
+    if (job.channels?.whatsapp && Array.isArray(job.whatsapp?.to) && job.whatsapp.to.length) {
+      if (whatsappReady()) {
+        await Promise.all(job.whatsapp.to.map((phoneNumber) => postJson(
+            `https://graph.facebook.com/v23.0/${process.env.WHATSAPP_PHONE_NUMBER_ID}/messages`,
+            {
+              messaging_product: "whatsapp",
+              to: phoneNumber,
+              type: "text",
+              text: {
+                body: job.whatsapp?.body || job.message || "",
+              },
+            },
+            {
+              headers: {
+                Authorization: `Bearer ${process.env.WHATSAPP_ACCESS_TOKEN}`,
+              },
+            },
+        )));
+        results.push({channel: "whatsapp", status: "sent"});
+      } else {
+        results.push({channel: "whatsapp", status: "skipped", reason: "whatsapp_not_configured"});
       }
     }
 

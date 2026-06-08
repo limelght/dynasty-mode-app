@@ -2,7 +2,7 @@
 
 ## Current build
 
-- App version badge target: `vs.0.2.8-dev-2026-06-08-03`
+- App version badge target: `vs.0.3.0-dev-2026-06-08-05`
 
 ## Current architecture
 
@@ -38,11 +38,14 @@ Create `functions/.env` from `functions/.env.example` before deploying live noti
 - `SMTP_PASS`
 - `SMTP_FROM`
 
-### SMS
+### Telegram
 
-- `TWILIO_ACCOUNT_SID`
-- `TWILIO_AUTH_TOKEN`
-- `TWILIO_FROM_NUMBER`
+- `TELEGRAM_BOT_TOKEN`
+
+### WhatsApp
+
+- `WHATSAPP_ACCESS_TOKEN`
+- `WHATSAPP_PHONE_NUMBER_ID`
 
 ### Web push
 
@@ -68,5 +71,6 @@ League lifecycle transitions now also write backend-friendly metadata and a `sta
 - Hosting has been deployed successfully to `https://dynastyhq-app.web.app`.
 - Functions have now been deployed successfully on Node `22`.
 - Live health endpoint: `https://us-central1-dynastyhq-app.cloudfunctions.net/health`
-- Current live backend status shows notification providers are not configured yet, so `email`, `sms`, and `push` channels report `false` until `functions/.env` is populated and Functions are redeployed.
+- Current live backend status reports readiness for `email`, `push`, `discord`, `telegram`, and `whatsapp`.
 - Frontend now surfaces backend notification readiness and stores browser push subscriptions in user profiles when Web Push is configured.
+- Web Push VAPID keys have been established locally in `functions/.env`. SMTP still needs real credentials for email readiness. Telegram requires a bot token. WhatsApp requires Meta business credentials and is not a no-cost channel in production.
