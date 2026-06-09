@@ -365,6 +365,80 @@ exports.sendAdminTestNotification = onRequest(async (req, res) => {
   }
 });
 
+exports.sendUserNotificationTest = onRequest(async (req, res) => {
+  try {
+    const decodedToken = await verifyFirebaseUserFromRequest(req);
+    const requestedChannel = String(req.body?.channel || "").trim() || "all";
+    const profileDraft = req.body?.profile || {};
+    const message = String(
+        req.body?.message ||
+        `DynastyHQ user test for ${requestedChannel === "all" ? "all ready channels" : requestedChannel}.`,
+    ).trim();
+
+    const userSnap = await db.collection("users").doc(decodedToken.uid).get();
+    const storedProfile = userSnap.exists ? userSnap.data() || {} : {};
+    const profile = {
+      ...storedProfile,
+      ...profileDraft,
+      email: decodedToken.email,
+      notificationEmail: profileDraft.notificationEmail || storedProfile.notificationEmail || decodedToken.email || "",
+      notificationPrefs: {
+        ...(storedProfile.notificationPrefs || {}),
+        ...(profileDraft.notificationPrefs || {}),
+      },
+      pushSubscriptions: Array.isArray(profileDraft.pushSubscriptions) ?
+        profileDraft.pushSubscriptions :
+        (Array.isArray(storedProfile.pushSubscriptions) ? storedProfile.pushSubscriptions : []),
+    };
+
+    const channels = requestedChannel === "all" ? {
+      email: !!profile.notificationPrefs?.email,
+      push: !!profile.notificationPrefs?.push,
+      discord: !!profile.notificationPrefs?.discord,
+      telegram: !!profile.notificationPrefs?.telegram,
+      whatsapp: !!profile.notificationPrefs?.whatsapp,
+    } : {
+      email: requestedChannel === "email",
+      push: requestedChannel === "push",
+      discord: requestedChannel === "discord",
+      telegram: requestedChannel === "telegram",
+      whatsapp: requestedChannel === "whatsapp",
+    };
+
+    const job = {
+      message,
+      channels,
+      email: {
+        to: profile.notificationEmail ? [profile.notificationEmail] : [],
+        subject: "DynastyHQ notification test",
+        text: message,
+      },
+      discord: {
+        webhooks: profile.discordWebhookUrl ? [profile.discordWebhookUrl] : [],
+        content: `**DynastyHQ Test**\n${message}`,
+      },
+      telegram: {
+        chatIds: profile.telegramChatId ? [profile.telegramChatId] : [],
+        text: `DynastyHQ Test\n${message}`,
+      },
+      whatsapp: {
+        to: profile.whatsappNumber ? [profile.whatsappNumber] : [],
+        body: `DynastyHQ Test\n${message}`,
+      },
+      push: {
+        title: "DynastyHQ Test",
+        body: message,
+      },
+      pushSubscriptions: Array.isArray(profile.pushSubscriptions) ? profile.pushSubscriptions : [],
+    };
+
+    const results = await sendNotificationThroughChannels(job);
+    res.json({ok: true, results});
+  } catch (error) {
+    res.status(500).json({ok: false, error: error.message || "user_test_failed"});
+  }
+});
+
 exports.verifyEmailTransport = onRequest(async (req, res) => {
   const transporter = smtpTransport();
   if (!transporter) {
