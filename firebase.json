@@ -26,6 +26,23 @@
       "index.firebase.fixed.html",
       "index.pre-blank-fix.html"
     ],
+    "redirects": [
+      {
+        "source": "/privacy",
+        "destination": "/privacy.html",
+        "type": 301
+      },
+      {
+        "source": "/terms",
+        "destination": "/terms.html",
+        "type": 301
+      },
+      {
+        "source": "/data-deletion",
+        "destination": "/data-deletion.html",
+        "type": 301
+      }
+    ],
     "rewrites": [
       {
         "source": "**",
