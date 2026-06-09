@@ -96,6 +96,11 @@
     .helper-list{display:grid;gap:var(--space-2);padding-left:var(--space-4);color:var(--text-muted);font-size:var(--text-sm)}
     .helper-list li{margin-left:var(--space-2)}
     .test-button-grid{display:grid;gap:var(--space-3);grid-template-columns:repeat(auto-fit, minmax(180px, 1fr))}
+    .identity-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:var(--radius-full);font-size:var(--text-xs);font-weight:700}
+    .identity-badge.admin{background:var(--accent-dim);color:var(--accent)}
+    .identity-badge.member{background:var(--surface-3);color:var(--text-muted);border:1px solid var(--border)}
+    .admin-shell{border-color:rgba(201,168,76,0.35);box-shadow:0 0 0 1px rgba(201,168,76,0.12), var(--shadow-sm)}
+    .admin-highlight{background:linear-gradient(135deg, rgba(201,168,76,0.14), rgba(201,168,76,0.04));border-color:rgba(201,168,76,0.25)}
     .app-version {
       position: fixed;
       left: 50%;
@@ -236,14 +241,17 @@
       <div class="card">
         <div style="display:flex;justify-content:space-between;align-items:center;gap:var(--space-3);flex-wrap:wrap;">
           <div>
-            <div style="font-size:var(--text-lg);font-weight:700;">Signed in as <span id="userNameLabel">User</span></div>
+            <div style="display:flex;align-items:center;gap:var(--space-3);flex-wrap:wrap;">
+              <div style="font-size:var(--text-lg);font-weight:700;">Signed in as <span id="userNameLabel">User</span></div>
+              <span class="identity-badge member" id="accountRoleBadge">League Member</span>
+            </div>
             <div class="muted" id="userEmailLabel">user@email.com</div>
           </div>
           <button class="btn btn-ghost" onclick="signOutNow()">Sign Out</button>
         </div>
       </div>
 
-      <div class="card">
+      <div class="card" id="welcomeCard">
         <div style="font-size:var(--text-lg);font-weight:700;margin-bottom:var(--space-2);" id="welcomeHeading">Welcome back</div>
         <div class="muted" id="welcomeSummary">Loading your dynasty snapshot...</div>
         <div class="league-list" style="grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));margin-top:var(--space-4);">
@@ -603,12 +611,13 @@
   </script>
 
   <script>
-    const APP_VERSION = 'vs.0.4.2-dev-2026-06-09-01';
+    const APP_VERSION = 'vs.0.4.3-dev-2026-06-09-02';
     const HEALTH_ENDPOINT = 'https://us-central1-dynastyhq-app.cloudfunctions.net/health';
     const ADMIN_START_ENDPOINT = 'https://us-central1-dynastyhq-app.cloudfunctions.net/startAdminAccessChallenge';
     const ADMIN_VERIFY_ENDPOINT = 'https://us-central1-dynastyhq-app.cloudfunctions.net/verifyAdminAccessChallenge';
     const ADMIN_TEST_ENDPOINT = 'https://us-central1-dynastyhq-app.cloudfunctions.net/sendAdminTestNotification';
     const USER_TEST_ENDPOINT = 'https://us-central1-dynastyhq-app.cloudfunctions.net/sendUserNotificationTest';
+    const VIEWER_ACCESS_ENDPOINT = 'https://us-central1-dynastyhq-app.cloudfunctions.net/getViewerAccessProfile';
     let themeMode = 'auto';
     let currentUser = null;
     let backendStatus = null;
@@ -731,11 +740,39 @@
       });
     }
 
+    async function refreshViewerAccessProfile() {
+      if (!currentUser?.uid) return null;
+      try {
+        const response = await authenticatedFetch(VIEWER_ACCESS_ENDPOINT, { method: 'GET' });
+        const payload = await response.json();
+        if (!response.ok || !payload.ok) throw new Error(payload.error || payload.reason || 'viewer_access_failed');
+        currentUser.isAdmin = !!payload.isAdmin;
+        return payload;
+      } catch (_) {
+        currentUser.isAdmin = false;
+        return null;
+      }
+    }
+
     function renderAdminAccessButton() {
       const btn = document.getElementById('adminAccessButton');
       if (!btn) return;
-      const isAdmin = !!(backendStatus?.adminConfigured && currentUser?.email && backendStatus?.diagnostics && currentUser.email);
-      btn.style.display = isAdmin ? 'inline-flex' : 'none';
+      btn.style.display = currentUser?.isAdmin ? 'inline-flex' : 'none';
+    }
+
+    function renderAccountIdentity() {
+      const badge = document.getElementById('accountRoleBadge');
+      const welcomeCard = document.getElementById('welcomeCard');
+      if (!badge || !welcomeCard) return;
+      if (currentUser?.isAdmin) {
+        badge.textContent = 'Backoffice Admin';
+        badge.className = 'identity-badge admin';
+        welcomeCard.classList.add('admin-shell', 'admin-highlight');
+      } else {
+        badge.textContent = 'League Member';
+        badge.className = 'identity-badge member';
+        welcomeCard.classList.remove('admin-shell', 'admin-highlight');
+      }
     }
 
     function toggleBackofficePanel() {
@@ -752,6 +789,8 @@
       const summary = document.getElementById('backofficeSummary');
       if (summary) summary.textContent = 'Admin verification required.';
       setPageTitle('Dynasty Home');
+      const panel = document.getElementById('backofficePanel');
+      if (panel) panel.style.display = 'none';
     }
 
     async function startAdminVerification() {
@@ -825,13 +864,18 @@
       const commissionerRoles = membershipDocs.filter((doc) => (doc.data().role || 'member') === 'commissioner').length;
       const latestJobs = getLocalNotificationJobs().slice(0, 3).length;
 
-      heading.textContent = `${greeting}, ${currentUser?.name || 'Coach'}`;
-      summary.textContent = membershipDocs.length
-        ? `You are in ${membershipDocs.length} league${membershipDocs.length === 1 ? '' : 's'}, with ${commissionerRoles} commissioner role${commissionerRoles === 1 ? '' : 's'} and ${latestJobs} queued update${latestJobs === 1 ? '' : 's'}.`
-        : 'You have not joined a league yet. Create one or join with an invite code to get started.';
+      heading.textContent = currentUser?.isAdmin
+        ? `${greeting}, ${currentUser?.name || 'Coach'} — Backoffice ready`
+        : `${greeting}, ${currentUser?.name || 'Coach'}`;
+      summary.textContent = currentUser?.isAdmin
+        ? `Admin account detected. You have ${membershipDocs.length} league${membershipDocs.length === 1 ? '' : 's'}, ${commissionerRoles} commissioner role${commissionerRoles === 1 ? '' : 's'}, and ${latestJobs} queued update${latestJobs === 1 ? '' : 's'}. Backoffice tools are available from the top bar.`
+        : membershipDocs.length
+          ? `You are in ${membershipDocs.length} league${membershipDocs.length === 1 ? '' : 's'}, with ${commissionerRoles} commissioner role${commissionerRoles === 1 ? '' : 's'} and ${latestJobs} queued update${latestJobs === 1 ? '' : 's'}.`
+          : 'You have not joined a league yet. Create one or join with an invite code to get started.';
       leagueCount.textContent = String(membershipDocs.length);
       commissionerCount.textContent = String(commissionerRoles);
       channelSummary.textContent = preferredChannels.length ? preferredChannels.join(', ') : 'No channels configured yet';
+      renderAccountIdentity();
     }
 
     function isValidDiscordWebhookUrl(value) {
@@ -2388,7 +2432,7 @@
           setStatus('Auth account created, but Firestore blocked creation of your users profile document.');
           showToast('Account created in Firebase Auth. Firestore profile write is blocked by security rules.', 'info');
         }
-        currentUser = { uid: cred.user.uid, name, email };
+        currentUser = { uid: cred.user.uid, name, email, isAdmin: false };
         hydrateNotificationForm({ email, notificationPrefs: { push: true, email: true, discord: false, telegram: false, whatsapp: false } });
         document.getElementById('loginScreen').style.display = 'none';
         document.getElementById('onboardScreen').classList.add('visible');
@@ -2414,6 +2458,7 @@
         const cred = await fb.signInWithEmailAndPassword(fb.auth, email, pass);
         const profile = await readUserProfile(cred.user.uid);
         setAuthenticatedUser(cred.user, profile);
+        await refreshViewerAccessProfile();
         await loadLeaguesForUser();
         enterApp();
       } catch (err) {
@@ -2558,6 +2603,7 @@
       renderMemberDirectory();
       renderGovernanceSummary();
       renderAdminAccessButton();
+      renderAccountIdentity();
       renderWelcomePanel([]);
       renderNotificationSettingsPanel();
     }
@@ -2596,6 +2642,7 @@
           try {
             const profile = await readUserProfile(user.uid);
             setAuthenticatedUser(user, profile);
+            await refreshViewerAccessProfile();
             await loadLeaguesForUser();
             enterApp();
           } catch (err) {

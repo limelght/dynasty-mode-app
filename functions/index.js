@@ -224,6 +224,21 @@ exports.health = onRequest((req, res) => {
   });
 });
 
+exports.getViewerAccessProfile = onRequest(async (req, res) => {
+  try {
+    const decodedToken = await verifyFirebaseUserFromRequest(req);
+    const email = String(decodedToken.email || "").trim().toLowerCase();
+    res.json({
+      ok: true,
+      email,
+      isAdmin: isAdminEmail(email),
+      adminConfigured: adminEmails().length > 0,
+    });
+  } catch (error) {
+    res.status(401).json({ok: false, error: error.message || "viewer_access_failed"});
+  }
+});
+
 exports.startAdminAccessChallenge = onRequest(async (req, res) => {
   try {
     const decodedToken = await verifyFirebaseUserFromRequest(req);
