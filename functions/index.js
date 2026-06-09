@@ -205,7 +205,7 @@ async function sendNotificationThroughChannels(job) {
   return results;
 }
 
-exports.health = onRequest((req, res) => {
+exports.health = onRequest({cors: true}, (req, res) => {
   const diagnostics = providerDiagnostics();
   res.json({
     ok: true,
@@ -224,7 +224,7 @@ exports.health = onRequest((req, res) => {
   });
 });
 
-exports.getViewerAccessProfile = onRequest(async (req, res) => {
+exports.getViewerAccessProfile = onRequest({cors: true}, async (req, res) => {
   try {
     const decodedToken = await verifyFirebaseUserFromRequest(req);
     const email = String(decodedToken.email || "").trim().toLowerCase();
@@ -239,7 +239,7 @@ exports.getViewerAccessProfile = onRequest(async (req, res) => {
   }
 });
 
-exports.startAdminAccessChallenge = onRequest(async (req, res) => {
+exports.startAdminAccessChallenge = onRequest({cors: true}, async (req, res) => {
   try {
     const decodedToken = await verifyFirebaseUserFromRequest(req);
     if (!isAdminEmail(decodedToken.email)) {
@@ -275,7 +275,7 @@ exports.startAdminAccessChallenge = onRequest(async (req, res) => {
   }
 });
 
-exports.verifyAdminAccessChallenge = onRequest(async (req, res) => {
+exports.verifyAdminAccessChallenge = onRequest({cors: true}, async (req, res) => {
   try {
     const decodedToken = await verifyFirebaseUserFromRequest(req);
     if (!isAdminEmail(decodedToken.email)) {
@@ -320,7 +320,7 @@ exports.verifyAdminAccessChallenge = onRequest(async (req, res) => {
   }
 });
 
-exports.sendAdminTestNotification = onRequest(async (req, res) => {
+exports.sendAdminTestNotification = onRequest({cors: true}, async (req, res) => {
   try {
     const decodedToken = await verifyFirebaseUserFromRequest(req);
     if (!isAdminEmail(decodedToken.email)) {
@@ -380,7 +380,7 @@ exports.sendAdminTestNotification = onRequest(async (req, res) => {
   }
 });
 
-exports.sendUserNotificationTest = onRequest(async (req, res) => {
+exports.sendUserNotificationTest = onRequest({cors: true}, async (req, res) => {
   try {
     const decodedToken = await verifyFirebaseUserFromRequest(req);
     const requestedChannel = String(req.body?.channel || "").trim() || "all";
@@ -454,7 +454,7 @@ exports.sendUserNotificationTest = onRequest(async (req, res) => {
   }
 });
 
-exports.verifyEmailTransport = onRequest(async (req, res) => {
+exports.verifyEmailTransport = onRequest({cors: true}, async (req, res) => {
   const transporter = smtpTransport();
   if (!transporter) {
     res.status(400).json({
