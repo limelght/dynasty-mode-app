@@ -332,8 +332,8 @@
             </div>
           </div>
           <div class="league-card">
-            <div style="font-size:var(--text-base);font-weight:700;margin-bottom:var(--space-2);">Discord Connection</div>
-            <div class="muted" id="discordConnectionSummary" style="margin-bottom:var(--space-4);">Paste a Discord webhook for the channel where you want updates posted.</div>
+            <div style="font-size:var(--text-base);font-weight:700;margin-bottom:var(--space-2);">Discord Connection (Optional)</div>
+            <div class="muted" id="discordConnectionSummary" style="margin-bottom:var(--space-4);">Discord is optional for your demo. Add it later when you have a channel webhook ready.</div>
             <div class="form-group">
               <label class="form-label" for="notifDiscordChannelLabel">Discord Destination Label</label>
               <input class="form-input" id="notifDiscordChannelLabel" placeholder="Example: Dynasty Announcements" />
@@ -368,7 +368,7 @@
                 </label>
                 <label style="display:flex;align-items:center;gap:10px;margin:0;">
                   <input type="checkbox" id="prefDiscord" />
-                  <span>Discord</span>
+                  <span>Discord (optional)</span>
                 </label>
                 <label style="display:flex;align-items:center;gap:10px;margin:0;">
                   <input type="checkbox" id="prefTelegram" />
@@ -626,7 +626,7 @@
   </script>
 
   <script>
-    const APP_VERSION = 'vs.0.4.5-dev-2026-06-09-04';
+    const APP_VERSION = 'vs.0.4.6-dev-2026-06-09-05';
     const HEALTH_ENDPOINT = 'https://us-central1-dynastyhq-app.cloudfunctions.net/health';
     const ADMIN_START_ENDPOINT = 'https://us-central1-dynastyhq-app.cloudfunctions.net/startAdminAccessChallenge';
     const ADMIN_VERIFY_ENDPOINT = 'https://us-central1-dynastyhq-app.cloudfunctions.net/verifyAdminAccessChallenge';
@@ -982,25 +982,35 @@
       if (draft.notificationEmail && !validateEmail(draft.notificationEmail)) {
         return 'Use a valid email address for alerts.';
       }
-      if ((requestedChannel === 'email' || requestedChannel === 'all' || draft.notificationPrefs.email) && !validateEmail(draft.notificationEmail || draft.email)) {
+      if ((requestedChannel === 'email' || draft.notificationPrefs.email) && !validateEmail(draft.notificationEmail || draft.email)) {
         return 'Email notifications need a valid destination address.';
       }
       if (draft.discordWebhookUrl && !isValidDiscordWebhookUrl(draft.discordWebhookUrl)) {
         return 'Discord needs a full webhook URL from the target channel.';
       }
-      if ((requestedChannel === 'discord' || requestedChannel === 'all' || draft.notificationPrefs.discord) && !isValidDiscordWebhookUrl(draft.discordWebhookUrl)) {
+      if ((requestedChannel === 'discord' || draft.notificationPrefs.discord) && !isValidDiscordWebhookUrl(draft.discordWebhookUrl)) {
         return 'Discord is enabled, but the webhook URL is missing or invalid.';
       }
-      if ((requestedChannel === 'telegram' || requestedChannel === 'all' || draft.notificationPrefs.telegram) && !draft.telegramChatId && !draft.telegramLinkCode) {
+      if ((requestedChannel === 'telegram' || draft.notificationPrefs.telegram) && !draft.telegramChatId && !draft.telegramLinkCode) {
         return 'Telegram needs a linked bot conversation or a fresh Telegram link.';
       }
       if (draft.whatsappNumber && !isValidWhatsappNumber(draft.whatsappNumber)) {
         return 'WhatsApp numbers should look like +15555555555.';
       }
-      if ((requestedChannel === 'whatsapp' || requestedChannel === 'all' || draft.notificationPrefs.whatsapp) && !isValidWhatsappNumber(draft.whatsappNumber)) {
+      if ((requestedChannel === 'whatsapp' || draft.notificationPrefs.whatsapp) && !isValidWhatsappNumber(draft.whatsappNumber)) {
         return 'WhatsApp is enabled, but the number is missing or invalid.';
       }
       return '';
+    }
+
+    function getReadyChannelsForTesting(draft) {
+      return {
+        push: !!(draft.notificationPrefs.push && Array.isArray(draft.pushSubscriptions) && draft.pushSubscriptions.length),
+        email: !!(draft.notificationPrefs.email && validateEmail(draft.notificationEmail || draft.email)),
+        discord: !!(draft.notificationPrefs.discord && isValidDiscordWebhookUrl(draft.discordWebhookUrl)),
+        telegram: !!(draft.notificationPrefs.telegram && draft.telegramChatId),
+        whatsapp: !!(draft.notificationPrefs.whatsapp && isValidWhatsappNumber(draft.whatsappNumber)),
+      };
     }
 
     function renderNotificationSettingsPanel(profile = null) {
@@ -1048,8 +1058,9 @@
       const summary = document.getElementById('notificationSettingsSummary');
       if (summary) {
         const readyCount = states.filter((item) => item.state === 'ready' && item.backendReady).length;
+        const readyPrimary = states.filter((item) => item.key !== 'discord' && item.state === 'ready' && item.backendReady).length;
         summary.textContent = readyCount
-          ? `${readyCount} notification channel${readyCount === 1 ? '' : 's'} are ready for this account.`
+          ? `${readyPrimary} core channel${readyPrimary === 1 ? '' : 's'} are live for this account${states.find((item) => item.key === 'discord')?.state === 'ready' ? ', plus Discord.' : '. Discord can stay optional for now.'}`
           : 'Connect and enable the channels you want this account to receive.';
       }
 
@@ -2054,6 +2065,14 @@
       if (channel === 'push' || channel === 'all') {
         await requestPushPermissionIfNeeded(true);
         draft.pushSubscriptions = await registerPushSubscriptionIfNeeded(true);
+      }
+
+      if (channel === 'all') {
+        draft.notificationPrefs = getReadyChannelsForTesting(draft);
+        if (!Object.values(draft.notificationPrefs).some(Boolean)) {
+          showToast('No fully ready channels are enabled yet. Email, push, Telegram, and WhatsApp are the current demo path.', 'info');
+          return;
+        }
       }
 
       try {
