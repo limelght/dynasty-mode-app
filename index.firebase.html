@@ -101,6 +101,8 @@
     .identity-badge.member{background:var(--surface-3);color:var(--text-muted);border:1px solid var(--border)}
     .admin-shell{border-color:rgba(201,168,76,0.35);box-shadow:0 0 0 1px rgba(201,168,76,0.12), var(--shadow-sm)}
     .admin-highlight{background:linear-gradient(135deg, rgba(201,168,76,0.14), rgba(201,168,76,0.04));border-color:rgba(201,168,76,0.25)}
+    .telegram-card{display:grid;gap:var(--space-4)}
+    .telegram-status-row{display:flex;align-items:center;justify-content:space-between;gap:var(--space-3);flex-wrap:wrap}
     .app-version {
       position: fixed;
       left: 50%;
@@ -384,11 +386,18 @@
               <button class="btn btn-secondary" type="button" onclick="refreshNotificationSettingsPanel()">Refresh Status</button>
             </div>
           </div>
-          <div class="league-card">
-            <div style="font-size:var(--text-base);font-weight:700;margin-bottom:var(--space-2);">Connect Telegram</div>
-            <div class="muted" id="telegramLinkSummary" style="margin-bottom:var(--space-4);">Telegram bot not configured yet.</div>
+          <div class="league-card telegram-card">
+            <div class="telegram-status-row">
+              <div>
+                <div style="font-size:var(--text-base);font-weight:700;margin-bottom:var(--space-2);">Connect Telegram</div>
+                <div class="muted" id="telegramLinkSummary">Telegram bot not configured yet.</div>
+              </div>
+              <span class="status-pill off" id="telegramStatusBadge">Not linked</span>
+            </div>
             <div class="btn-row" style="margin-top:0;">
-              <button class="btn btn-secondary" onclick="generateTelegramLink()">Generate Telegram Link</button>
+              <button class="btn btn-primary" onclick="generateTelegramLink()">Generate Telegram Link</button>
+              <button class="btn btn-secondary" type="button" id="telegramOpenBotButton" onclick="openTelegramBotLink()" disabled>Open Telegram Bot</button>
+              <button class="btn btn-secondary" type="button" onclick="refreshTelegramLinkState()">Refresh Telegram Status</button>
               <button class="btn btn-secondary" type="button" onclick="sendUserNotificationTest('telegram')">Test Telegram</button>
             </div>
           </div>
@@ -611,7 +620,7 @@
   </script>
 
   <script>
-    const APP_VERSION = 'vs.0.4.3-dev-2026-06-09-02';
+    const APP_VERSION = 'vs.0.4.4-dev-2026-06-09-03';
     const HEALTH_ENDPOINT = 'https://us-central1-dynastyhq-app.cloudfunctions.net/health';
     const ADMIN_START_ENDPOINT = 'https://us-central1-dynastyhq-app.cloudfunctions.net/startAdminAccessChallenge';
     const ADMIN_VERIFY_ENDPOINT = 'https://us-central1-dynastyhq-app.cloudfunctions.net/verifyAdminAccessChallenge';
@@ -1103,21 +1112,64 @@
 
     function renderTelegramLinkSummary(profile = null) {
       const target = document.getElementById('telegramLinkSummary');
+      const badge = document.getElementById('telegramStatusBadge');
+      const openBotButton = document.getElementById('telegramOpenBotButton');
       if (!target) return;
       const currentProfile = profile || (currentUser?.uid ? readLocalProfile(currentUser.uid) : null) || {};
+      const setBadge = (label, className) => {
+        if (!badge) return;
+        badge.textContent = label;
+        badge.className = `status-pill ${className}`;
+      };
+      const botUrl = currentProfile.telegramLinkCode && backendStatus?.telegramBotUsername
+        ? `https://t.me/${encodeURIComponent(backendStatus.telegramBotUsername)}?start=dynasty_${encodeURIComponent(currentProfile.telegramLinkCode)}`
+        : '';
+      if (openBotButton) openBotButton.disabled = !botUrl;
       if (!backendStatus?.telegramBotUsername) {
         target.textContent = 'Telegram bot not configured yet.';
+        setBadge('Unavailable', 'off');
         return;
       }
       if (currentProfile.telegramChatId) {
-        target.textContent = `Telegram linked to chat ${currentProfile.telegramChatId}.`;
+        target.textContent = `Telegram linked to chat ${currentProfile.telegramChatId}. You are ready to receive DynastyHQ updates there.`;
+        setBadge('Linked', 'ready');
         return;
       }
       if (currentProfile.telegramLinkCode) {
-        target.innerHTML = `Open <a href="https://t.me/${encodeURIComponent(backendStatus.telegramBotUsername)}?start=dynasty_${encodeURIComponent(currentProfile.telegramLinkCode)}" target="_blank" rel="noreferrer">the Telegram bot</a> to finish linking your account.`;
+        target.innerHTML = `Open <a href="${botUrl}" target="_blank" rel="noreferrer">the Telegram bot</a>, press Start, then come back and refresh this panel.`;
+        setBadge('Waiting on bot', 'pending');
         return;
       }
       target.textContent = 'Generate a Telegram link, then open the bot to connect your account.';
+      setBadge('Not linked', 'off');
+    }
+
+    function openTelegramBotLink() {
+      const currentProfile = currentUser?.uid ? readLocalProfile(currentUser.uid) : null;
+      if (!currentProfile?.telegramLinkCode || !backendStatus?.telegramBotUsername) {
+        showToast('Generate a Telegram link first.', 'info');
+        return;
+      }
+      const botUrl = `https://t.me/${encodeURIComponent(backendStatus.telegramBotUsername)}?start=dynasty_${encodeURIComponent(currentProfile.telegramLinkCode)}`;
+      window.open(botUrl, '_blank', 'noopener,noreferrer');
+    }
+
+    async function refreshTelegramLinkState(silent = false) {
+      if (!currentUser?.uid) return;
+      try {
+        const profile = await readUserProfile(currentUser.uid);
+        if (profile?.uid) {
+          upsertLocalProfile(profile);
+          hydrateNotificationForm(profile);
+          renderTelegramLinkSummary(profile);
+          renderNotificationSettingsPanel(profile);
+          if (!silent) {
+            showToast(profile.telegramChatId ? 'Telegram is now linked.' : 'Telegram status refreshed.', profile.telegramChatId ? 'success' : 'info');
+          }
+          return;
+        }
+      } catch (_) {}
+      if (!silent) showToast('Telegram status refresh failed.', 'error');
     }
 
     async function registerServiceWorker() {
@@ -1600,6 +1652,7 @@
           updatedAt: fb.serverTimestamp()
         }, { merge: true });
         showToast('Telegram link generated.', 'success');
+        setTimeout(() => refreshTelegramLinkState(true), 2500);
       } catch (err) {
         if (!isPermissionDeniedError(err)) {
           showToast('Failed to save Telegram link: ' + err.message, 'error');
@@ -2727,6 +2780,19 @@
     document.addEventListener('input', (event) => {
       if (event.target && ['notifEmail', 'notifDiscordChannelLabel', 'notifDiscordWebhook', 'notifTelegramChatId', 'notifWhatsappNumber'].includes(event.target.id)) {
         renderNotificationSettingsPanel();
+      }
+    });
+    window.addEventListener('focus', () => {
+      const profile = currentUser?.uid ? readLocalProfile(currentUser.uid) : null;
+      if (profile?.telegramLinkCode && !profile?.telegramChatId) {
+        refreshTelegramLinkState(true);
+      }
+    });
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState !== 'visible') return;
+      const profile = currentUser?.uid ? readLocalProfile(currentUser.uid) : null;
+      if (profile?.telegramLinkCode && !profile?.telegramChatId) {
+        refreshTelegramLinkState(true);
       }
     });
     bootstrapAuthWatcher();

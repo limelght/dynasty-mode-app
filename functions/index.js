@@ -551,7 +551,9 @@ exports.setupTelegramWebhook = onRequest(async (req, res) => {
 
 exports.telegramWebhook = onRequest(async (req, res) => {
   const secret = process.env.TELEGRAM_WEBHOOK_SECRET || null;
-  if (secret && req.query.secret !== secret) {
+  const headerSecret = req.headers["x-telegram-bot-api-secret-token"];
+  const querySecret = req.query.secret;
+  if (secret && headerSecret !== secret && querySecret !== secret) {
     res.status(403).json({ok: false, error: "forbidden"});
     return;
   }
