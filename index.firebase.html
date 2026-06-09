@@ -326,9 +326,9 @@
               <div class="field-note" id="whatsappConnectionSummary">Add the number tied to your WhatsApp account.</div>
             </div>
             <div class="form-group" style="margin-bottom:0;">
-              <label class="form-label" for="notifTelegramChatId">Telegram Chat ID</label>
-              <input class="form-input" id="notifTelegramChatId" placeholder="Telegram chat ID" />
-              <div class="field-note">You usually will not need to type this manually if you use the Telegram connect button.</div>
+              <label class="form-label" for="notifTelegramChatId">Telegram connection (automatic)</label>
+              <input class="form-input" id="notifTelegramChatId" placeholder="This fills in automatically after you link Telegram" readonly />
+              <div class="field-note">Leave this alone. DynastyHQ fills it in for the user after they open the bot and press Start.</div>
             </div>
           </div>
           <div class="league-card">
@@ -394,10 +394,16 @@
               </div>
               <span class="status-pill off" id="telegramStatusBadge">Not linked</span>
             </div>
+            <ol class="helper-list" style="margin:0;">
+              <li>Click <strong>Generate Telegram Link</strong>.</li>
+              <li>Click <strong>Open Telegram Bot</strong> and press <strong>Start</strong> in Telegram.</li>
+              <li>Return here and click <strong>Refresh Telegram Status</strong> until the badge says <strong>Linked</strong>.</li>
+            </ol>
             <div class="btn-row" style="margin-top:0;">
               <button class="btn btn-primary" onclick="generateTelegramLink()">Generate Telegram Link</button>
               <button class="btn btn-secondary" type="button" id="telegramOpenBotButton" onclick="openTelegramBotLink()" disabled>Open Telegram Bot</button>
               <button class="btn btn-secondary" type="button" onclick="refreshTelegramLinkState()">Refresh Telegram Status</button>
+              <button class="btn btn-secondary" type="button" onclick="resetTelegramConnection()">Reset Telegram Link</button>
               <button class="btn btn-secondary" type="button" onclick="sendUserNotificationTest('telegram')">Test Telegram</button>
             </div>
           </div>
@@ -620,7 +626,7 @@
   </script>
 
   <script>
-    const APP_VERSION = 'vs.0.4.4-dev-2026-06-09-03';
+    const APP_VERSION = 'vs.0.4.5-dev-2026-06-09-04';
     const HEALTH_ENDPOINT = 'https://us-central1-dynastyhq-app.cloudfunctions.net/health';
     const ADMIN_START_ENDPOINT = 'https://us-central1-dynastyhq-app.cloudfunctions.net/startAdminAccessChallenge';
     const ADMIN_VERIFY_ENDPOINT = 'https://us-central1-dynastyhq-app.cloudfunctions.net/verifyAdminAccessChallenge';
@@ -1152,6 +1158,31 @@
       }
       const botUrl = `https://t.me/${encodeURIComponent(backendStatus.telegramBotUsername)}?start=dynasty_${encodeURIComponent(currentProfile.telegramLinkCode)}`;
       window.open(botUrl, '_blank', 'noopener,noreferrer');
+    }
+
+    async function resetTelegramConnection() {
+      if (!currentUser?.uid) return;
+      const existingProfile = readLocalProfile(currentUser.uid) || {};
+      const nextProfile = {
+        ...existingProfile,
+        uid: currentUser.uid,
+        telegramChatId: '',
+        telegramLinkCode: null,
+      };
+      upsertLocalProfile(nextProfile);
+      hydrateNotificationForm(nextProfile);
+      renderTelegramLinkSummary(nextProfile);
+      renderNotificationSettingsPanel(nextProfile);
+      try {
+        const fb = window._dynastyFirebase;
+        await fb.setDoc(fb.doc(fb.db, 'users', currentUser.uid), {
+          uid: currentUser.uid,
+          telegramChatId: '',
+          telegramLinkCode: null,
+          updatedAt: fb.serverTimestamp()
+        }, { merge: true });
+      } catch (_) {}
+      showToast('Telegram link reset. Generate a fresh link to reconnect.', 'info');
     }
 
     async function refreshTelegramLinkState(silent = false) {
