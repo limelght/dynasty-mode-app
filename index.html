@@ -896,6 +896,41 @@
       }[channel] || channel;
     }
 
+    function describeNotificationResult(item) {
+      const channel = channelDisplayName(item.channel);
+      const reason = String(item.reason || '');
+      if (item.status === 'sent') return `${channel} sent`;
+      if (item.status === 'skipped') {
+        if (reason === 'discord_webhook_missing') return `${channel}: add a Discord webhook first`;
+        if (reason === 'telegram_chat_missing') return `${channel}: link your Telegram bot chat first`;
+        if (reason === 'push_subscription_missing') return `${channel}: enable browser push on this device first`;
+        if (reason === 'whatsapp_number_missing') return `${channel}: add a WhatsApp destination number first`;
+        return `${channel}: ${reason.replaceAll('_', ' ')}`;
+      }
+      if (reason.includes('Bad Request: chat not found')) return `${channel}: chat not found, finish Telegram bot linking first`;
+      if (reason.includes('OAuthException') || reason.includes('"code":190')) return `${channel}: provider token was rejected and needs to be refreshed`;
+      if (reason.includes('unexpected response code') || reason.includes('410') || reason.includes('404')) return `${channel}: browser push subscription is stale, save settings again on this device`;
+      return `${channel}: ${reason}`;
+    }
+
+    async function clearStoredPushSubscriptions() {
+      if (!currentUser?.uid) return;
+      const profile = readLocalProfile(currentUser.uid) || {};
+      upsertLocalProfile({
+        ...profile,
+        uid: currentUser.uid,
+        pushSubscriptions: [],
+      });
+      try {
+        const fb = window._dynastyFirebase;
+        await fb.setDoc(fb.doc(fb.db, 'users', currentUser.uid), {
+          uid: currentUser.uid,
+          pushSubscriptions: [],
+          updatedAt: fb.serverTimestamp()
+        }, { merge: true });
+      } catch (_) {}
+    }
+
     function buildNotificationDraft(profile = null) {
       const storedProfile = profile || (currentUser?.uid ? readLocalProfile(currentUser.uid) : {}) || {};
       const byId = (id, fallback = '') => {
@@ -1948,8 +1983,22 @@
         });
         const payload = await response.json();
         if (!response.ok || !payload.ok) throw new Error(payload.reason || payload.error || 'user_test_failed');
-        const sentChannels = (payload.results || []).filter((item) => item.status === 'sent').map((item) => channelDisplayName(item.channel));
-        showToast(sentChannels.length ? `Test sent via ${sentChannels.join(', ')}.` : 'Test request completed, but no channels were ready to send.', sentChannels.length ? 'success' : 'info');
+        const results = payload.results || [];
+        const sentChannels = results.filter((item) => item.status === 'sent').map((item) => channelDisplayName(item.channel));
+        const issues = results.filter((item) => item.status !== 'sent').map(describeNotificationResult);
+        const pushIssue = results.find((item) => item.channel === 'push' && item.status !== 'sent');
+        if (pushIssue && String(pushIssue.reason || '').match(/unexpected response code|410|404/i)) {
+          await clearStoredPushSubscriptions();
+        }
+        if (sentChannels.length && !issues.length) {
+          showToast(`Test sent via ${sentChannels.join(', ')}.`, 'success');
+        } else if (sentChannels.length && issues.length) {
+          showToast(`Sent via ${sentChannels.join(', ')}. Issues: ${issues.join(' · ')}`, 'info');
+        } else if (issues.length) {
+          showToast(issues.join(' · '), 'error');
+        } else {
+          showToast('Test request completed, but no channels were ready to send.', 'info');
+        }
         renderNotificationSettingsPanel();
       } catch (err) {
         showToast('Notification test failed: ' + err.message, 'error');

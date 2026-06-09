@@ -127,79 +127,108 @@ async function verifyAdminSession(req, decodedToken) {
 
 async function sendNotificationThroughChannels(job) {
   const results = [];
+  const normalizeError = (error) => String(error?.message || error || "unknown_error");
 
   if (job.channels?.email && job.email?.to) {
     const transporter = smtpTransport();
     if (transporter) {
-      await transporter.sendMail({
-        from: process.env.SMTP_FROM || process.env.SMTP_USER,
-        to: job.email.to,
-        subject: job.email.subject || "Dynasty Mode Update",
-        text: job.email.text || job.message || ""
-      });
-      results.push({channel: "email", status: "sent"});
+      try {
+        await transporter.sendMail({
+          from: process.env.SMTP_FROM || process.env.SMTP_USER,
+          to: job.email.to,
+          subject: job.email.subject || "Dynasty Mode Update",
+          text: job.email.text || job.message || ""
+        });
+        results.push({channel: "email", status: "sent"});
+      } catch (error) {
+        results.push({channel: "email", status: "failed", reason: normalizeError(error)});
+      }
     } else {
       results.push({channel: "email", status: "skipped", reason: "smtp_not_configured"});
     }
   }
 
   if (job.channels?.discord && Array.isArray(job.discord?.webhooks) && job.discord.webhooks.length) {
-    await Promise.all(job.discord.webhooks.map((webhookUrl) => postJson(webhookUrl, {
-      content: job.discord?.content || job.message || "",
-    })));
-    results.push({channel: "discord", status: "sent"});
+    try {
+      await Promise.all(job.discord.webhooks.map((webhookUrl) => postJson(webhookUrl, {
+        content: job.discord?.content || job.message || "",
+      })));
+      results.push({channel: "discord", status: "sent"});
+    } catch (error) {
+      results.push({channel: "discord", status: "failed", reason: normalizeError(error)});
+    }
+  } else if (job.channels?.discord) {
+    results.push({channel: "discord", status: "skipped", reason: "discord_webhook_missing"});
   }
 
   if (job.channels?.telegram && Array.isArray(job.telegram?.chatIds) && job.telegram.chatIds.length) {
     if (telegramReady()) {
-      await Promise.all(job.telegram.chatIds.map((chatId) => postJson(
-          `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`,
-          {
-            chat_id: chatId,
-            text: job.telegram?.text || job.message || "",
-          },
-      )));
-      results.push({channel: "telegram", status: "sent"});
+      try {
+        await Promise.all(job.telegram.chatIds.map((chatId) => postJson(
+            `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`,
+            {
+              chat_id: chatId,
+              text: job.telegram?.text || job.message || "",
+            },
+        )));
+        results.push({channel: "telegram", status: "sent"});
+      } catch (error) {
+        results.push({channel: "telegram", status: "failed", reason: normalizeError(error)});
+      }
     } else {
       results.push({channel: "telegram", status: "skipped", reason: "telegram_not_configured"});
     }
+  } else if (job.channels?.telegram) {
+    results.push({channel: "telegram", status: "skipped", reason: "telegram_chat_missing"});
   }
 
   if (job.channels?.push && Array.isArray(job.pushSubscriptions) && job.pushSubscriptions.length) {
     const pushReady = configureWebPush();
     if (pushReady) {
-      await Promise.all(job.pushSubscriptions.map((subscription) => webpush.sendNotification(subscription, JSON.stringify({
-        title: job.push?.title || "Dynasty Mode",
-        body: job.push?.body || job.message || ""
-      }))));
-      results.push({channel: "push", status: "sent"});
+      try {
+        await Promise.all(job.pushSubscriptions.map((subscription) => webpush.sendNotification(subscription, JSON.stringify({
+          title: job.push?.title || "Dynasty Mode",
+          body: job.push?.body || job.message || ""
+        }))));
+        results.push({channel: "push", status: "sent"});
+      } catch (error) {
+        results.push({channel: "push", status: "failed", reason: normalizeError(error)});
+      }
     } else {
       results.push({channel: "push", status: "skipped", reason: "web_push_not_configured"});
     }
+  } else if (job.channels?.push) {
+    results.push({channel: "push", status: "skipped", reason: "push_subscription_missing"});
   }
 
   if (job.channels?.whatsapp && Array.isArray(job.whatsapp?.to) && job.whatsapp.to.length) {
     if (whatsappReady()) {
-      await Promise.all(job.whatsapp.to.map((phoneNumber) => postJson(
-          `https://graph.facebook.com/v23.0/${process.env.WHATSAPP_PHONE_NUMBER_ID}/messages`,
-          {
-            messaging_product: "whatsapp",
-            to: phoneNumber,
-            type: "text",
-            text: {
-              body: job.whatsapp?.body || job.message || "",
+      try {
+        await Promise.all(job.whatsapp.to.map((phoneNumber) => postJson(
+            `https://graph.facebook.com/v23.0/${process.env.WHATSAPP_PHONE_NUMBER_ID}/messages`,
+            {
+              messaging_product: "whatsapp",
+              to: phoneNumber,
+              type: "text",
+              text: {
+                body: job.whatsapp?.body || job.message || "",
+              },
             },
-          },
-          {
-            headers: {
-              Authorization: `Bearer ${process.env.WHATSAPP_ACCESS_TOKEN}`,
+            {
+              headers: {
+                Authorization: `Bearer ${process.env.WHATSAPP_ACCESS_TOKEN}`,
+              },
             },
-          },
-      )));
-      results.push({channel: "whatsapp", status: "sent"});
+        )));
+        results.push({channel: "whatsapp", status: "sent"});
+      } catch (error) {
+        results.push({channel: "whatsapp", status: "failed", reason: normalizeError(error)});
+      }
     } else {
       results.push({channel: "whatsapp", status: "skipped", reason: "whatsapp_not_configured"});
     }
+  } else if (job.channels?.whatsapp) {
+    results.push({channel: "whatsapp", status: "skipped", reason: "whatsapp_number_missing"});
   }
 
   return results;
