@@ -206,7 +206,17 @@ async function sendNotificationThroughChannels(job) {
       try {
         await Promise.all(job.whatsapp.to.map((phoneNumber) => postJson(
             `https://graph.facebook.com/v23.0/${process.env.WHATSAPP_PHONE_NUMBER_ID}/messages`,
-            {
+            job.whatsapp?.template ? {
+              messaging_product: "whatsapp",
+              to: phoneNumber,
+              type: "template",
+              template: {
+                name: job.whatsapp.template.name || "hello_world",
+                language: {
+                  code: job.whatsapp.template.languageCode || "en_US",
+                },
+              },
+            } : {
               messaging_product: "whatsapp",
               to: phoneNumber,
               type: "text",
@@ -394,6 +404,10 @@ exports.sendAdminTestNotification = onRequest({cors: true}, async (req, res) => 
       whatsapp: {
         to: profile.whatsappNumber ? [profile.whatsappNumber] : [],
         body: `Dynasty Mode Test\n${message}`,
+        template: {
+          name: "hello_world",
+          languageCode: "en_US",
+        },
       },
       push: {
         title: "Dynasty Mode Test",
@@ -468,6 +482,10 @@ exports.sendUserNotificationTest = onRequest({cors: true}, async (req, res) => {
       whatsapp: {
         to: profile.whatsappNumber ? [profile.whatsappNumber] : [],
         body: `DynastyHQ Test\n${message}`,
+        template: {
+          name: "hello_world",
+          languageCode: "en_US",
+        },
       },
       push: {
         title: "DynastyHQ Test",
